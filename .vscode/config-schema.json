@@ -67,11 +67,7 @@
           "properties": {
             "name": {
               "type": "string",
-              "description": "Name of the step"
-            },
-            "destination": {
-              "type": "string",
-              "description": "Destination path for the file this task will obtain"
+              "description": "Name of the task. The first word of the task name is the type, which should be a task registered in Otter."
             }
           }
         }
