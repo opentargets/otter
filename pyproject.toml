@@ -57,7 +57,7 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 
 [tool.deptry]
 extend_exclude = ["src/test"]
-pep621_dev_dependency_groups = ["dev", "test", "docs"]
+pep621_dev_dependency_groups = ["test", "docs"]
 
 [tool.ruff]
 target-version = 'py313'

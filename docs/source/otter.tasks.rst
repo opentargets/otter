@@ -39,6 +39,15 @@ tasks.explode module
    :show-inheritance:
    :exclude-members: model_post_init, run, validate
 
+tasks.explode\_glob module
+--------------------------
+
+.. automodule:: otter.tasks.explode_glob
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: model_post_init, run, validate
+
 tasks.find\_latest module
 -------------------------
 

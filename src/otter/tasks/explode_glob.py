@@ -42,24 +42,24 @@ class ExplodeGlob(Task):
     This task will duplicate the specs in the ``do`` list for each entry in a list
     coming from a glob expression.
 
-    The task will add the following keys to the scratchpad:
-    - ``prefix``: the path up to the glob pattern and relative to either the
-        :py:obj:`otter.config.model.Config.release_uri` or the
-        :py:obj:`otter.config.model.Config.work_path`.
-    - ``match_path``: the part of the path that the glob matched **without** the
+    The task will add the following keys to a local scratchpad:
+
+    - ``prefix``: the path up to the glob pattern and relative to either the \
+        :py:obj:`otter.config.model.Config.release_uri` or the :py:obj:`otter.config.model.Config.work_path`.
+    - ``match_path``: the part of the path that the glob matched **without** the \
         file name.
     - ``match_stem``: the file name of the matched file **without** the extension.
     - ``match_ext``: the file extensions of the matched file, with the dot.
-    - ``uuid``: a random UUID in case it is needed to generate unique names.
+    - ``uuid``: an UUID4, in case it is needed to generate unique names.
 
-    ```
-    - name: explode_glob things
-      glob: 'gs://release-25/input/items/**/*.json'
-      do:
-        - name: transform ${match_stem} into parquet
-          source: ${prefix}${match_path}${match_stem}${match_ext}
-          destination: intermediate/${match_path}${math_stem}.parquet
-    ```
+    .. code-block:: yaml
+
+        - name: explode_glob things
+          glob: 'gs://release-25/input/items/**/*.json'
+          do:
+            - name: transform ${match_stem} into parquet
+              source: ${prefix}${match_path}${match_stem}${match_ext}
+              destination: intermediate/${match_path}${math_stem}.parquet
 
     for a directory structure like:
 
@@ -77,13 +77,14 @@ class ExplodeGlob(Task):
 
     the first task will be duplicated twice, with the following specs:
 
-    .. code-block:: yaml
-        - name: transform chair into parquet
-          source: input/items/furniture/chair.json
-          destination: intermediate/furniture/chair.parquet
-        - name: transform table into parquet
-          source: input/items/furniture/table.json
-          destination: intermediate/furniture/table.parquet
+        .. code-block:: yaml
+
+            - name: transform chair into parquet
+            source: input/items/furniture/chair.json
+            destination: intermediate/furniture/chair.parquet
+            - name: transform table into parquet
+            source: input/items/furniture/table.json
+            destination: intermediate/furniture/table.parquet
     """
 
     def __init__(self, spec: ExplodeGlobSpec, context: TaskContext) -> None:
