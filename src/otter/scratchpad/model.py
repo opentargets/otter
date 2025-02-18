@@ -1,0 +1,160 @@
+"""Scratchpad module.
+
+This module defines the `Scratchpad` class, which is a centralized place to store
+key-value pairs in the configuration of the application. It provides utilities to
+perform template substition.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from pathlib import Path
+from string import Template
+from types import NoneType
+from typing import Any
+
+from loguru import logger
+
+from otter.util.errors import ScratchpadError
+
+
+class ScratchpadTemplate(Template):
+    """Scratchpad Template class.
+
+    A subclass of `string.Template` that allows dots and spaces in placeholders,
+    and will keep sentinels there when the key is not found in the sentinel dict.
+    """
+
+    idpattern = r'(?a:[_a-z][._a-z0-9\s]*[_a-z0-9])'
+
+    def substitute(self, mapping: Mapping[str, object] = {}, **kwargs: Any) -> Any:
+        """Perform template substitution."""
+        mapping = {**mapping, **kwargs}
+
+        # build a new mapping that preserves missing values
+        def get_or_preserve(key: Any) -> Any:
+            if key in mapping:
+                return mapping[key]
+            return self.delimiter + '{' + key + '}'
+
+        preserved_mapping = {k: get_or_preserve(k) for k in self.get_identifiers()}
+        return super().safe_substitute(preserved_mapping)
+
+
+class Scratchpad:
+    """A class to store and replace placeholders in strings.
+
+    This class is used to store key-value pairs and replace placeholders in strings
+    with the corresponding values. The placeholders are defined in the strings
+    using the dollar sign followed by the placeholder name enclosed in curly braces,
+    e.g., `${person.name}`. The placeholders can include dots to represent nested
+    dictionaries or objects.
+
+    Example:
+        >>> scratchpad = Scratchpad()
+        >>> scratchpad.store('person.name', 'Alice')
+        >>> scratchpad.replace('Hello, ${person.name}!')
+        'Hello, Alice!'
+
+    The `Scratchpad` class is used to perform template substitution in a `Spec`,
+    right before the task intantiation.
+
+    .. seealso::  :py:meth:`otter.task.task_registry.TaskRegistry.instantiate`
+    """
+
+    def __init__(self, sentinel_dict: dict[str, Any] | None = None) -> None:
+        self.sentinel_dict: dict[str, Any] = sentinel_dict or {}
+        """A dictionary to store the key-value pairs."""
+
+    def store(self, key: str, value: str | list[str]) -> None:
+        """Store a key-value pair in the scratchpad.
+
+        Both strings and lists of strings are accepted as values. It might be
+        useful to extend it to accept dicts as well.
+
+        :param key: The key to store.
+        :type key: str
+        :param value: The value to store.
+        :type value: str | list[str]
+        """
+        self.sentinel_dict[key] = value
+
+    def merge(self, other: Scratchpad) -> None:
+        """Merge the sentinels from another scratchpad.
+
+        :param other: The scratchpad to merge.
+        :type other: Scratchpad
+        """
+        for key, value in other.sentinel_dict.items():
+            self.sentinel_dict[key] = value
+
+    def _replace(self, string: str, *, ignore_missing: bool = False) -> str:
+        """Replace placeholders in a string.
+
+        :param string: The string with placeholders to replace.
+        :type string: str
+        :return: The string with the placeholders replaced.
+        :rtype: str
+        :param ignore_missing: Whether to ignore missing keys in the scratchpad.
+            Defaults to `False`.
+        :type ignore_missing: bool
+        :raises ScratchpadError: If `self.ignore_missing` is `False` and one of
+            the placeholder in the string does not have a corresponding key in the
+            scratchpad.
+        """
+        replacer = ScratchpadTemplate(string)
+
+        try:
+            return replacer.substitute(self.sentinel_dict)
+        except KeyError as e:
+            if ignore_missing:
+                return str(string)
+            else:
+                logger.critical(f'key {e} not found in scratchpad')
+                raise ScratchpadError(e)
+
+    def _replace_any(self, v: Any, *, ignore_missing: bool = False) -> Any:
+        """Replace placeholders in a value.
+
+        :param v: The value with placeholders to replace.
+        :type v: Any
+        :return: The value with the placeholders replaced.
+        :rtype: Any
+        :param ignore_missing: Whether to ignore missing keys in the scratchpad.
+            Defaults to `False`.
+        :type ignore_missing: bool
+        :raises ScratchpadError: If `self.ignore_missing` is `False` and one of
+            the placeholder in the value does not have a corresponding key in the
+            scratchpad.
+        """
+        if isinstance(v, NoneType) or v == 'None':
+            return None
+        if isinstance(v, dict):
+            return self.replace_dict(v, ignore_missing=ignore_missing)  # type: ignore[arg-type]
+        if isinstance(v, list):
+            return [self._replace_any(e, ignore_missing=ignore_missing) for e in v]  # type: ignore[arg-type]
+        if isinstance(v, Path):
+            return Path(self._replace(str(v), ignore_missing=ignore_missing))
+        return self._replace(v, ignore_missing=ignore_missing)
+
+    def replace_dict(self, d: dict[str, Any], *, ignore_missing: bool = False) -> dict[str, Any]:
+        """Replace placeholders in a dictionary with the corresponding values.
+
+        :param d: The dictionary with placeholders to replace.
+        :type d: dict[str, Any]
+        :param ignore_missing: Whether to ignore missing keys in the scratchpad.
+            Defaults to `False`.
+        :type ignore_missing: bool
+        :return: The dictionary with the placeholders replaced by their values.
+        :rtype: dict[str, Any]
+        """
+        keys_to_ignore = {'task_type', 'scratchpad_ignore_missing'}
+
+        replaced_dict: dict[str, Any] = {}
+        for key, value in d.items():
+            if key in keys_to_ignore:
+                replaced_dict[key] = value
+                continue
+            replaced_dict[key] = self._replace_any(value, ignore_missing=ignore_missing)
+
+        return replaced_dict
