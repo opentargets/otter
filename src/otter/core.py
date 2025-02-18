@@ -24,8 +24,21 @@ class Runner:
         in debugging.
     """
 
-    def __init__(self) -> None:
-        self.config = load_config()
+    def __init__(self, name: str) -> None:
+        self.name = name
+        """The name of the runner.
+
+        This will identify the application using Otter. Usually an application
+        will have a single runner.
+
+        The is used as the prefix in environment variables and will also be
+        prepended to step names in the manifest. That way, multiple applications
+        can report steps with the same name without colliding.
+
+        The name should beetween 2 and 32 characters and only contain lowercase
+        letters, numbers and the underscore character.
+        """
+        self.config = load_config(self.name)
         init_logger(self.config.log_level)
         self.scratchpad = load_scratchpad(self.config.config_path)
         self.specs = load_specs(config_path=self.config.config_path, step_name=self.config.step)
@@ -72,6 +85,7 @@ class Runner:
         )
 
         manifest = ManifestManager(
+            runner_name=self.name,
             remote_uri=self.config.release_uri,
             local_path=self.config.work_path,
             relevant_step=step,

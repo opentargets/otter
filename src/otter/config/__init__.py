@@ -1,6 +1,7 @@
 """Configuration package."""
 
 import errno
+import re
 
 from loguru import logger
 from pydantic import ValidationError
@@ -13,20 +14,27 @@ from otter.util.errors import StepInvalidError, log_pydantic
 from otter.util.logger import init_logger
 
 
-def load_config() -> Config:
+def load_config(runner_name: str) -> Config:
     """Load the config.
 
     See :class:`otter.config.model.Config` for the ``Config`` object.
 
+    :param str runner_name: The name of the runner.
+    :type runner_name: str
     :return: The config object.
     :rtype: Config
     """
+    # first, check runner name
+    if re.compile(r'^[a-z][a-z0-9_]{1,31}$').match(runner_name) is None:
+        logger.critical(f'invalid runner name {runner_name}, must match ^[a-z][a-z0-9_]{{1,31}}$')
+        raise SystemExit(errno.EINVAL)
+
     # start with defaults
     dfl = Defaultconfig()
 
     # parse env vars and cli args
-    env = parse_env()
-    cli = parse_cli()
+    env = parse_env(runner_name)
+    cli = parse_cli(runner_name)
 
     # get the step
     step = cli.step or env.step

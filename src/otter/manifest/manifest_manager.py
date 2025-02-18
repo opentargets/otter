@@ -24,7 +24,15 @@ UPLOAD_COOLDOWN = 3
 class ManifestManager:
     """Class that manages the manifest file."""
 
-    def __init__(self, remote_uri: str | None, local_path: Path, relevant_step: Step, steps: list[str]) -> None:
+    def __init__(
+        self,
+        runner_name: str,
+        remote_uri: str | None,
+        local_path: Path,
+        relevant_step: Step,
+        steps: list[str],
+    ) -> None:
+        self.runner_name = runner_name
         self._steps = steps
         self.remote_uri = f'{remote_uri}/{MANIFEST_FILENAME}' if remote_uri else None
         self.local_path = local_path / MANIFEST_FILENAME
@@ -64,7 +72,8 @@ class ManifestManager:
         logger.info('creating empty manifest')
         manifest = RootManifest()
         for step in self._steps:
-            manifest.steps[step] = StepManifest(name=step)
+            step_name = f'{self.runner_name}.{step}'
+            manifest.steps[step_name] = StepManifest(name=step)
         return manifest
 
     def _validate(self, manifest_str: str) -> RootManifest:
@@ -131,7 +140,8 @@ class ManifestManager:
 
     def _update_step(self, step: Step) -> None:
         self.relevant_step = step
-        self.manifest.steps[step.name] = step.manifest
+        relevant_step_name = f'{self.runner_name}_{step.name}'
+        self.manifest.steps[relevant_step_name] = step.manifest
         self.manifest.modified_at = datetime.now()
         self._check_steps()
 

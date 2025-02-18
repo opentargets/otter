@@ -8,21 +8,22 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from otter.config.env import ENV_PREFIX
 from otter.config.model import BaseConfig
 
 if TYPE_CHECKING:
     from argparse import Action
 
 
-def config_to_env(var: str) -> str:
+def config_to_env(var: str, runner_name: str) -> str:
     """Convert a config variable name to its env var."""
-    return f'{ENV_PREFIX}_{var.upper()}'
+    return f'{runner_name.upper()}_{var.upper()}'
 
 
-def parse_cli() -> BaseConfig:
+def parse_cli(runner_name: str) -> BaseConfig:
     """Parse the command line arguments.
 
+    :param runner_name: The name of the runner.
+    :type runner_name: str
     :return: The parsed command line arguments.
     :rtype: BaseConfig
     """
@@ -31,7 +32,7 @@ def parse_cli() -> BaseConfig:
     class HelpFormatter(argparse.HelpFormatter):
         def _get_help_string(self, action: Action) -> str:
             if action.default is not argparse.SUPPRESS:
-                action.help = f'{action.help} (environment variable: {config_to_env(action.dest)})'
+                action.help = f'{action.help} (environment variable: {config_to_env(action.dest, runner_name)})'
                 default_value = BaseConfig.model_fields[action.dest].default
                 if default_value != '':  # noqa: PLC1901
                     action.help += f' (default: {default_value})'
@@ -45,7 +46,7 @@ def parse_cli() -> BaseConfig:
     parser.add_argument(
         '-s',
         '--step',
-        required=config_to_env('step') not in os.environ,
+        required=config_to_env('step', runner_name) not in os.environ,
         help='The step to run',
     )
 
