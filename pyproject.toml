@@ -186,7 +186,7 @@ parametrize-values-type = 'list'
 parametrize-values-row-type = 'tuple'
 
 [tool.ruff.lint.per-file-ignores]
-'**/*_test.py' = ['S108', 'S602', 'D']
+'src/test/*.py' = ['S108', 'S602', 'D']
 '**/__init__.py' = ['F401']
 '**/tasks/*.py' = ['D102']
 
