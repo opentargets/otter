@@ -61,19 +61,24 @@ class ExplodeGlob(Task):
               source: ${prefix}${match_path}${match_stem}${match_ext}
               destination: intermediate/${match_path}${math_stem}.parquet
 
-    for a directory structure like:
+    for a bucket containing two files:
 
-    ```
-    gs://release-25/input/items/furniture/chair.json
-    gs://release-25/input/items/furniture/table.json
-    ```
+    | gs://release-25/input/items/furniture/chair.json
+    | gs://release-25/input/items/furniture/table.json
 
-    if the ``release_uri`` is ``gs://release-25``, the values will be:
+    And `release_uri` set to ``gs://release-25``
 
-    ``prefix``: ``input/items/``
-    ``match_path``: ``furniture/``
-    ``match_stem``: ``chair``
-    ``match_ext``: ``.json``
+    the values will be:
+
+    .. table:: Scratchpad values
+    ==============  ================
+    key               value
+    ==============  ================
+    ``prefix``      ``input/items/``
+    ``match_path``  ``furniture/``
+    ``match_stem``  ``chair``
+    ``match_ext``   ``.json``
+    ==============  ================
 
     the first task will be duplicated twice, with the following specs:
 
