@@ -17,7 +17,10 @@ help:
 autobuild:
 	uv run sphinx-autobuild -b html $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(O) --host localhost --port 8000
 
-.PHONY: help Makefile autobuild
+clean:
+	rm -rf $(BUILDDIR)
+
+.PHONY: help Makefile autobuild clean
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
