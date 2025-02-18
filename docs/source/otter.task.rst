@@ -1,10 +1,14 @@
-task package
-============
+Task
+====
+
+The ``otter.task`` package contains the classes that are used to define the tasks,
+their specs, the task state, task registry, its context and the task reporter, in
+charge of maintaining the task part of the manifest.
 
 task.model module
 -----------------
 
-.. automodule:: psr.task.model
+.. automodule:: otter.task.model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,7 +16,7 @@ task.model module
 task.task\_registry module
 --------------------------
 
-.. automodule:: psr.task.task_registry
+.. automodule:: otter.task.task_registry
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +24,7 @@ task.task\_registry module
 task.task\_reporter module
 --------------------------
 
-.. automodule:: psr.task.task_reporter
+.. automodule:: otter.task.task_reporter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -28,7 +32,7 @@ task.task\_reporter module
 Module contents
 ---------------
 
-.. automodule:: psr.task
+.. automodule:: otter.task
    :members:
    :undoc-members:
    :show-inheritance:

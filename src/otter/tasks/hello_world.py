@@ -10,13 +10,10 @@ from otter.task.task_reporter import report
 
 
 class HelloWorldSpec(Spec):
-    """Configuration fields for the hello_world task.
-
-    This task has the following custom configuration fields:
-        - who (str): Optional. The person to greet in the output file. Defaults to 'world'.
-    """
+    """Configuration fields for the hello_world task."""
 
     who: str | None = 'world'
+    """The person to greet."""
 
 
 class HelloWorld(Task):
@@ -28,19 +25,15 @@ class HelloWorld(Task):
 
     @report
     def run(self) -> Self:
-        # configure
-        who = self.spec.who
-
-        # say hello
-        logger.success(f'hello {who}')
-
-        # create an artifact
+        """Say hello, then create an artifact about it."""
+        logger.success(f'hello {self.spec.who}')
         self.artifact = Artifact(source='me', destination=self.spec.who or 'world')
-
         return self
 
     @report
     def validate(self) -> Self:
-        # always pass validation, as an example
-        # if you do not validate a task, there is no need to implement validate
+        """Always pass.
+
+        If you don't want to validate anything, this method can be omitted.
+        """
         return self

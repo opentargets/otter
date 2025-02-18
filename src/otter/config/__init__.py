@@ -16,7 +16,7 @@ from otter.util.logger import init_logger
 def load_config() -> Config:
     """Load the config.
 
-    See :class:`otter.config.model.Config` for the `Config` object.
+    See :class:`otter.config.model.Config` for the ``Config`` object.
 
     :return: The config object.
     :rtype: Config

@@ -1,12 +1,13 @@
-config package
-==============
+Configuration
+=============
 
-This package contains the configuration models, parsers and utilities for PSR.
+The ``otter.config`` package contains the configuration models, parsers and utilities.
+
 
 config.model module
 -------------------
 
-.. automodule:: psr.config.model
+.. automodule:: otter.config.model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +16,7 @@ config.model module
 config.cli module
 -----------------
 
-.. automodule:: psr.config.cli
+.. automodule:: otter.config.cli
    :members:
    :undoc-members:
    :show-inheritance:
@@ -24,7 +25,7 @@ config.cli module
 config.env module
 -----------------
 
-.. automodule:: psr.config.env
+.. automodule:: otter.config.env
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,7 +33,7 @@ config.env module
 config.yaml module
 ------------------
 
-.. automodule:: psr.config.yaml
+.. automodule:: otter.config.yaml
    :members:
    :undoc-members:
    :show-inheritance:
@@ -41,7 +42,7 @@ config.yaml module
 Module contents
 ---------------
 
-.. automodule:: psr.config
+.. automodule:: otter.config
    :members:
    :undoc-members:
    :show-inheritance:

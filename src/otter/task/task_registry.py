@@ -29,6 +29,9 @@ class TaskRegistry:
 
     The registry is where a `Task` will be instantiated from when the `Step` is
     run. It contains the mapping of a `task_type` to its `Task` and `TaskSpec`.
+
+    .. note:: The :py:class:`otter.scratchpad.model.Scratchpad` placeholders are
+        replaced into the `Spec` here, right before the `Task` is instantiated.
     """
 
     def __init__(self, config: Config, scratchpad: Scratchpad) -> None:
@@ -42,6 +45,8 @@ class TaskRegistry:
 
         :param package_name: The name of the package to register tasks from.
         :type package_name: str
+        :raises SystemExit: If the package is not found, modules are missing the
+            expected class, or the class is not found in the module.
         """
         # determine list of files in the package
         try:

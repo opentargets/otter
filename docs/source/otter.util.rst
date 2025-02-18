@@ -1,10 +1,13 @@
-util package
-============
+Utilities
+=========
+
+The ``otter.util`` package contains utility modules for Otter, incluing errors
+used throughout the application.
 
 util.errors module
 ------------------
 
-.. automodule:: psr.util.errors
+.. automodule:: otter.util.errors
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,7 +15,7 @@ util.errors module
 util.fs module
 --------------
 
-.. automodule:: psr.util.fs
+.. automodule:: otter.util.fs
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +23,7 @@ util.fs module
 util.logger module
 ------------------
 
-.. automodule:: psr.util.logger
+.. automodule:: otter.util.logger
    :members:
    :undoc-members:
    :show-inheritance:
@@ -28,7 +31,7 @@ util.logger module
 Module contents
 ---------------
 
-.. automodule:: psr.util
+.. automodule:: otter.util
    :members:
    :undoc-members:
    :show-inheritance:

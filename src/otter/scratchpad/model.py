@@ -44,11 +44,11 @@ class ScratchpadTemplate(Template):
 class Scratchpad:
     """A class to store and replace placeholders in strings.
 
-    This class is used to store key-value pairs and replace placeholders in strings
-    with the corresponding values. The placeholders are defined in the strings
-    using the dollar sign followed by the placeholder name enclosed in curly braces,
-    e.g., `${person.name}`. The placeholders can include dots to represent nested
-    dictionaries or objects.
+    This class is used to store key-value pairs and replace placeholders in
+    strings with the corresponding values. The placeholders are defined in the
+    strings using the dollar sign followed by the placeholder name enclosed in
+    curly braces, e.g., ``${person.name}``. The placeholders can include dots to
+    represent nested dictionaries or objects.
 
     Example:
         >>> scratchpad = Scratchpad()
@@ -58,6 +58,26 @@ class Scratchpad:
 
     The `Scratchpad` class is used to perform template substitution in a `Spec`,
     right before the task intantiation.
+
+    .. important:: You can use internal scratchpads in tasks. For example, to have
+        private variables that are only replaced in one of the specs.
+
+        To be able to do this, however, you must set the
+        ``scratchpad_ignore_missing`` attribute to ``True`` in the task model.
+        This will allow the task to be instantiated even if keys are missing
+        from the global scratchpad.
+
+        You are responsible, however, of ensuring that the keys are present in
+        the internal scratchpad. It is good practice to leave the internal
+        scratchpad set to not ignore, so that you can catch missing keys.
+
+        To set the `scratchpad_ignore_missing` attribute, you can add this to
+        the spec definition:
+
+        .. code-block:: python
+
+            def model_post_init(self, __context: Any) -> None:
+                self.scratchpad_ignore_missing = True
 
     .. seealso::  :py:meth:`otter.task.task_registry.TaskRegistry.instantiate`
     """
@@ -96,9 +116,9 @@ class Scratchpad:
         :return: The string with the placeholders replaced.
         :rtype: str
         :param ignore_missing: Whether to ignore missing keys in the scratchpad.
-            Defaults to `False`.
+            Defaults to ``False``.
         :type ignore_missing: bool
-        :raises ScratchpadError: If `self.ignore_missing` is `False` and one of
+        :raises ScratchpadError: If ``self.ignore_missing`` is ``False`` and one of
             the placeholder in the string does not have a corresponding key in the
             scratchpad.
         """
@@ -121,9 +141,9 @@ class Scratchpad:
         :return: The value with the placeholders replaced.
         :rtype: Any
         :param ignore_missing: Whether to ignore missing keys in the scratchpad.
-            Defaults to `False`.
+            Defaults to ``False``.
         :type ignore_missing: bool
-        :raises ScratchpadError: If `self.ignore_missing` is `False` and one of
+        :raises ScratchpadError: If ``self.ignore_missing`` is ``False`` and one of
             the placeholder in the value does not have a corresponding key in the
             scratchpad.
         """
@@ -143,7 +163,7 @@ class Scratchpad:
         :param d: The dictionary with placeholders to replace.
         :type d: dict[str, Any]
         :param ignore_missing: Whether to ignore missing keys in the scratchpad.
-            Defaults to `False`.
+            Defaults to ``False``.
         :type ignore_missing: bool
         :return: The dictionary with the placeholders replaced by their values.
         :rtype: dict[str, Any]

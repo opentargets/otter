@@ -1,4 +1,4 @@
-"""Find out the file with the latest modification date among those in a prefix URI."""
+"""Find the last-modified file among those in a prefix URI."""
 
 from typing import Self
 
@@ -10,26 +10,23 @@ from otter.task.task_reporter import report
 
 
 class FindLatestSpec(Spec):
-    """Configuration fields for the find_latest task.
-
-    This task has the following custom configuration fields:
-        - source str: The prefix from where the file with the latest modification date will
-            be found.
-        - pattern str: Optional. The pattern to match files against. The pattern should be
-            a simple string match, preceded by an exclamation mark to exclude files. For
-            example, 'foo' will match all files containing 'foo', while '!foo' will exclude
-            all files containing 'foo'.
-        - scratchpad_key str: The scratchpad key where the path of the latest file will be
-            stored. Defaults to the task name.
-    """
+    """Configuration fields for the find_latest task."""
 
     source: str
+    """The prefix from where the file with the latest modification date will be
+        found."""
     pattern: str | None = None
+    """The pattern to match files against. The pattern should be a simple string
+        match, preceded by an exclamation mark to exclude files. For example,
+        ``foo`` will match only files containing ``foo``, while ``!foo`` will
+        exclude all files containing ``foo``."""
     scratchpad_key: str | None = None
+    """The scratchpad key where the path of the latest file will be stored.
+        Defaults to the task name."""
 
 
 class FindLatest(Task):
-    """Find out the file with the latest modification date among those in a prefix URI."""
+    """Find the last-modified file among those in a prefix URI."""
 
     def __init__(self, spec: FindLatestSpec, context: TaskContext) -> None:
         super().__init__(spec, context)

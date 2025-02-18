@@ -15,19 +15,12 @@ from otter.validators.file import file_exists, file_size
 
 
 class CopySpec(Spec):
-    """Configuration fields for the copy task.
-
-    This task has the following custom configuration fields:
-        - source (str): The URL of the file to download.
-        - destination (str): The path, relative to `release_uri` to upload the
-            file to.
-        - scratchpad_key (str): If present, the local path of the downloaded file
-            will be stored in the scratchpad under this key.
-    """
+    """Configuration fields for the copy task."""
 
     source: str
+    """The URL of the file to download."""
     destination: str
-    scratchpad_key: str | None = None
+    """The path, relative to `release_uri` to upload the file to."""
 
 
 class Copy(Task):
@@ -65,9 +58,6 @@ class Copy(Task):
             remote_storage = get_remote_storage(self.remote_uri)
             remote_storage.upload(self.local_path, self.remote_uri)
             logger.debug('upload successful')
-
-        if self.spec.scratchpad_key:
-            self.context.scratchpad.store(self.spec.scratchpad_key, str(self.local_path))
 
         self.artifacts = [Artifact(source=self.spec.source, destination=self.destination)]
         return self

@@ -10,16 +10,13 @@ from otter.task.task_reporter import report
 
 
 class ExplodeSpec(Spec):
-    """Configuration fields for the explode task.
-
-    This task has the following custom configuration fields:
-        - do (list[dict]): The tasks to explode. Each task in the list will be
-            duplicated for each iteration of the foreach list.
-        - foreach (list[str]): The list to iterate over.
-    """
+    """Configuration fields for the explode task."""
 
     do: list[Spec]
+    """The tasks to explode. Each task in the list will be duplicated for each
+        iteration of the foreach list."""
     foreach: list[str]
+    """The list to iterate over."""
 
     def model_post_init(self, __context: Any) -> None:
         # allows keys to be missing from the global scratchpad
@@ -43,19 +40,20 @@ class Explode(Task):
 
     .. code-block:: yaml
 
-    steps:
-        - explode species:
-          foreach:
-            - homo_sapiens
-            - mus_musculus
-            - drosophila_melanogaster
-          do:
-            - name: copy ${each} genes
-              source: https://example.com/genes/${each}/file.tsv
-              destination: genes-${each}.tsv
-            - name: copy ${each} proteins
-              source: https://example.com/proteins/${each}/file.tsv
-              destination: proteins-${each}.tsv
+        steps:
+            - explode species:
+            foreach:
+                - homo_sapiens
+                - mus_musculus
+                - drosophila_melanogaster
+            do:
+                - name: copy ${each} genes
+                source: https://example.com/genes/${each}/file.tsv
+                destination: genes-${each}.tsv
+                - name: copy ${each} proteins
+                source: https://example.com/proteins/${each}/file.tsv
+                destination: proteins-${each}.tsv
+
 
     Keep in mind this replacement of `each` will only be done in strings, not lists
     or sub-objects.

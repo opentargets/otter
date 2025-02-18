@@ -1,12 +1,13 @@
-storage package
-===============
+Storage
+=======
 
-This package contains classes for interacting with remote storage services.
+The ``otter.storage`` package contains classes for interacting with remote storage
+services.
 
 storage.model module
 --------------------
 
-.. automodule:: psr.storage.model
+.. automodule:: otter.storage.model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +15,7 @@ storage.model module
 storage.google module
 ---------------------
 
-.. automodule:: psr.storage.google
+.. automodule:: otter.storage.google
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +23,7 @@ storage.google module
 storage.noop module
 -------------------
 
-.. automodule:: psr.storage.noop
+.. automodule:: otter.storage.noop
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +31,7 @@ storage.noop module
 Module contents
 ---------------
 
-.. automodule:: psr.storage
+.. automodule:: otter.storage
    :members:
    :undoc-members:
    :show-inheritance:

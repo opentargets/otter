@@ -120,7 +120,10 @@ def step_logging(step: Step) -> Generator[None, None, None]:
 
 
 class MessageQueue:
-    """A queue for log messages."""
+    """A queue for log messages.
+
+    This class is used to hold log messages until the logger is configured.
+    """
 
     def __init__(self) -> None:
         self._log_queue: Queue[loguru.Message] = Queue()
@@ -133,7 +136,11 @@ class MessageQueue:
         """Dump the log messages to stdout."""
         while not self._log_queue.empty():
             msg = self._log_queue.get()
-            logger.patch(lambda r: None).log(msg.record['level'].name, msg.rstrip())
+
+            def patcher(record: loguru.Record) -> None:
+                record.update(msg.record)  # noqa: B023
+
+            logger.patch(patcher).log(msg.record['level'].name, msg.record['message'])
 
 
 _early_logs = MessageQueue()

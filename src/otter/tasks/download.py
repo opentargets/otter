@@ -14,21 +14,16 @@ from otter.validators.file import file_exists, file_size
 
 
 class DownloadSpec(Spec):
-    """Configuration fields for the download task.
-
-    This task has the following custom configuration fields:
-        - source (str): The URL of the file to download.
-    """
+    """Configuration fields for the download task."""
 
     source: str
+    """The URL of the file to download."""
     destination: Path
+    """The local path to download the file to."""
 
 
 class Download(Task):
-    """Download a file.
-
-    Downloads a file from a URL to a local destination.
-    """
+    """Download a file."""
 
     def __init__(self, spec: DownloadSpec, context: TaskContext) -> None:
         super().__init__(spec, context)
@@ -40,7 +35,6 @@ class Download(Task):
 
     @report
     def run(self) -> Self:
-        """Download a file from the source URL to the destination path."""
         download(self.spec.source, self.full_destination, abort=self.context.abort)
         self.artifact = Artifact(source=self.spec.source, destination=str(self.full_destination))
         logger.debug('download successful')

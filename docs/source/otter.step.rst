@@ -1,10 +1,14 @@
-step package
-============
+Step
+====
+
+The ``otter.step`` package contains the step model and all the mechanics for the
+parallel execution of tasks.
+
 
 model module
 ------------
 
-.. automodule:: psr.step.model
+.. automodule:: otter.step.model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,7 +16,7 @@ model module
 step\_reporter module
 ---------------------
 
-.. automodule:: psr.step.step_reporter
+.. automodule:: otter.step.step_reporter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +24,7 @@ step\_reporter module
 Module contents
 ---------------
 
-.. automodule:: psr.step
+.. automodule:: otter.step
    :members:
    :undoc-members:
    :show-inheritance:
