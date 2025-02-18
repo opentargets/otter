@@ -1,4 +1,4 @@
-name: Development build
+name: Publish dev version
 
 on:
   push:
@@ -17,6 +17,18 @@ jobs:
     uses: ./.github/workflows/build.yaml
     needs: ci
 
-  publish:
-    uses: ./.github/workflows/publish.yaml
+  publish-to-pypi:
+    name: Publish to PyPI 🐍
     needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/p/opentargets-otter
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distribution
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
