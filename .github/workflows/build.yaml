@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Wheel 📦
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Prepare tag
+        run: |
+          TAG=$(echo $TAG | sed 's/^v//')
+          echo "TAG=$TAG" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        name: Checkout code
+      - uses: coursier/cache-action@v6
+        name: Set up cache
+      - uses: astral-sh/setup-uv@v5
+        name: Set up uv
+      - name: Build Wheel
+        run: uv build
+      - uses: actions/upload-artifact@v4
+        name: Upload Wheel
+        with:
+          name: python-package-distribution
+          path: dist/
