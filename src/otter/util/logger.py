@@ -82,7 +82,7 @@ def get_format_log(include_task: bool = True) -> Callable[..., str]:
 
 
 @contextmanager
-def task_logging(task: Task) -> Generator[None, None, None]:
+def task_logging(task: Task) -> Generator[None]:
     """Context manager that appends log messages to the task's manifest.
 
     :param task: The task to log messages to.
@@ -101,7 +101,7 @@ def task_logging(task: Task) -> Generator[None, None, None]:
 
 
 @contextmanager
-def step_logging(step: Step) -> Generator[None, None, None]:
+def step_logging(step: Step) -> Generator[None]:
     """Context manager that appends log messages to the step's manifest.
 
     :param step: The step to log messages to.
