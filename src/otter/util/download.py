@@ -13,7 +13,7 @@ from urllib3 import HTTPResponse, Retry
 
 from otter.storage.google import GoogleStorage
 from otter.util.errors import DownloadError, TaskAbortedError
-from otter.util.fs import check_fs
+from otter.util.fs import check_destination
 
 REQUEST_TIMEOUT = 10
 
@@ -155,7 +155,7 @@ class DownloadHelper:
         logger.debug(f'preparing to download to {dst!s}')
         if isinstance(dst, str):
             dst = Path(dst)
-        check_fs(dst)
+        check_destination(dst, delete=True)
         return dst
 
     def _get_protocol(self, src: str) -> str:
