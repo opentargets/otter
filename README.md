@@ -2,7 +2,7 @@
 
 [![pypi](https://raster.shields.io/pypi/v/opentargets-otter.png)](https://pypi.org/project/opentargets-otter/)
 [![docs status](https://github.com/opentargets/otter/actions/workflows/docs.yaml/badge.svg)](https://opentargets.github.io/otter)
-[![build status](https://github.com/opentargets/otter/actions/workflows/build.yaml/badge.svg)](https://github.com/opentargets/otter/actions/workflows/build.yaml)
+[![build](https://github.com/opentargets/otter/actions/workflows/ci.yaml/badge.svg)](https://github.com/opentargets/otter/actions/workflows/ci.yaml)
 [![license](https://img.shields.io/github/license/opentargets/otter.svg)](LICENSE)
 
 Otter is a the task execution framework used in the Open Targets data Pipeline.
