@@ -69,6 +69,16 @@ class RemoteStorage(ABC):
         return []
 
     @abstractmethod
+    def glob(self, uri: str) -> list[str]:
+        """List blobs matching a pattern.
+
+        :param uri: The URI with a glob expression to match for.
+        :type uri: str
+        :return: A list of blob URIs.
+        :rtype: list[str]
+        """
+
+    @abstractmethod
     def download_to_file(self, uri: str, dst: Path) -> int:
         """Download a file to the local filesystem.
 

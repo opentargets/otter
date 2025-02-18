@@ -36,6 +36,10 @@ class NoopStorage(RemoteStorage):
         """List files."""
         raise NotFoundError(uri)
 
+    def glob(self, uri: str) -> list[str]:
+        """List files matching a glob pattern."""
+        raise NotFoundError(uri)
+
     def download_to_file(self, uri: str, dst: Path) -> int:
         """Download a file to the local filesystem."""
         raise NotFoundError(uri)

@@ -186,6 +186,24 @@ class GoogleStorage(RemoteStorage):
 
         return [f'gs://{bucket_name}/{blob_name}' for blob_name in blob_name_list]
 
+    def glob(self, uri: str) -> list[str]:
+        """List blobs matching a pattern.
+
+        :param uri: The URI with a glob expression to match for.
+        :type uri: str
+        :return: A list of blob URIs.
+        :rtype: list[str]
+        """
+        bucket_name, glob = self._parse_uri(uri)
+        bucket = self._get_bucket(bucket_name)
+
+        blob_names: list[str] = [n.name for n in list(bucket.list_blobs(match_glob=glob))]
+
+        if len(blob_names) == 0:
+            logger.warning(f'no files found matching glob {uri}')
+
+        return [f'gs://{bucket_name}/{blob_name}' for blob_name in blob_names]
+
     def download_to_file(self, uri: str, dst: Path) -> int:
         """Download a file from Google Cloud Storage to the local filesystem.
 
