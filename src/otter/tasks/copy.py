@@ -44,7 +44,6 @@ class Copy(Task):
         self.remote_uri: str | None = None
         if context.config.release_uri:
             self.remote_uri = f'{context.config.release_uri}/{spec.destination}'
-        self.destination = self.remote_uri or str(self.local_path)
 
     def _is_google_spreadsheet(self) -> bool:
         return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
@@ -59,7 +58,7 @@ class Copy(Task):
             remote_storage.upload(self.local_path, self.remote_uri)
             logger.debug('upload successful')
 
-        self.artifacts = [Artifact(source=self.spec.source, destination=self.destination)]
+        self.artifacts = [Artifact(source=self.spec.source, destination=self.remote_uri or str(self.local_path))]
         return self
 
     @report

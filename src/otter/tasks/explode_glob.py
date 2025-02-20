@@ -12,14 +12,15 @@ from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 
 
-def _split_glob(glob: str) -> tuple[str, str]:
-    """Get the prefix of a glob expression."""
+def _split_glob(s: str) -> tuple[str,str]:
+    """Return the prefix of a glob expression."""
     i = 0
-    while i < len(glob):
-        if glob[i] in ['*', '?', '{', '['] and (i == 0 or glob[i - 1] != '\\'):
-            return glob[:i], glob[i:]
+    while i < len(s):
+        if s[i] in ['*', '[', '{', '?'] and (i == 0 or s[i-1] != '\\'):
+            return s[:i], s[i:]
         i += 1
-    return glob, ''
+    return s, ''
+
 
 
 class ExplodeGlobSpec(Spec):
@@ -44,9 +45,10 @@ class ExplodeGlob(Task):
 
     The task will add the following keys to a local scratchpad:
 
-    - ``prefix``: the path up to the glob pattern and relative to either the \
-        :py:obj:`otter.config.model.Config.release_uri` or the :py:obj:`otter.config.model.Config.work_path`.
-    - ``match_path``: the part of the path that the glob matched **without** the \
+    - ``prefix``: the path up to the glob pattern and, in cases where possible,
+        relative to either the :py:obj:`otter.config.model.Config.release_uri` or
+        the :py:obj:`otter.config.model.Config.work_path`.
+    - ``match_path``: the part of the path that the glob matched **without** the
         file name.
     - ``match_stem``: the file name of the matched file **without** the extension.
     - ``match_ext``: the file extensions of the matched file, with the dot.
@@ -95,41 +97,65 @@ class ExplodeGlob(Task):
     def __init__(self, spec: ExplodeGlobSpec, context: TaskContext) -> None:
         super().__init__(spec, context)
         self.spec: ExplodeGlobSpec
-        self.prefix, _ = _split_glob(self.spec.glob)
-        self.scratchpad = Scratchpad({'prefix': self.prefix})
+        self.scratchpad = Scratchpad()
 
         if not self.context.config.release_uri:
             raise ValueError('release_uri is required for explode_glob')
 
-        prefix = self.context.config.release_uri or self.context.config.work_path
-        self.full_glob_path = f'{prefix}/{self.spec.glob}'
+        # if glob is relative, we append release_uri
+        self.glob = self.spec.glob
+        if '://' not in self.glob:
+            self.glob = f'{self.context.config.release_uri}/{self.spec.glob}'
 
     @report
     def run(self) -> Self:
-        if self.context.config.release_uri:
-            # when release_uri is set, we glob from the remote storage
-            remote_storage = get_remote_storage(self.full_glob_path)
-            files = remote_storage.glob(self.full_glob_path)
-        else:
-            # when release_uri is not set, we glob from the local filesystem
-            prefix, glob = _split_glob(self.full_glob_path)
-            files = list(Path(prefix).glob(glob))
+        remote_storage = get_remote_storage(self.glob)
+        files = remote_storage.glob(self.glob)
 
         new_tasks = 0
 
+    # - ``uri``: the full file path
+    # - ``match_prefix``: the path up to the glob pattern and, in cases where possible,
+    #     relative to :py:obj:`otter.config.model.Config.release_uri`.
+    # - ``match_path``: the part of the path that the glob matched **without** the
+    #     file name.
+    # - ``match_stem``: the file name of the matched file **without** the extension.
+    # - ``match_ext``: the file extensions of the matched file, with the dot.
+    # - ``uuid``: an UUID4, in case it is needed to generate unique names.
+
         for f in files:
-            # store the part of the path that the glob matched
-            relative_path = Path(str(f).split(self.prefix)[1])
-            match_path = str(relative_path.parent) + '/'
-            # remove empty path parts
-            if match_path == './':
+            uri = f
+            print("URI: ", uri)
+            match_prefix, glob = _split_glob(self.glob)
+            print("Match Prefix: ", match_prefix)
+            print("Glob: ", glob)
+            match = uri.replace(match_prefix, '')
+            print("Match: ", match)
+            split_match = match.rsplit('/',1)
+            if len(split_match) ==2 :
+                match_path, match_filename = split_match
+            else:
                 match_path = ''
-            match_stem = relative_path.stem
-            match_ext = relative_path.suffix
+                match_filename = split_match[0]
+            print("Match Path: ", match_path)
+            print("Match Filename: ", match_filename)
+            split_filename = match_filename.rsplit('.',1)
+            if len(split_filename) == 2:
+                match_stem, match_ext = split_filename
+            else:
+                match_stem = split_filename[0]
+                match_ext = ''
+            print("Match Stem: ", match_stem)
+            print("Match Ext: ", match_ext)
+
+            self.scratchpad.store('uri', uri)
+            self.scratchpad.store('match_prefix', match_prefix.replace(self.context.config.release_uri, ''))
             self.scratchpad.store('match_path', match_path)
             self.scratchpad.store('match_stem', match_stem)
             self.scratchpad.store('match_ext', match_ext)
             self.scratchpad.store('uuid', str(uuid4()))
+
+            print(self.scratchpad.sentinel_dict)
 
             for do_spec in self.spec.do:
                 replaced_do_spec = Spec.model_validate(self.scratchpad.replace_dict(do_spec.model_dump()))
