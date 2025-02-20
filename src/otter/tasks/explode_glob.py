@@ -1,6 +1,5 @@
 """Generate more tasks based on a glob."""
 
-from pathlib import Path
 from typing import Any, Self
 from uuid import uuid4
 
@@ -12,15 +11,14 @@ from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 
 
-def _split_glob(s: str) -> tuple[str,str]:
+def _split_glob(s: str) -> tuple[str, str]:
     """Return the prefix of a glob expression."""
     i = 0
     while i < len(s):
-        if s[i] in ['*', '[', '{', '?'] and (i == 0 or s[i-1] != '\\'):
+        if s[i] in ['*', '[', '{', '?'] and (i == 0 or s[i - 1] != '\\'):
             return s[:i], s[i:]
         i += 1
     return s, ''
-
 
 
 class ExplodeGlobSpec(Spec):
@@ -45,9 +43,9 @@ class ExplodeGlob(Task):
 
     The task will add the following keys to a local scratchpad:
 
-    - ``prefix``: the path up to the glob pattern and, in cases where possible,
-        relative to either the :py:obj:`otter.config.model.Config.release_uri` or
-        the :py:obj:`otter.config.model.Config.work_path`.
+    - ``uri``: the full file path
+    - ``match_prefix``: the path up to the glob pattern and, in cases where possible,
+        relative to :py:obj:`otter.config.model.Config.release_uri`.
     - ``match_path``: the part of the path that the glob matched **without** the
         file name.
     - ``match_stem``: the file name of the matched file **without** the extension.
@@ -60,7 +58,7 @@ class ExplodeGlob(Task):
           glob: 'gs://release-25/input/items/**/*.json'
           do:
             - name: transform ${match_stem} into parquet
-              source: ${prefix}${match_path}${match_stem}${match_ext}
+              source: ${uri}
               destination: intermediate/${match_path}${math_stem}.parquet
 
     for a bucket containing two files:
@@ -72,26 +70,31 @@ class ExplodeGlob(Task):
 
     the values will be:
 
-    .. table:: Scratchpad values
-    ==============  ================
-    key               value
-    ==============  ================
-    ``prefix``      ``input/items/``
-    ``match_path``  ``furniture/``
-    ``match_stem``  ``chair``
-    ``match_ext``   ``.json``
-    ==============  ================
+    .. table:: Scratchpad values for the first task
+        :class: custom
+
+        =================  =====================================================
+         key               value
+        =================  =====================================================
+         ``uri``           ``gs://release-25/input/items/furniture/chair.json``
+         ``match_prefix``  ``input/items/``
+         ``match_path``    ``furniture/``
+         ``match_stem``    ``chair``
+         ``match_ext``     ``.json``
+         ``uuid``          ``<uuid>``
+        =================  =====================================================
 
     the first task will be duplicated twice, with the following specs:
 
         .. code-block:: yaml
 
             - name: transform chair into parquet
-            source: input/items/furniture/chair.json
-            destination: intermediate/furniture/chair.parquet
+              source: input/items/furniture/chair.json
+              destination: intermediate/furniture/chair.parquet
             - name: transform table into parquet
-            source: input/items/furniture/table.json
-            destination: intermediate/furniture/table.parquet
+              source: input/items/furniture/table.json
+              destination: intermediate/furniture/table.parquet
+
     """
 
     def __init__(self, spec: ExplodeGlobSpec, context: TaskContext) -> None:
@@ -114,48 +117,31 @@ class ExplodeGlob(Task):
 
         new_tasks = 0
 
-    # - ``uri``: the full file path
-    # - ``match_prefix``: the path up to the glob pattern and, in cases where possible,
-    #     relative to :py:obj:`otter.config.model.Config.release_uri`.
-    # - ``match_path``: the part of the path that the glob matched **without** the
-    #     file name.
-    # - ``match_stem``: the file name of the matched file **without** the extension.
-    # - ``match_ext``: the file extensions of the matched file, with the dot.
-    # - ``uuid``: an UUID4, in case it is needed to generate unique names.
-
         for f in files:
             uri = f
-            print("URI: ", uri)
-            match_prefix, glob = _split_glob(self.glob)
-            print("Match Prefix: ", match_prefix)
-            print("Glob: ", glob)
+            match_prefix, _ = _split_glob(self.glob)
             match = uri.replace(match_prefix, '')
-            print("Match: ", match)
-            split_match = match.rsplit('/',1)
-            if len(split_match) ==2 :
+            split_match = match.rsplit('/', 1)
+            if len(split_match) == 2:
                 match_path, match_filename = split_match
             else:
                 match_path = ''
                 match_filename = split_match[0]
-            print("Match Path: ", match_path)
-            print("Match Filename: ", match_filename)
-            split_filename = match_filename.rsplit('.',1)
+            split_filename = match_filename.rsplit('.', 1)
             if len(split_filename) == 2:
                 match_stem, match_ext = split_filename
             else:
                 match_stem = split_filename[0]
                 match_ext = ''
-            print("Match Stem: ", match_stem)
-            print("Match Ext: ", match_ext)
+            if self.context.config.release_uri:
+                match_prefix = match_prefix.replace(self.context.config.release_uri, '')
 
             self.scratchpad.store('uri', uri)
-            self.scratchpad.store('match_prefix', match_prefix.replace(self.context.config.release_uri, ''))
+            self.scratchpad.store('match_prefix', match_prefix)
             self.scratchpad.store('match_path', match_path)
             self.scratchpad.store('match_stem', match_stem)
             self.scratchpad.store('match_ext', match_ext)
             self.scratchpad.store('uuid', str(uuid4()))
-
-            print(self.scratchpad.sentinel_dict)
 
             for do_spec in self.spec.do:
                 replaced_do_spec = Spec.model_validate(self.scratchpad.replace_dict(do_spec.model_dump()))
