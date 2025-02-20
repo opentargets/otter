@@ -1,5 +1,9 @@
 """Main module."""
 
+from importlib.metadata import version
+
+from loguru import logger
+
 from otter.config import load_config
 from otter.manifest.manifest_manager import ManifestManager
 from otter.scratchpad import load_scratchpad
@@ -40,6 +44,7 @@ class Runner:
         """
         self.config = load_config(self.name)
         init_logger(self.config.log_level)
+        logger.info(f'otter v{version("opentargets-otter")} starting!')
         self.scratchpad = load_scratchpad(self.config.config_path)
         self.specs = load_specs(config_path=self.config.config_path, step_name=self.config.step)
         self.task_registry = TaskRegistry(self.config, self.scratchpad)
