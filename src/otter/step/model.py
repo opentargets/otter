@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import errno
+import signal
 from concurrent.futures import Future, ProcessPoolExecutor, wait
 from multiprocessing import Manager
 from threading import Event
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
@@ -131,8 +133,19 @@ class Step(StepReporter):
             abort = manager.Event()
             futures: dict[str, Future[Task]] = {}
 
+            def handle_sigint(*args: Any) -> None:
+                logger.error('caught sigint, aborting')
+                abort.set()
+                manager.shutdown()
+                raise SystemExit(errno.ECANCELED)
+
+            signal.signal(signal.SIGINT, handle_sigint)
+
             try:
                 while not self._is_step_done():
+                    if abort.is_set():
+                        raise StepFailedError('step aborted')
+
                     # instantiate new tasks from specs
                     ready_specs = self._get_ready_specs()
                     if ready_specs:
