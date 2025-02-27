@@ -132,6 +132,7 @@ class ManifestManager:
         """Check the result for all steps and update the root."""
         step_manifests = self.manifest.steps.values()
         if any(step.result in [Result.FAILURE, Result.ABORTED] for step in step_manifests):
+            logger.warning('there are failed steps in the manifest')
             self.manifest.result = Result.FAILURE
         elif all(step.result is Result.SUCCESS for step in step_manifests):
             self.manifest.result = Result.SUCCESS
@@ -145,20 +146,24 @@ class ManifestManager:
         self.manifest.modified_at = datetime.now()
         self._check_steps()
 
-    def complete(self, step: Step) -> None:
+    def complete(self, step: Step) -> Result:
         """Complete the manifest.
 
         Updates the step in the manifest, and then saves it locally and in the
         remote storage if a release URI is provided.
 
+        Returns the result of the step.
+
         :param step: The step to update.
         :type step: Step
+        :return: The result of the step.
+        :rtype: Result
         """
         self._update_step(step)
 
         with step_logging(step):
             if step.manifest.result is not Result.SUCCESS:
-                logger.error(f'step {step.name} did not complete successfully')
+                logger.warning(f'step {step.name} did not complete successfully')
             else:
                 logger.success(f'step {step.name} completed successfully')
                 if self.manifest.result is Result.SUCCESS:
@@ -166,3 +171,5 @@ class ManifestManager:
 
         self._save_local()
         self._save_remote()
+
+        return step.manifest.result

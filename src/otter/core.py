@@ -6,6 +6,7 @@ from loguru import logger
 
 from otter.config import load_config
 from otter.manifest.manifest_manager import ManifestManager
+from otter.manifest.model import Result
 from otter.scratchpad import load_scratchpad
 from otter.step.model import Step
 from otter.task import load_specs
@@ -98,4 +99,8 @@ class Runner:
         )
 
         step.run()
-        manifest.complete(step)
+        result = manifest.complete(step)
+
+        if result != Result.SUCCESS:
+            logger.error(f' step {self.config.step} failed to run')
+            raise SystemExit(1)
