@@ -16,7 +16,7 @@ def _split_glob(s: str) -> tuple[str, str]:
     i = 0
     while i < len(s):
         if s[i] in ['*', '[', '{', '?'] and (i == 0 or s[i - 1] != '\\'):
-            return s[:i], s[i:]
+            return s[:i], s[i:].strip('/')
         i += 1
     return s, ''
 
@@ -77,8 +77,8 @@ class ExplodeGlob(Task):
          key               value
         =================  =====================================================
          ``uri``           ``gs://release-25/input/items/furniture/chair.json``
-         ``match_prefix``  ``input/items/``
-         ``match_path``    ``furniture/``
+         ``match_prefix``  ``input/items``
+         ``match_path``    ``furniture``
          ``match_stem``    ``chair``
          ``match_ext``     ``.json``
          ``uuid``          ``<uuid>``
@@ -134,7 +134,7 @@ class ExplodeGlob(Task):
                 match_stem = split_filename[0]
                 match_ext = ''
             if self.context.config.release_uri:
-                match_prefix = match_prefix.replace(self.context.config.release_uri, '')
+                match_prefix = match_prefix.replace(self.context.config.release_uri, '').strip('/')
 
             self.scratchpad.store('uri', uri)
             self.scratchpad.store('match_prefix', match_prefix)
