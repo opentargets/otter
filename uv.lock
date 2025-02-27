@@ -425,7 +425,7 @@ wheels = [
 
 [[package]]
 name = "opentargets-otter"
-version = "25.0.0a12"
+version = "25.0.0a13"
 source = { editable = "." }
 dependencies = [
     { name = "filelock" },
