@@ -16,7 +16,7 @@ def _split_glob(s: str) -> tuple[str, str]:
     i = 0
     while i < len(s):
         if s[i] in ['*', '[', '{', '?'] and (i == 0 or s[i - 1] != '\\'):
-            return s[:i], s[i:].strip('/')
+            return s[:i], s[i:].lstrip('/')
         i += 1
     return s, ''
 
@@ -47,7 +47,8 @@ class ExplodeGlob(Task):
     - ``match_prefix``: the path up to the glob pattern and, in cases where possible,
         relative to :py:obj:`otter.config.model.Config.release_uri`.
     - ``match_path``: the part of the path that the glob matched **without** the
-        file name.
+        file name. **NOTE** that this will always end with a slash, so do not include
+        it in the templating.
     - ``match_stem``: the file name of the matched file **without** the extension.
     - ``match_ext``: the file extensions of the matched file, with the dot.
     - ``uuid``: an UUID4, in case it is needed to generate unique names.
@@ -78,7 +79,7 @@ class ExplodeGlob(Task):
         =================  =====================================================
          ``uri``           ``gs://release-25/input/items/furniture/chair.json``
          ``match_prefix``  ``input/items``
-         ``match_path``    ``furniture``
+         ``match_path``    ``furniture/``
          ``match_stem``    ``chair``
          ``match_ext``     ``.json``
          ``uuid``          ``<uuid>``
@@ -124,6 +125,7 @@ class ExplodeGlob(Task):
             split_match = match.rsplit('/', 1)
             if len(split_match) == 2:
                 match_path, match_filename = split_match
+                match_path = f'{match_path}/'
             else:
                 match_path = ''
                 match_filename = split_match[0]
