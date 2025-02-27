@@ -55,6 +55,7 @@ class GoogleStorage(RemoteStorage):
             sys.exit(1)
 
         self.credentials = credentials
+        self.project_id = project_id
         self.client = storage.Client(credentials=credentials)
 
     @classmethod
@@ -71,7 +72,9 @@ class GoogleStorage(RemoteStorage):
 
     def _get_bucket(self, bucket_name: str) -> storage.Bucket:
         try:
-            return self.client.get_bucket(bucket_name)
+            bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+            bucket.reload()
+            return bucket
         except NotFound:
             raise NotFoundError(bucket_name)
         except GoogleAPICallError as e:
