@@ -1,0 +1,199 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Task" href="otter.task.html" />
+    <link rel="prev" title="Core" href="otter.core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      25.0.0a14
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Step</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step.model">model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.model.Step"><code class="docutils literal notranslate"><span class="pre">Step</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.run"><code class="docutils literal notranslate"><span class="pre">Step.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step.step_reporter">step_reporter module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.step_reporter.StepReporter"><code class="docutils literal notranslate"><span class="pre">StepReporter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.step_reporter.StepReporter.start_run"><code class="docutils literal notranslate"><span class="pre">StepReporter.start_run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.step_reporter.StepReporter.finish_validation"><code class="docutils literal notranslate"><span class="pre">StepReporter.finish_validation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.step_reporter.StepReporter.fail"><code class="docutils literal notranslate"><span class="pre">StepReporter.fail()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.step_reporter.StepReporter.upsert_task_manifests"><code class="docutils literal notranslate"><span class="pre">StepReporter.upsert_task_manifests()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Step</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.step.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="step">
+<h1>Step<a class="headerlink" href="#step" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.step</span></code> package contains the step model and all the mechanics for the
+parallel execution of tasks.</p>
+<section id="module-otter.step.model">
+<span id="model-module"></span><h2>model module<a class="headerlink" href="#module-otter.step.model" title="Link to this heading"></a></h2>
+<p>Step module.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.step.model.Step">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otter.step.model.</span></span><span class="sig-name descname"><span class="pre">Step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_registry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.task_registry.TaskRegistry" title="otter.task.task_registry.TaskRegistry"><span class="pre">TaskRegistry</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/step/model.html#Step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.model.Step" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.step.step_reporter.StepReporter" title="otter.step.step_reporter.StepReporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StepReporter</span></code></a></p>
+<p>Step class.</p>
+<p>This class represents a step in the pipeline.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.model.Step.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.step.model.Step" title="otter.step.model.Step"><span class="pre">Step</span></a></span></span><a class="reference internal" href="_modules/otter/step/model.html#Step.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.model.Step.run" title="Link to this definition"></a></dt>
+<dd><p>Run the step.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.step.step_reporter">
+<span id="step-reporter-module"></span><h2>step_reporter module<a class="headerlink" href="#module-otter.step.step_reporter" title="Link to this heading"></a></h2>
+<p>StepReporter class and report decorator for logging and updating steps in the manifest.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.step.step_reporter.StepReporter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otter.step.step_reporter.</span></span><span class="sig-name descname"><span class="pre">StepReporter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/step/step_reporter.html#StepReporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.step_reporter.StepReporter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for logging and updating steps in the manifest.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.step_reporter.StepReporter.start_run">
+<span class="sig-name descname"><span class="pre">start_run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/step_reporter.html#StepReporter.start_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.step_reporter.StepReporter.start_run" title="Link to this definition"></a></dt>
+<dd><p>Update a step that has started running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.step_reporter.StepReporter.finish_validation">
+<span class="sig-name descname"><span class="pre">finish_validation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/step_reporter.html#StepReporter.finish_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.step_reporter.StepReporter.finish_validation" title="Link to this definition"></a></dt>
+<dd><p>Update a step that has finished validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.step_reporter.StepReporter.fail">
+<span class="sig-name descname"><span class="pre">fail</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/step_reporter.html#StepReporter.fail"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.step_reporter.StepReporter.fail" title="Link to this definition"></a></dt>
+<dd><p>Update a step that has failed running or validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.step_reporter.StepReporter.upsert_task_manifests">
+<span class="sig-name descname"><span class="pre">upsert_task_manifests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.task_reporter.TaskReporter" title="otter.task.task_reporter.TaskReporter"><span class="pre">TaskReporter</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/step_reporter.html#StepReporter.upsert_task_manifests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.step_reporter.StepReporter.upsert_task_manifests" title="Link to this definition"></a></dt>
+<dd><p>Update the step manifest with new task manifests.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.step">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.step" title="Link to this heading"></a></h2>
+<p>Step module.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.core.html" class="btn btn-neutral float-left" title="Core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.task.html" class="btn btn-neutral float-right" title="Task" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
