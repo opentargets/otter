@@ -44,10 +44,10 @@ class ExplodeGlob(Task):
     The task will add the following keys to a local scratchpad:
 
     - ``uri``: the full file path
-    - ``match_prefix``: the path up to the glob pattern and, in cases where possible,
+    - ``match_prefix``: the path up to the glob pattern and, in cases where possible, \
         relative to :py:obj:`otter.config.model.Config.release_uri`.
-    - ``match_path``: the part of the path that the glob matched **without** the
-        file name. **NOTE** that this will always end with a slash, so do not include
+    - ``match_path``: the part of the path that the glob matched **without** the \
+        file name. **NOTE** this will always end with a slash, so do not include \
         it in the templating.
     - ``match_stem``: the file name of the matched file **without** the extension.
     - ``match_ext``: the file extensions of the matched file, with the dot.

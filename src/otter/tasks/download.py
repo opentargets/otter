@@ -30,10 +30,10 @@ class Download(Task):
     Downloads a file from `source` to `destination`. There are a few defaults and
     conveniences built in to the task:
 
-    - If `source` does not contain a protocol (``://`` not present), the `release_uri`
+    - If `source` does not contain a protocol (``://`` not present), the `release_uri` \
         will be prepended to the source.
 
-    - If `destination` is not provided, the file will be downloaded to the same path
+    - If `destination` is not provided, the file will be downloaded to the same path \
         as the source, prepending the work path.
 
     Those two together are useful for downloading files from the release bucket.
