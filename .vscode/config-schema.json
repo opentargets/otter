@@ -15,8 +15,7 @@
     },
     "release_uri": {
       "type": "string",
-      "description": "Remote storage URI (without trailing slash) where the results will be uploaded. This setting is optional, and if not provided, the results will be stored only locally.",
-      "pattern": "^gs://"
+      "description": "Remote storage URI (without trailing slash) where the results will be uploaded. This setting is optional, and if not provided, the results will be stored only locally."
     },
     "log_level": {
       "type": "string",
