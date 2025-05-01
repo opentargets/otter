@@ -72,7 +72,7 @@ class ManifestManager:
         logger.info('creating empty manifest')
         manifest = RootManifest()
         for step in self._steps:
-            step_name = f'{self.runner_name}.{step}'
+            step_name = self.manifest_step_name(step)
             manifest.steps[step_name] = StepManifest(name=step)
         return manifest
 
@@ -141,10 +141,22 @@ class ManifestManager:
 
     def _update_step(self, step: Step) -> None:
         self.relevant_step = step
-        relevant_step_name = f'{self.runner_name}_{step.name}'
+        relevant_step_name = self.manifest_step_name(step)
         self.manifest.steps[relevant_step_name] = step.manifest
         self.manifest.modified_at = datetime.now()
         self._check_steps()
+
+    def manifest_step_name(self, step: str | Step) -> str:
+        """Get the manifest step name for a given step or step name.
+
+        :param step: The step name or Step to get the manifest name for.
+        :type step: str | Step
+        :return: The manifest step name.
+        :rtype: str
+        """
+        if isinstance(step, Step):
+            step = step.name
+        return f'{self.runner_name}_{step}'
 
     def complete(self, step: Step) -> Result:
         """Complete the manifest.
