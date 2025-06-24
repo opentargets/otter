@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 import loguru
 from loguru import logger
 
+_runner_name = globals().get('__app_name__', 'otter')
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -28,8 +30,8 @@ def get_exception_info(record_exception: loguru.RecordException | None) -> tuple
     do this, the error will be logged as raising from the in the report decorator,
     which is not very useful.
 
-    Args:
-        record_exception: The exception record.
+    :param record_exception: The exception record to extract the information from.
+    :type record_exception: loguru.RecordException | None
     """
     name = '{name}'
     func = '{function}'
@@ -42,10 +44,9 @@ def get_exception_info(record_exception: loguru.RecordException | None) -> tuple
             return name, func, line
 
         # go back in the stack to the first frame originated inside the app
-        app_name = globals()['__package__'].split('.')[0]
         while tb.tb_next:
             next_name = tb.tb_next.tb_frame.f_globals.get('__name__', None)
-            if app_name not in next_name:
+            if not next_name or _runner_name not in next_name:
                 break
             name = next_name
             tb = tb.tb_next
@@ -149,16 +150,20 @@ logger.add(sink=_early_logs.put, level='TRACE')
 logger.debug('early logger configured')
 
 
-def init_logger(log_level: str = 'INFO') -> None:
+def init_logger(log_level: str = 'INFO', app_name: str | None = None) -> None:
     """Initialize the logger.
 
     Once the logger is set up, dumps the log messages held in the queue.
 
     :param log_level: The log level to use.
     :type log_level: str
-    :param message_queue: The message queue.
-    :type message_queue: MessageQueue
+    :param app_name: The name of the Otter application, defaults to `otter`.
+    :type app_name: str | None
     """
+    if app_name is not None:
+        global _runner_name  # noqa: PLW0603
+        _runner_name = app_name
+
     logger.remove()
     logger.add(sink=sys.stdout, level=log_level, format=get_format_log())
     _early_logs.flush()

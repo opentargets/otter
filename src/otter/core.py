@@ -44,7 +44,7 @@ class Runner:
         letters, numbers and the underscore character.
         """
         self.config = load_config(self.name)
-        init_logger(self.config.log_level)
+        init_logger(self.config.log_level, self.name)
         logger.info(f'otter v{version("opentargets-otter")} starting!')
         self.scratchpad = load_scratchpad(self.config.config_path)
         self.specs = load_specs(config_path=self.config.config_path, step_name=self.config.step)
