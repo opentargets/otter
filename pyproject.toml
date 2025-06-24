@@ -7,31 +7,31 @@ requires-python = ">=3.13"
 authors = [{ name = "Open Targets Core Team", email = "devs@opentargets.net" }]
 license = { text = "Apache-2.0" }
 dependencies = [
-  "filelock==3.17.0",
-  "google-cloud-storage==3.0.0",
+  "filelock==3.18.0",
+  "google-cloud-storage==3.1.1",
   "loguru==0.7.3",
-  "pydantic==2.10.6",
+  "pydantic==2.11.7",
   "PyYAML==6.0.2",
-  "requests==2.32.3",
-  "urllib3==2.3.0",              # must be <= 2 for elasticsearch, see overrides
+  "requests==2.32.4",
+  "urllib3==2.5.0",              # must be <= 2 for elasticsearch, see overrides
 ]
 
 [dependency-groups]
-dev = ["ruff==0.9.6", "deptry==0.23.0"]
+dev = ["ruff==0.12.0", "deptry==0.23.0"]
 
 [project.optional-dependencies]
 test = [
-  "coverage==7.6.10",
-  "freezegun==1.5.1",
-  "pytest==8.3.4",
-  "pytest-mock==3.14.0",
+  "coverage==7.9.1",
+  "freezegun==1.5.2",
+  "pytest==8.4.1",
+  "pytest-mock==3.14.1",
 ]
 docs = [
   "autodoc-pydantic>=2.2.0",
   "sphinx-autobuild>=2024.10.3",
-  "sphinx-issues>=5.0.0",
+  "sphinx-issues>=5.0.1",
   "sphinx-rtd-theme>=3.0.2",
-  "sphinx>=8.1.3",
+  "sphinx>=8.2.3",
   "esbonio>=0.16.5",
 ]
 
