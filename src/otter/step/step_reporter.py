@@ -23,24 +23,20 @@ class StepReporter:
         self.name = name
         self.manifest: StepManifest = StepManifest(name=name)
 
-    def start_run(self) -> None:
+    def start(self) -> None:
         """Update a step that has started running."""
         self.manifest.started_run_at = datetime.now(UTC)
         logger.success(f'step {self.name} started running')
 
-    def finish_validation(self) -> None:
-        """Update a step that has finished validation."""
+    def finish(self) -> None:
+        """Update a step that has finished running."""
+        self.manifest.finished_run_at = datetime.now(UTC)
         if all(t.result == Result.SUCCESS for t in self.manifest.tasks):
             self.manifest.result = Result.SUCCESS
+            logger.success(f'step {self.name} completed: took {self.manifest.elapsed:.3f}s')
         else:
             self.manifest.result = Result.FAILURE
-        self.manifest.finished_run_at = datetime.now(UTC)
-        logger.success(f'step {self.name} completed: took {self.manifest.elapsed:.3f}s')
-
-    def fail(self) -> None:
-        """Update a step that has failed running or validation."""
-        self.manifest.result = Result.FAILURE
-        logger.opt(exception=sys.exc_info()).error(f'step {self.name} failed')
+            logger.opt(exception=sys.exc_info()).error(f'step {self.name} failed')
 
     def upsert_task_manifests(self, result: Sequence[TaskReporter]) -> None:
         """Update the step manifest with new task manifests."""

@@ -127,7 +127,7 @@ class Step(StepReporter):
 
     def run(self) -> Step:
         """Run the step."""
-        self.start_run()
+        self.start()
 
         with Manager() as manager, ProcessPoolExecutor(max_workers=self.config.pool_size) as executor:
             abort = manager.Event()
@@ -168,13 +168,9 @@ class Step(StepReporter):
                             self._process_results([completed_task])
                             self.upsert_task_manifests([completed_task])
 
-            except Exception as e:
+            except Exception:
                 abort.set()
-                self.fail()
-                raise StepFailedError(e)
 
-            logger.success(f'step {self.name} finished')
-
-            self.finish_validation()
+            self.finish()
 
         return self
