@@ -99,8 +99,5 @@ class Runner:
         )
 
         step.run()
-        result = manifest.complete(step)
 
-        if result != Result.SUCCESS:
-            logger.error(f' step {self.config.step} failed to run')
-            raise SystemExit(1)
+        manifest.complete(step)
