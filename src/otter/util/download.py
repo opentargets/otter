@@ -161,7 +161,7 @@ class DownloadHelper:
     def _get_protocol(self, src: str) -> str:
         if src.startswith('https://docs.google.com/spreadsheets/d'):
             return 'google_sheets'
-        return src.split(':')[0]
+        return src.split(':', 1)[0]
 
 
 def download(src: str, dst: Path | str, *, abort: Event | None = None) -> Path:

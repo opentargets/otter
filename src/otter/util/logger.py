@@ -59,11 +59,17 @@ def get_exception_info(record_exception: loguru.RecordException | None) -> tuple
 def get_format_log(include_task: bool = True) -> Callable[..., str]:
     """Create the log format function."""
 
+    def _get_process_role() -> str:
+        p_role = os.environ.get('OTTER_PROCESS_ROLE', 'M')
+        p_role_str = f'{p_role}:{os.getpid()}'.ljust(8)
+        color = 'lm' if p_role_str.startswith('W') else 'g'
+        return f'<b><{color}>{p_role_str}</{color}></b>'
+
     def format_log(record: loguru.Record) -> str:
         name, func, line = get_exception_info(record.get('exception'))
         task = '<y>{extra[task]}</>::' if include_task and record['extra'].get('task') else ''
         trail = '\n' if include_task else ''
-
+        p_role = _get_process_role()
         exception = os.getenv('OTTER_SHOW_EXCEPTIONS')
 
         # debug flag to hide exceptions in logs (they are too verbose when checking the log flow)
@@ -72,6 +78,7 @@ def get_format_log(include_task: bool = True) -> Callable[..., str]:
 
         return (
             '<g>{time:YYYY-MM-DD HH:mm:ss.SSS}</> | '
+            f'<m>{p_role}</> | '
             '<lvl>{level: <8}</> | '
             f'{task}'
             f'<c>{name}</>:<c>{func}</>:<c>{line}</>'
