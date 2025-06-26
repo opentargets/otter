@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import errno
+import os
 import signal
 from concurrent.futures import Future, ProcessPoolExecutor, wait
 from multiprocessing import Manager
@@ -119,6 +120,8 @@ class Step(StepReporter):
 
     @staticmethod
     def _run_task(task: Task, abort: Event) -> Task:
+        # set the process role in the environment for logging purposes
+        os.environ['OTTER_PROCESS_ROLE'] = 'W'
         task.context.state = task.context.state.next()
         task.context.abort = abort
         with task_logging(task):
