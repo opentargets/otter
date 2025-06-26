@@ -99,6 +99,10 @@ class Step(StepReporter):
         all_tasks_are_done = all(t.context.state is State.DONE for t in self.tasks.values())
         return all_specs_are_tasks and all_tasks_are_done
 
+    def _are_all_created_tasks_done(self) -> bool:
+        """Check if all tasks created from specs are done."""
+        return all(t.context.state is State.DONE for t in self.tasks.values())
+
     def _process_results(self, results: list[Task]) -> None:
         for result in results:
             if result.context.state is State.RUNNING:
@@ -151,6 +155,12 @@ class Step(StepReporter):
                     if ready_specs:
                         logger.debug(f'adding {len(ready_specs)} tasks to the queue')
                         self.tasks.update(self._instantiate_tasks(self._get_ready_specs()))
+                    elif self._are_all_created_tasks_done():
+                        logger.error(
+                            'all tasks instantiated so far have been completed, but remaining specs '
+                            'are not ready, there is a cycle in the dependencies'
+                        )
+                        raise StepFailedError('cycle detected in task dependencies')
 
                     # add new tasks to the queue
                     ready_tasks = self._get_ready_tasks(futures)
@@ -160,6 +170,7 @@ class Step(StepReporter):
 
                     # process completed tasks
                     if futures:
+                        logger.debug(f'waiting for {len(futures)} task(s) to complete')
                         done, _ = wait(futures.values(), timeout=MANAGER_POLLING_RATE, return_when='FIRST_COMPLETED')
 
                         for future in done:
@@ -171,6 +182,6 @@ class Step(StepReporter):
             except Exception:
                 abort.set()
 
-            self.finish()
+            self.finish(self.specs, self.tasks)
 
         return self
