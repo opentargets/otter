@@ -13,6 +13,7 @@ from otter.manifest.model import Result, StepManifest
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from otter.task.model import Spec, Task
     from otter.task.task_reporter import TaskReporter
 
 
@@ -28,10 +29,11 @@ class StepReporter:
         self.manifest.started_run_at = datetime.now(UTC)
         logger.success(f'step {self.name} started running')
 
-    def finish(self) -> None:
+    def finish(self, specs: list[Spec], tasks: dict[str, Task]) -> None:
         """Update a step that has finished running."""
         self.manifest.finished_run_at = datetime.now(UTC)
-        if all(t.result == Result.SUCCESS for t in self.manifest.tasks):
+
+        if len(tasks) == len(specs) and all(t.result == Result.SUCCESS for t in self.manifest.tasks):
             self.manifest.result = Result.SUCCESS
             logger.success(f'step {self.name} completed: took {self.manifest.elapsed:.3f}s')
         else:
