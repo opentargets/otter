@@ -85,16 +85,9 @@ class State(Enum):
     VALIDATING = 3
     DONE = 4
 
-    def next(self) -> State:
-        """Get the next state."""
-        try:
-            return State(self.value + 1)
-        except ValueError:
-            return State.DONE
-
 
 DEP_READY_STATES = [State.PENDING_VALIDATION, State.VALIDATING, State.DONE]
-"""States on which a dependency can be considered as ready for other tasks depending on it."""
+"""States on which a task can be considered as ready for others depending on it."""
 
 READY_STATES = [State.PENDING_RUN, State.PENDING_VALIDATION]
 """States on which a task can be considered as ready to be sent to a worker."""
@@ -186,7 +179,36 @@ class Task(TaskReporter):
             case State.VALIDATING:
                 return self.validate
             case _:
-                raise ValueError(f'tasks in state {self.context.state} should not reach this')
+                raise ValueError(f'task {self.name} has invalid state {self.context.state}')
+
+    @final
+    def get_next_state(self) -> State:
+        """Get the next state.
+
+        Checks if the task has a validation method to determine if the next state
+        should be `PENDING_VALIDATION` or `DONE`.
+
+        :return: The next state.
+        :rtype: State
+        """
+        if self.context.state is State.RUNNING:
+            task_validate = self.__class__.__dict__.get('validate', None)
+            if not task_validate:
+                logger.warning(f'task {self.name} does not implement validation')
+                return State.DONE
+        return State(self.context.state.value + 1)
+
+    @final
+    def is_next_state_done(self) -> bool:
+        """Check if the next state is DONE.
+
+        This is used to determine if the task has finished running and has no
+        validation phase, or if the task has finished validating.
+
+        :return: True if the next state is DONE, False otherwise.
+        :rtype: bool
+        """
+        return self.get_next_state() is State.DONE
 
     @abstractmethod
     @report
