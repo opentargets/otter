@@ -41,9 +41,11 @@ class TaskReporter:
         self.manifest.started_run_at = datetime.now(UTC)
         logger.info(f'task {self.name} started running')
 
-    def finish_run(self) -> None:
+    def finish_run(self, done: bool = False) -> None:
         """Update a task that has finished running."""
         self.manifest.finished_run_at = datetime.now(UTC)
+        if done:
+            self.manifest.result = Result.SUCCESS
         logger.success(f'task {self.name} finished running: took {self.manifest.run_elapsed:.3f}s')
 
     def start_validation(self) -> None:
@@ -86,7 +88,7 @@ def report(func: Callable[..., Task]) -> Callable[..., Task]:
 
             # perform these after the wrapped method runs
             if func.__name__ == 'run':
-                self.finish_run()
+                self.finish_run(done=self.is_next_state_done())
             elif func.__name__ == 'validate':
                 self.finish_validation()
             return result

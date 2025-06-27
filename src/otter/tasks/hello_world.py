@@ -29,11 +29,3 @@ class HelloWorld(Task):
         logger.success(f'hello {self.spec.who}')
         self.artifact = Artifact(source='me', destination=self.spec.who or 'world')
         return self
-
-    @report
-    def validate(self) -> Self:
-        """Always pass.
-
-        If you don't want to validate anything, this method can be omitted.
-        """
-        return self

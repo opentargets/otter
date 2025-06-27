@@ -114,15 +114,16 @@ class Step(StepReporter):
                     self.specs.extend(new_specs)
                 # add new keys to the scratchpad
                 self.task_registry.scratchpad.merge(result.context.scratchpad)
-            # update the task
-            result.context.state = result.context.state.next()
+            # update the task's state once done running/validating
+            result.context.state = result.get_next_state()
             self.tasks[result.spec.name] = result
 
     @staticmethod
     def _run_task(task: Task, abort: Event) -> Task:
         # set the process role in the environment for logging purposes
         os.environ['OTTER_PROCESS_ROLE'] = 'W'
-        task.context.state = task.context.state.next()
+        # update the task's state to running/validating
+        task.context.state = task.get_next_state()
         task.context.abort = abort
         with task_logging(task):
             if not abort.is_set():
@@ -157,7 +158,7 @@ class Step(StepReporter):
                     ready_specs = self._get_ready_specs()
                     if ready_specs:
                         logger.debug(f'adding {len(ready_specs)} tasks to the queue')
-                        self.tasks.update(self._instantiate_tasks(self._get_ready_specs()))
+                        self.tasks.update(self._instantiate_tasks(ready_specs))
                     elif self._are_all_created_tasks_done():
                         logger.error(
                             'all tasks instantiated so far have been completed, but remaining specs '
