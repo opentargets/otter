@@ -6,6 +6,7 @@ import errno
 import os
 import signal
 from concurrent.futures import Future, ProcessPoolExecutor, wait
+from graphlib import CycleError, TopologicalSorter
 from multiprocessing import Manager
 from threading import Event
 from typing import TYPE_CHECKING, Any
@@ -90,10 +91,23 @@ class Step(StepReporter):
                 ready_specs.append(s)
         return ready_specs
 
-    def _get_task_cycles(self) -> list[str]:
-        """Get the cycles in the task dependencies."""
-        # TODO implement cycle detection
-        return []
+    def check_cycles(self):
+        """Check if there are cycles in the task dependencies."""
+        graph: dict[str, set[str]] = {}
+        for s in self.specs:
+            if s.name not in graph:
+                graph[s.name] = set()
+            for r in s.requires:
+                if r not in graph:
+                    graph[r] = set()
+                graph[s.name].add(r)
+
+        ts = TopologicalSorter(graph)
+        try:
+            ts.prepare()
+        except CycleError as e:
+            logger.critical(f'task cycle detected: {e.args[1]}')
+            raise SystemExit(errno.EINVAL)
 
     def _is_step_done(self) -> bool:
         all_specs_are_tasks = all(s.name in self.tasks for s in self.specs)

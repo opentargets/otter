@@ -88,6 +88,7 @@ class Runner:
             task_registry=self.task_registry,
             config=self.config,
         )
+        step.check_cycles()
 
         manifest = ManifestManager(
             runner_name=self.name,
