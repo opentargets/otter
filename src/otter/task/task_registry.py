@@ -84,6 +84,9 @@ class TaskRegistry:
         """Instantiate a Task.
 
         Template replacement is performed here, right before initializing the Task.
+        All non-templatable fields (non-string fields) are passed as is, while
+        templatable fields (string fields) are submitted into the scratchpad for
+        potential replacement.
 
         :param spec: The spec to instantiate the Task from.
         :type spec: Spec
@@ -98,11 +101,15 @@ class TaskRegistry:
 
         try:
             spec = spec_class(**spec.model_dump())
+            templatable_fields = spec.templatable_fields()
+            templatable_spec_dump = spec.model_dump(include=templatable_fields)
+            non_templatable_spec_dump = spec.model_dump(exclude=templatable_fields)
             replaced_spec = spec_class(
                 **self.scratchpad.replace_dict(
-                    spec.model_dump(),
+                    templatable_spec_dump,
                     ignore_missing=spec.scratchpad_ignore_missing,
-                )
+                ),
+                **non_templatable_spec_dump,
             )
         except ValidationError as e:
             logger.critical(f'invalid spec for task {spec.name}')
