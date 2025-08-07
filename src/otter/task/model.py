@@ -75,6 +75,14 @@ class Spec(BaseModel, extra='allow'):
     def task_type(self, value: str) -> None:
         self.name = f'{value} {self.name.split(" ", 1)[1]}'
 
+    @classmethod
+    def templatable_fields(cls) -> set[str]:
+        """Fields that can be templated in the spec.
+
+        Returns a set of field names that can be potentially templated (string fields).
+        """
+        return {f for f, v in cls.model_fields.items() if v.annotation is str}
+
 
 class State(Enum):
     """Enumeration of possible states for a :py:class:`otter.task.model.Task`."""
