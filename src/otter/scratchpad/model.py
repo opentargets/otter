@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 from string import Template
-from types import NoneType
 from typing import Any
 
 from loguru import logger
@@ -57,7 +56,7 @@ class Scratchpad:
         'Hello, Alice!'
 
     The `Scratchpad` class is used to perform template substitution in a `Spec`,
-    right before the task intantiation.
+    right before the task instantiation.
 
     .. important:: You can use internal scratchpads in tasks. For example, to have
         private variables that are only replaced in one of the specs.
@@ -108,7 +107,7 @@ class Scratchpad:
         for key, value in other.sentinel_dict.items():
             self.sentinel_dict[key] = value
 
-    def _replace(self, string: str, *, ignore_missing: bool = False) -> str:
+    def _replace_str(self, string: str, *, ignore_missing: bool = False) -> str:
         """Replace placeholders in a string.
 
         :param string: The string with placeholders to replace.
@@ -147,15 +146,19 @@ class Scratchpad:
             the placeholder in the value does not have a corresponding key in the
             scratchpad.
         """
-        if isinstance(v, NoneType) or v == 'None':
-            return None
-        if isinstance(v, dict):
-            return self.replace_dict(v, ignore_missing=ignore_missing)  # type: ignore[arg-type]
-        if isinstance(v, list):
-            return [self._replace_any(e, ignore_missing=ignore_missing) for e in v]  # type: ignore[arg-type]
-        if isinstance(v, Path):
-            return Path(self._replace(str(v), ignore_missing=ignore_missing))
-        return self._replace(v, ignore_missing=ignore_missing)
+        match v:
+            case None:
+                return None
+            case dict():
+                return self.replace_dict(v, ignore_missing=ignore_missing)  # type: ignore[arg-type]
+            case list():
+                return [self._replace_any(e, ignore_missing=ignore_missing) for e in v]  # type: ignore[arg-type]
+            case Path():
+                return Path(self._replace_str(str(v), ignore_missing=ignore_missing))
+            case str():
+                return self._replace_str(v, ignore_missing=ignore_missing)
+            case _:
+                return v
 
     def replace_dict(self, d: dict[str, Any], *, ignore_missing: bool = False) -> dict[str, Any]:
         """Replace placeholders in a dictionary with the corresponding values.
@@ -176,5 +179,4 @@ class Scratchpad:
                 replaced_dict[key] = value
                 continue
             replaced_dict[key] = self._replace_any(value, ignore_missing=ignore_missing)
-
         return replaced_dict
