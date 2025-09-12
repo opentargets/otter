@@ -48,11 +48,11 @@ class Explode(Task):
                 - drosophila_melanogaster
             do:
                 - name: copy ${each} genes
-                source: https://example.com/genes/${each}/file.tsv
-                destination: genes-${each}.tsv
+                  source: https://example.com/genes/${each}/file.tsv
+                  destination: genes-${each}.tsv
                 - name: copy ${each} proteins
-                source: https://example.com/proteins/${each}/file.tsv
-                destination: proteins-${each}.tsv
+                  source: https://example.com/proteins/${each}/file.tsv
+                  destination: proteins-${each}.tsv
 
 
     Keep in mind this replacement of `each` will only be done in strings, not lists
