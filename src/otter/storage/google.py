@@ -71,14 +71,35 @@ class GoogleStorage(RemoteStorage):
         return bucket_name, file_path
 
     def _get_bucket(self, bucket_name: str) -> storage.Bucket:
+        """Get a bucket, avoiding unconditional requester-pays.
+
+        Try without user_project first to support public/external buckets where
+        callers may not have buckets.get. If access requires requester-pays,
+        retry with user_project set to the authenticated project.
+        """
+        # First try without user_project
+        bucket = self.client.bucket(bucket_name)
         try:
-            bucket = self.client.bucket(bucket_name, user_project=self.project_id)
             bucket.reload()
             return bucket
         except NotFound:
             raise NotFoundError(bucket_name)
-        except GoogleAPICallError as e:
-            raise StorageError(f'google api error checking bucket {bucket_name}: {e}')
+        except GoogleAPICallError:
+            # Some buckets require requester-pays (userProject) or deny buckets.get.
+            # Retry with user_project; if that still fails, return the bucket
+            # object and let object-level operations surface precise errors.
+            try:
+                bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+                try:
+                    bucket.reload()
+                except GoogleAPICallError:
+                    # Ignore reload failure here; object ops may still be allowed
+                    pass
+                return bucket
+            except NotFound:
+                raise NotFoundError(bucket_name)
+            except Exception as inner:
+                raise StorageError(f'error checking bucket {bucket_name}: {inner}')
         except Exception as e:
             raise StorageError(f'error checking bucket {bucket_name}: {e}')
 
