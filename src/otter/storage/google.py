@@ -12,7 +12,7 @@ from google import auth
 from google.api_core.exceptions import GoogleAPICallError, PreconditionFailed
 from google.auth import exceptions as auth_exceptions
 from google.auth.transport.requests import AuthorizedSession
-from google.cloud import storage
+from google.cloud import storage  # type: ignore[import-untyped]
 from google.cloud.exceptions import NotFound
 from loguru import logger
 
@@ -48,7 +48,7 @@ class GoogleStorage(RemoteStorage):
         try:
             credentials: Credentials
             project_id: str
-            credentials, project_id = auth.default(scopes=GOOGLE_SCOPES)
+            credentials, project_id = auth.default(scopes=GOOGLE_SCOPES)  # pyright: ignore[reportAssignmentType, reportUnknownMemberType, reportUnknownVariableType]
             logger.debug(f'gcp authenticated on project {project_id}')
         except auth_exceptions.DefaultCredentialsError as e:
             logger.critical(f'error authenticating on gcp: {e}')
@@ -74,7 +74,7 @@ class GoogleStorage(RemoteStorage):
         if prefix is None:
             raise StorageError(f'invalid prefix: {prefix}')
         try:
-            blob = bucket.blob(prefix)
+            blob = bucket.blob(prefix)  # pyright: ignore[reportUnknownMemberType]
         except GoogleAPICallError as e:
             raise StorageError(f'error preparing blob: {e}')
         return blob
@@ -101,11 +101,11 @@ class GoogleStorage(RemoteStorage):
         :raises NotFoundError: If the file does not exist.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)  # pyright: ignore[reportUnknownMemberType]
         blob = self._prepare_blob(bucket, prefix)
 
         try:
-            blob.reload()
+            blob.reload()  # pyright: ignore[reportUnknownMemberType]
         except NotFound:
             raise NotFoundError(uri)
         except GoogleAPICallError as e:
@@ -125,8 +125,8 @@ class GoogleStorage(RemoteStorage):
         :raises StorageError: If the prefix is invalid.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        blob_names: list[str] = [n.name for n in list(bucket.list_blobs(prefix=prefix))]
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)  # pyright: ignore[reportUnknownMemberType]
+        blob_names: list[str] = [n.name for n in list(bucket.list_blobs(prefix=prefix))]  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
 
         # filter out blobs that have longer prefixes
         blob_name_list = [n for n in blob_names if self._is_blob_shallow(n, prefix)]
@@ -151,8 +151,8 @@ class GoogleStorage(RemoteStorage):
         :rtype: list[str]
         """
         bucket_name, glob = self._parse_uri(uri)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        blob_names: list[str] = [n.name for n in list(bucket.list_blobs(match_glob=glob))]
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)  # pyright: ignore[reportUnknownMemberType]
+        blob_names: list[str] = [n.name for n in list(bucket.list_blobs(match_glob=glob))]  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType, reportUnknownArgumentType]
 
         if len(blob_names) == 0:
             logger.warning(f'no files found matching glob {uri}')
@@ -172,11 +172,11 @@ class GoogleStorage(RemoteStorage):
         :raises StorageError: If an error occurs while downloading the file.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)  # pyright: ignore[reportUnknownMemberType]
         blob = self._prepare_blob(bucket, prefix)
 
         try:
-            blob.download_to_filename(dst)
+            blob.download_to_filename(dst)  # pyright: ignore[reportUnknownMemberType]
         except NotFound:
             raise NotFoundError(uri)
         except (GoogleAPICallError, OSError) as e:
@@ -194,11 +194,11 @@ class GoogleStorage(RemoteStorage):
         :rtype: tuple[str, int]
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)  # pyright: ignore[reportUnknownMemberType]
         blob = self._prepare_blob(bucket, prefix)
 
         try:
-            blob_str = blob.download_as_string()
+            blob_str = blob.download_as_string()  # pyright: ignore[reportUnknownMemberType]
         except NotFound:
             raise NotFoundError(uri)
 
@@ -225,19 +225,19 @@ class GoogleStorage(RemoteStorage):
         :raises PreconditionFailedError: If the revision number does not match.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)  # pyright: ignore[reportUnknownMemberType]
         blob = self._prepare_blob(bucket, prefix)
 
         try:
             if revision is not None:
-                blob.upload_from_filename(src, if_generation_match=revision)
+                blob.upload_from_filename(src, if_generation_match=revision)  # pyright: ignore[reportUnknownMemberType]
             else:
-                blob.upload_from_filename(src)
+                blob.upload_from_filename(src)  # pyright: ignore[reportUnknownMemberType]
         except PreconditionFailed:
             raise PreconditionFailedError(f'upload of {src} failed due to generation mismatch')
         except (GoogleAPICallError, OSError) as e:
             raise StorageError(f'error uploading {src}: {e}')
-        blob.reload()
+        blob.reload()  # pyright: ignore[reportUnknownMemberType]
         return blob.generation or 0
 
     def get_session(self) -> AuthorizedSession:
