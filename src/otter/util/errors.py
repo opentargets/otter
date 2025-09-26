@@ -42,8 +42,10 @@ class DownloadError(OtterError):
 class NotFoundError(OtterError):
     """Raise when something is not found."""
 
-    def __init__(self, msg: str | None = None) -> None:
-        super().__init__(msg)
+    def __init__(self, thing: str | None = None) -> None:
+        if thing is None:
+            thing = 'item'
+        super().__init__(f'{thing} not found')
 
 
 class PreconditionFailedError(OtterError):
