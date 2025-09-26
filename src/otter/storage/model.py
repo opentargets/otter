@@ -23,20 +23,6 @@ class RemoteStorage(ABC):
         """
 
     @abstractmethod
-    def check(self, uri: str) -> bool:
-        """Check if the provided storage is valid.
-
-        This method should check if the storage exists and has proper permissions.
-        On Google Cloud Storage, for example, this would check if the bucket exists
-        and the service account has get, list and create permissions.
-
-        :param uri: The URI to check.
-        :type uri: str
-        :return: True if the storage exists, False otherwise.
-        :rtype: bool
-        """
-
-    @abstractmethod
     def stat(self, uri: str) -> dict[str, Any]:
         """Get metadata for a file.
 
