@@ -70,39 +70,6 @@ class GoogleStorage(RemoteStorage):
         file_path = uri_parts[1] if len(uri_parts) > 1 else None
         return bucket_name, file_path
 
-    def _get_bucket(self, bucket_name: str) -> storage.Bucket:
-        """Get a bucket, avoiding unconditional requester-pays.
-
-        Try without user_project first to support public/external buckets where
-        callers may not have buckets.get. If access requires requester-pays,
-        retry with user_project set to the authenticated project.
-        """
-        # First try without user_project
-        bucket = self.client.bucket(bucket_name)
-        try:
-            bucket.reload()
-            return bucket
-        except NotFound:
-            raise NotFoundError(bucket_name)
-        except GoogleAPICallError:
-            # Some buckets require requester-pays (userProject) or deny buckets.get.
-            # Retry with user_project; if that still fails, return the bucket
-            # object and let object-level operations surface precise errors.
-            try:
-                bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-                try:
-                    bucket.reload()
-                except GoogleAPICallError:
-                    # Ignore reload failure here; object ops may still be allowed
-                    pass
-                return bucket
-            except NotFound:
-                raise NotFoundError(bucket_name)
-            except Exception as inner:
-                raise StorageError(f'error checking bucket {bucket_name}: {inner}')
-        except Exception as e:
-            raise StorageError(f'error checking bucket {bucket_name}: {e}')
-
     def _prepare_blob(self, bucket: storage.Bucket, prefix: str | None) -> storage.Blob:
         if prefix is None:
             raise StorageError(f'invalid prefix: {prefix}')
@@ -124,41 +91,6 @@ class GoogleStorage(RemoteStorage):
         blob_name = blob_name.replace(prefix or '', '', 1)
         return '/' not in blob_name and not blob_name.endswith('/')
 
-    def check(self, uri: str) -> bool:
-        """Check if a bucket exists in Google Cloud Storage.
-
-        :param uri: The URI of the file to check.
-        :type uri: str
-        :return: True if the file exists, False otherwise.
-        :rtype: bool
-        """
-        bucket_name, _ = self._parse_uri(uri)
-        bucket = None
-        permissions = [
-            'storage.buckets.get',
-            'storage.objects.list',
-            'storage.objects.get',
-            'storage.objects.create',
-            'storage.objects.delete',
-            'storage.objects.update',
-        ]
-
-        try:
-            bucket = self._get_bucket(bucket_name)
-        except NotFoundError:
-            logger.warning(f'bucket {bucket_name} not found')
-            return False
-
-        actual_permissions: list[str] = bucket.test_iam_permissions(permissions)
-
-        if actual_permissions != permissions:
-            missing_permissions = ', '.join(set(permissions) - set(actual_permissions))
-            logger.warning(f'bucket {bucket_name} exists but is missing {missing_permissions} permission')
-            return False
-
-        logger.debug(f'bucket {bucket_name} exists and is readable')
-        return True
-
     def stat(self, uri: str) -> dict[str, float | None]:
         """Get metadata for a file in Google Cloud Storage.
 
@@ -169,7 +101,7 @@ class GoogleStorage(RemoteStorage):
         :raises NotFoundError: If the file does not exist.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self._get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
         blob = self._prepare_blob(bucket, prefix)
 
         try:
@@ -193,7 +125,7 @@ class GoogleStorage(RemoteStorage):
         :raises StorageError: If the prefix is invalid.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self._get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
         blob_names: list[str] = [n.name for n in list(bucket.list_blobs(prefix=prefix))]
 
         # filter out blobs that have longer prefixes
@@ -219,8 +151,7 @@ class GoogleStorage(RemoteStorage):
         :rtype: list[str]
         """
         bucket_name, glob = self._parse_uri(uri)
-        bucket = self._get_bucket(bucket_name)
-
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
         blob_names: list[str] = [n.name for n in list(bucket.list_blobs(match_glob=glob))]
 
         if len(blob_names) == 0:
@@ -241,7 +172,7 @@ class GoogleStorage(RemoteStorage):
         :raises StorageError: If an error occurs while downloading the file.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self._get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
         blob = self._prepare_blob(bucket, prefix)
 
         try:
@@ -263,13 +194,13 @@ class GoogleStorage(RemoteStorage):
         :rtype: tuple[str, int]
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self._get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
         blob = self._prepare_blob(bucket, prefix)
 
         try:
             blob_str = blob.download_as_string()
         except NotFound:
-            raise NotFoundError(f'file {uri} not found')
+            raise NotFoundError(uri)
 
         decoded_blob = None
         try:
@@ -294,7 +225,7 @@ class GoogleStorage(RemoteStorage):
         :raises PreconditionFailedError: If the revision number does not match.
         """
         bucket_name, prefix = self._parse_uri(uri)
-        bucket = self._get_bucket(bucket_name)
+        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
         blob = self._prepare_blob(bucket, prefix)
 
         try:

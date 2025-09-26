@@ -24,10 +24,6 @@ class NoopStorage(RemoteStorage):
         """The name of the storage provider."""
         return 'No-operation storage'
 
-    def check(self, uri: str) -> bool:
-        """Check if a file exists."""
-        return False
-
     def stat(self, uri: str) -> dict[str, Any]:
         """Get metadata for a file."""
         raise NotFoundError(uri)
