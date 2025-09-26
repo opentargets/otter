@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import loguru
 from loguru import logger
 
-_runner_name = globals().get('__app_name__', 'otter')
+_runner_name: list[str] = ['otter']
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -46,7 +46,7 @@ def get_exception_info(record_exception: loguru.RecordException | None) -> tuple
         # go back in the stack to the first frame originated inside the app
         while tb.tb_next:
             next_name = tb.tb_next.tb_frame.f_globals.get('__name__', None)
-            if not next_name or _runner_name not in next_name:
+            if not next_name or not any(next_name.startswith(rn) for rn in _runner_name):
                 break
             name = next_name
             tb = tb.tb_next
@@ -168,8 +168,8 @@ def init_logger(log_level: str = 'INFO', app_name: str | None = None) -> None:
     :type app_name: str | None
     """
     if app_name is not None:
-        global _runner_name  # noqa: PLW0603
-        _runner_name = app_name
+        global _runner_name  # noqa: PLW0602
+        _runner_name.append(app_name)
 
     logger.remove()
     logger.add(sink=sys.stdout, level=log_level, format=get_format_log())
