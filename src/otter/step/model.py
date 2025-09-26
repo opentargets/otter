@@ -193,7 +193,7 @@ class Step(StepReporter):
 
                     # process completed tasks
                     if futures:
-                        logger.debug(f'waiting for {len(futures)} task(s) to complete')
+                        logger.trace(f'waiting for {len(futures)} task(s) to complete')
                         done, _ = wait(futures.values(), timeout=MANAGER_POLLING_RATE, return_when='FIRST_COMPLETED')
 
                         for future in done:
