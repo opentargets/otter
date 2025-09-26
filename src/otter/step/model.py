@@ -51,7 +51,12 @@ class Step(StepReporter):
         self.tasks: dict[str, Task] = {}
 
     def _instantiate_tasks(self, specs: Sequence[Spec]) -> dict[str, Task]:
-        new_tasks = {spec.name: self.task_registry.instantiate(spec) for spec in specs}
+        try:
+            new_tasks = {spec.name: self.task_registry.instantiate(spec) for spec in specs}
+        except Exception as e:
+            raise StepFailedError(f'error instantiating tasks: {e}') from e
+
+        logger.debug(f'instantiated {len(new_tasks)} new tasks')
         for t in new_tasks:
             if self.tasks.get(t):
                 raise StepFailedError(f'duplicate task: {t}')
@@ -197,7 +202,8 @@ class Step(StepReporter):
                             self._process_results([completed_task])
                             self.upsert_task_manifests([completed_task])
 
-            except Exception:
+            except Exception as e:
+                logger.critical(f'error running step {self.name}: {e}')
                 abort.set()
 
             self.finish(self.specs, self.tasks)
