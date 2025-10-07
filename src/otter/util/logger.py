@@ -93,9 +93,24 @@ def get_format_log(include_task: bool = True) -> Callable[..., str]:
 def task_logging(task: Task) -> Generator[None]:
     """Context manager that appends log messages to the task's manifest.
 
+    We check if there is already a stdout logger, and if not, we add one. This
+    is added to make sure spawned processes also log to stdout. We've seen that
+    sometimes the logger configuration is not inherited by child processes for
+    some unknown reason. Probably related to:
+
+    https://github.com/Delgan/loguru/issues/912
+
     :param task: The task to log messages to.
     :type task: Task
     """
+    found = False
+    for h in logger._core.handlers.values():
+        if h._sink._stream.name == '<stdout>':
+            logger.debug('found stdout logger')
+            found = True
+    if not found:
+        logger.add(sink=sys.stdout, level='TRACE', format=get_format_log())
+        logger.debug('added missing stdout logger')
     with logger.contextualize(task=task.spec.name):
         sink_task: Callable[[str], None] = lambda message: task.manifest.log.append(message)
         logger.add(
