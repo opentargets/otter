@@ -104,5 +104,9 @@ class Runner:
         manifest.complete(step)
 
         if manifest.manifest.result not in [Result.PENDING, Result.SUCCESS]:
-            logger.error('the run has failed')
+            logger.warning('there are failed steps in the manifest')
+        if step.manifest.result == Result.SUCCESS:
+            logger.success(f'step {step.name} ran successfully')
+        else:
+            logger.error(f'step {step.name} failed')
             raise SystemExit(1)

@@ -1,10 +1,10 @@
 [project]
 name = "opentargets-otter"
-version = "25.0.6"
+version = "25.0.7"
 description = "Open Targets Task ExcutoR"
 readme = "README.md"
 requires-python = ">=3.13"
-authors = [{ name = "Open Targets Core Team", email = "devs@opentargets.net" }]
+authors = [{ name = "Open Targets Core Team", email = "devs@opentargets.org" }]
 license = { text = "Apache-2.0" }
 dependencies = [
   "filelock==3.18.0",

@@ -132,7 +132,6 @@ class ManifestManager:
         """Check the result for all steps and update the root."""
         step_manifests = self.manifest.steps.values()
         if any(step.result in [Result.FAILURE, Result.ABORTED] for step in step_manifests):
-            logger.warning('there are failed steps in the manifest')
             self.manifest.result = Result.FAILURE
         elif all(step.result is Result.SUCCESS for step in step_manifests):
             self.manifest.result = Result.SUCCESS
