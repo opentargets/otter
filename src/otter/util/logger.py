@@ -105,7 +105,7 @@ def task_logging(task: Task) -> Generator[None]:
     """
     found = False
     for h in logger._core.handlers.values():
-        if h._sink._stream.name == '<stdout>':
+        if hasattr(h, '_sink') and hasattr(h._sink, '_stream') and h._sink._stream.name == '<stdout>':
             logger.debug('found stdout logger')
             found = True
     if not found:
