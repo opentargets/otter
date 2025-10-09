@@ -27,7 +27,7 @@ class StepReporter:
     def start(self) -> None:
         """Update a step that has started running."""
         self.manifest.started_run_at = datetime.now(UTC)
-        logger.success(f'step {self.name} started running')
+        logger.info(f'step {self.name} started running')
 
     def finish(self, specs: list[Spec], tasks: dict[str, Task]) -> None:
         """Update a step that has finished running."""

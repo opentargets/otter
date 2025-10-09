@@ -22,10 +22,12 @@ if TYPE_CHECKING:
     from otter.task.model import Task
 
 
-def get_exception_info(record_exception: loguru.RecordException | None) -> tuple[str, str, str]:
+def get_exception_info(record_exception: loguru.RecordException | None) -> tuple[str, str, str, str, str]:
     """Get fields from the exception record.
 
     This function extracts the name, function and line number from an exception.
+    It will also return the exception type and message.
+
     It will go back in the stack to the first frame originated inside the app,
     that way it will make sure the error is meaningful in the logs. If we don't
     do this, the error will be logged as raising from the in the report decorator,
@@ -37,12 +39,16 @@ def get_exception_info(record_exception: loguru.RecordException | None) -> tuple
     name = '{name}'
     func = '{function}'
     line = '{line}'
+    exc_type = ''
+    exc_msg = ''
 
     if record_exception is not None:
+        exc_type = record_exception.type.__name__ if record_exception.type else ''
+        exc_msg = str(record_exception.value) if record_exception.value else ''
         tb = record_exception.traceback
 
         if tb is None:
-            return name, func, line
+            return name, func, line, exc_type, exc_msg
 
         # go back in the stack to the first frame originated inside the app
         while tb.tb_next:
@@ -54,7 +60,7 @@ def get_exception_info(record_exception: loguru.RecordException | None) -> tuple
         func = tb.tb_frame.f_code.co_name
         line = str(tb.tb_lineno)
 
-    return name, func, line
+    return name, func, line, exc_type, exc_msg
 
 
 def get_format_log(include_task: bool = True) -> Callable[..., str]:
@@ -67,15 +73,16 @@ def get_format_log(include_task: bool = True) -> Callable[..., str]:
         return f'<b><{color}>{p_role_str}</{color}></b>'
 
     def format_log(record: loguru.Record) -> str:
-        name, func, line = get_exception_info(record.get('exception'))
+        name, func, line, exc_type, exc_msg = get_exception_info(record.get('exception'))
         task = '<y>{extra[task]}</>::' if include_task and record['extra'].get('task') else ''
         trail = '\n' if include_task else ''
         p_role = _get_process_role()
-        exception = os.getenv('OTTER_SHOW_EXCEPTIONS')
 
-        # debug flag to hide exceptions in logs (they are too verbose when checking the log flow)
-        if exception and include_task:
-            trail = '\n{exception}'  # noqa: RUF027
+        # if there is an exception, add it to the log message
+        message = '{message}'
+        if exc_type:
+            message = f'{exc_type}: {exc_msg}'
+            trail += '\n{exception}'
 
         return (
             '<g>{time:YYYY-MM-DD HH:mm:ss.SSS}</> | '
@@ -83,7 +90,7 @@ def get_format_log(include_task: bool = True) -> Callable[..., str]:
             '<lvl>{level: <8}</> | '
             f'{task}'
             f'<c>{name}</>:<c>{func}</>:<c>{line}</>'
-            ' - <lvl>{message}</>'
+            f' - <lvl>{message}</>'
             f'{trail}'
         )
 
