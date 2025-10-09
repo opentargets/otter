@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import os
 import sys
 from collections.abc import Generator
@@ -104,8 +105,8 @@ def task_logging(task: Task) -> Generator[None]:
     :type task: Task
     """
     found = False
-    for h in logger._core.handlers.values():
-        if hasattr(h, '_sink') and hasattr(h._sink, '_stream') and h._sink._stream.name == '<stdout>':
+    for h in logger._core.handlers.values():  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+        if hasattr(h, '_sink') and hasattr(h._sink, '_stream') and h._sink._stream.name == '<stdout>':  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
             logger.debug('found stdout logger')
             found = True
     if not found:
@@ -157,6 +158,9 @@ class MessageQueue:
 
     def flush(self) -> None:
         """Dump the log messages to stdout."""
+        logger.remove()
+        logger.add(sys.stdout, level='TRACE', format=get_format_log())
+
         while not self._log_queue.empty():
             msg = self._log_queue.get()
 
@@ -166,10 +170,14 @@ class MessageQueue:
             logger.patch(patcher).log(msg.record['level'].name, msg.record['message'])
 
 
-_early_logs = MessageQueue()
-logger.remove()
-logger.add(sink=_early_logs.put, level='TRACE')
-logger.debug('early logger configured')
+def early_init_logger() -> None:
+    """Initialize early logging."""
+    global _early_logs  # noqa: PLW0603
+    _early_logs = MessageQueue()
+    logger.remove()
+    logger.add(sink=_early_logs.put, level='TRACE')
+    atexit.register(_early_logs.flush)
+    logger.debug('early logger configured')
 
 
 def init_logger(log_level: str = 'INFO', app_name: str | None = None) -> None:

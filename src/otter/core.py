@@ -12,7 +12,7 @@ from otter.step.model import Step
 from otter.task import load_specs
 from otter.task.task_registry import TaskRegistry
 from otter.util.fs import check_dir
-from otter.util.logger import init_logger
+from otter.util.logger import early_init_logger, init_logger
 
 
 class Runner:
@@ -43,6 +43,7 @@ class Runner:
         The name should beetween 2 and 32 characters and only contain lowercase
         letters, numbers and the underscore character.
         """
+        early_init_logger()
         self.config = load_config(self.name)
         init_logger(self.config.log_level, self.name)
         logger.info(f'otter v{version("opentargets-otter")} starting!')
