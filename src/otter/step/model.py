@@ -8,6 +8,8 @@ import signal
 from concurrent.futures import Future, ProcessPoolExecutor, wait
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import Manager
+from multiprocessing.managers import SyncManager
+from queue import Queue
 from threading import Event
 from typing import TYPE_CHECKING, Any
 
@@ -50,9 +52,9 @@ class Step(StepReporter):
 
         self.tasks: dict[str, Task] = {}
 
-    def _instantiate_tasks(self, specs: Sequence[Spec]) -> dict[str, Task]:
+    def _instantiate_tasks(self, specs: Sequence[Spec], manager: SyncManager) -> dict[str, Task]:
         try:
-            new_tasks = {spec.name: self.task_registry.instantiate(spec) for spec in specs}
+            new_tasks = {spec.name: self.task_registry.instantiate(spec, manager) for spec in specs}
         except Exception as e:
             raise StepFailedError(f'error instantiating tasks: {e}') from e
 
@@ -125,17 +127,18 @@ class Step(StepReporter):
 
     def _process_results(self, results: list[Task]) -> None:
         for result in results:
-            if result.context.state is State.RUNNING:
-                # add new tasks to the queue
-                new_specs = result.context.specs
-                if new_specs:
-                    logger.debug(f'task {result.spec.name} will add {len(new_specs)} new tasks to the queue')
-                    self.specs.extend(new_specs)
-                # add new keys to the scratchpad
-                self.task_registry.scratchpad.merge(result.context.scratchpad)
-            # update the task's state once done running/validating
             result.context.state = result.get_next_state()
+            if result.context.state is State.DONE:
+                result.context.task_queue.task_done()
             self.tasks[result.spec.name] = result
+
+    def _get_new_specs_from_sub_task_queues(self, queues: list[Queue[Spec]]) -> list[Spec]:
+        new_specs: list[Spec] = []
+        for q in queues:
+            while not q.empty():
+                new_spec = q.get()
+                new_specs.append(new_spec)
+        return new_specs
 
     @staticmethod
     def _run_task(task: Task, abort: Event) -> Task:
@@ -158,6 +161,7 @@ class Step(StepReporter):
 
         with Manager() as manager, ProcessPoolExecutor(max_workers=self.config.pool_size) as executor:
             abort = manager.Event()
+            queues: list[Queue[Spec]] = []
             futures: dict[str, Future[Task]] = {}
 
             def handle_sigint(*args: Any) -> None:
@@ -177,7 +181,7 @@ class Step(StepReporter):
                     ready_specs = self._get_ready_specs()
                     if ready_specs:
                         logger.debug(f'adding {len(ready_specs)} tasks to the queue')
-                        self.tasks.update(self._instantiate_tasks(ready_specs))
+                        self.tasks.update(self._instantiate_tasks(ready_specs, manager))
                     elif self._are_all_created_tasks_done():
                         logger.error(
                             'all tasks instantiated so far have been completed, but remaining specs '
@@ -188,6 +192,7 @@ class Step(StepReporter):
                     # add new tasks to the queue
                     ready_tasks = self._get_ready_tasks(futures)
                     for task in ready_tasks:
+                        queues.append(task.context.sub_queue)
                         future = executor.submit(self._run_task, task, abort)
                         futures[task.spec.name] = future
 
@@ -195,12 +200,14 @@ class Step(StepReporter):
                     if futures:
                         logger.trace(f'waiting for {len(futures)} task(s) to complete')
                         done, _ = wait(futures.values(), timeout=MANAGER_POLLING_RATE, return_when='FIRST_COMPLETED')
-
                         for future in done:
                             completed_task = future.result()
                             futures.pop(completed_task.spec.name)
                             self._process_results([completed_task])
                             self.upsert_task_manifests([completed_task])
+
+                    # collect new specs from task queues
+                    self.specs.extend(self._get_new_specs_from_sub_task_queues(queues))
 
             except Exception as e:
                 logger.critical(f'error running step {self.name}: {e}')

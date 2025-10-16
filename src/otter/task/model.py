@@ -5,18 +5,19 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from enum import Enum
+from queue import Queue
 from threading import Event
 from typing import Self, final
 
 from loguru import logger
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, SkipValidation, field_validator
 
 from otter.config.model import Config
 from otter.scratchpad.model import Scratchpad
 from otter.task.task_reporter import TaskReporter, report
 
 
-class Spec(BaseModel, extra='allow'):
+class Spec(BaseModel, extra='allow', arbitrary_types_allowed=True):
     """Task Spec model.
 
     A `Spec` describes the properties and types for the config of a :py:class:`Task`.
@@ -62,6 +63,7 @@ class Spec(BaseModel, extra='allow'):
         scratchpad are replaced.
 
         Defaults to ``False``."""
+    task_queue: SkipValidation[Queue[Spec]] | None = None
 
     @property
     def task_type(self) -> str:
@@ -96,13 +98,26 @@ READY_STATES = [State.PENDING_RUN, State.PENDING_VALIDATION]
 class TaskContext:
     """Task context."""
 
-    def __init__(self, config: Config, scratchpad: Scratchpad) -> None:
+    def __init__(
+        self,
+        config: Config,
+        scratchpad: Scratchpad,
+        task_queue: Queue[Spec],
+        sub_queue: Queue[Spec],
+    ) -> None:
         self.state: State = State.PENDING_RUN
         """The state of the task. See :class:`otter.task.model.State`."""
 
         self.abort: Event
         """An event that will trigger if another task fails. The `abort` event
             is assigned to the `task context` when the task is sent to run."""
+
+        self.task_queue: Queue[Spec] = task_queue
+        """A queue where the task itself belongs."""
+
+        self.sub_queue: Queue[Spec] = sub_queue
+        """A queue where new specs can be added to be instantiated into
+            new tasks, i.e. subtasks."""
 
         self.config: Config = config
         """The configuration object. See :class:`otter.config.model.Config`."""
