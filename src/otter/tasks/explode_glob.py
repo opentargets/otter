@@ -1,5 +1,6 @@
 """Generate more tasks based on a glob."""
 
+from queue import Queue
 from typing import Any, Self
 from uuid import uuid4
 
@@ -117,6 +118,7 @@ class ExplodeGlob(Task):
         files = remote_storage.glob(self.glob)
 
         new_tasks = 0
+        subtask_queue: Queue[Spec] = self.context.sub_queue
 
         for f in files:
             uri = f
@@ -146,9 +148,11 @@ class ExplodeGlob(Task):
             self.scratchpad.store('uuid', str(uuid4()))
 
             for do_spec in self.spec.do:
-                replaced_do_spec = Spec.model_validate(self.scratchpad.replace_dict(do_spec.model_dump()))
-                self.context.specs.append(replaced_do_spec)
+                subtask_spec = do_spec.model_validate(self.scratchpad.replace_dict(do_spec.model_dump()))
+                subtask_spec.task_queue = subtask_queue
+                subtask_queue.put(subtask_spec)
                 new_tasks += 1
-
         logger.info(f'exploded into {new_tasks} new tasks')
+        subtask_queue.shutdown()
+        subtask_queue.join()
         return self

@@ -6,7 +6,9 @@ import errno
 import importlib
 import pkgutil
 from importlib import resources
+from multiprocessing.managers import SyncManager
 from pathlib import Path
+from queue import Queue
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -80,13 +82,19 @@ class TaskRegistry:
 
             logger.debug(f'registered task type {task_type}')
 
-    def instantiate(self, spec: Spec) -> Task:
+    def instantiate(self, spec: Spec, manager: SyncManager) -> Task:
         """Instantiate a Task.
 
         Template replacement is performed here, right before initializing the Task.
 
         :param spec: The spec to instantiate the Task from.
         :type spec: Spec
+
+        :param manager: The SyncManager to use for creating shared queues.
+        :type manager: SyncManager
+        :raises SystemExit: If the task type is invalid or the spec is invalid.
+        :return: The instantiated Task.
+        :rtype: Task
         """
         task_type = spec.task_type
         try:
@@ -110,5 +118,32 @@ class TaskRegistry:
             raise SystemExit(errno.EINVAL)
 
         # create task and attach manifest
-        context = TaskContext(self.config, self.scratchpad)
+        if spec.task_queue:
+            context = TaskContext(self.config, self.scratchpad, task_queue=spec.task_queue, sub_queue=manager.Queue())
+        else:
+            task_queue = self._init_queue(manager, replaced_spec)
+            context = TaskContext(self.config, self.scratchpad, task_queue=task_queue, sub_queue=manager.Queue())
+        context.sub_queue = manager.Queue()
         return task_class(replaced_spec, context)
+
+    @staticmethod
+    def _init_queue(manager: SyncManager, spec: Spec) -> Queue[Spec]:
+        """Manage a multiprocessing queue.
+
+        This function is used to initialize a queue for a specific task.
+        It puts and gets an item to ensure the queue is set up such that
+        task_done() can be called without discriminating between these tasks
+        and those that were initialised from a queue.
+
+        :param manager: The SyncManager to use for creating the queue.
+        :type manager: SyncManager
+        :param spec: The spec to initialize the queue for.
+        :type spec: Spec
+        :return: The initialized queue.
+        :rtype: Queue[Spec]
+        """
+        task_queue = manager.Queue()
+        task_queue.put(spec)
+        task_queue.get()
+        task_queue.shutdown()
+        return task_queue
