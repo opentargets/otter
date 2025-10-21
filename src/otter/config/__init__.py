@@ -11,7 +11,6 @@ from otter.config.env import parse_env
 from otter.config.model import Config, Defaultconfig, YamlConfig
 from otter.config.yaml import parse_yaml
 from otter.util.errors import StepInvalidError, log_pydantic
-from otter.util.logger import init_logger
 
 
 def load_config(runner_name: str) -> Config:
@@ -39,7 +38,6 @@ def load_config(runner_name: str) -> Config:
     # get the step
     step = cli.step or env.step
     if not step:
-        init_logger(log_level='TRACE')  # must initialize logger to dump queue
         logger.critical('no step provided')
         raise SystemExit(errno.EINVAL)
 
@@ -49,7 +47,6 @@ def load_config(runner_name: str) -> Config:
     try:
         yml = YamlConfig(**config_dict | {'steps': list(config_dict.get('steps', {}))})
     except ValidationError as e:
-        init_logger(log_level='TRACE')  # must initialize logger to dump queue
         logger.critical('error validating yaml config')
         logger.error(log_pydantic(e))
         raise SystemExit(errno.EINVAL)
@@ -67,7 +64,6 @@ def load_config(runner_name: str) -> Config:
             log_level=cli.log_level or env.log_level or yml.log_level or dfl.log_level,
         )
     except Exception as e:
-        init_logger(log_level='TRACE')  # must initialize logger to dump queue
         if type(e) is StepInvalidError:
             logger.critical(f'invalid step: {step}')
             logger.info(f'valid steps are: {yml.steps}')

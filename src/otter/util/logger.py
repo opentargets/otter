@@ -204,4 +204,4 @@ def init_logger(log_level: str = 'INFO', app_name: str | None = None) -> None:
     logger.remove()
     logger.add(sink=sys.stdout, level=log_level, format=get_format_log())
     _early_logs.flush()
-    logger.debug('logger configured')
+    logger.debug(f'logger configured, level {log_level}')
