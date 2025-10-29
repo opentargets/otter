@@ -112,7 +112,7 @@ def task_logging(task: Task) -> Generator[None]:
     :type task: Task
     """
     found = False
-    for h in logger._core.handlers.values():  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+    for h in logger._core.handlers.values():  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownVariableType]
         if hasattr(h, '_sink') and hasattr(h._sink, '_stream') and h._sink._stream.name == '<stdout>':  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
             logger.debug('found stdout logger')
             found = True
@@ -201,7 +201,7 @@ def init_logger(log_level: str = 'INFO', app_name: str | None = None) -> None:
         global _runner_name  # noqa: PLW0602
         _runner_name.append(app_name)
 
+    _early_logs.flush()
     logger.remove()
     logger.add(sink=sys.stdout, level=log_level, format=get_format_log())
-    _early_logs.flush()
     logger.debug(f'logger configured, level {log_level}')
