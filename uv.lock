@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.13"
 
 [[package]]
@@ -439,7 +439,7 @@ wheels = [
 
 [[package]]
 name = "opentargets-otter"
-version = "25.0.12"
+version = "25.0.13"
 source = { editable = "." }
 dependencies = [
     { name = "filelock" },
