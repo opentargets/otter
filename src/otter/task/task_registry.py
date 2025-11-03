@@ -145,5 +145,6 @@ class TaskRegistry:
         task_queue = manager.Queue()
         task_queue.put(spec)
         task_queue.get()
-        task_queue.shutdown()
+        # disabled for now to allow python versions < 3.13
+        # subtask_queue.shutdown()
         return task_queue

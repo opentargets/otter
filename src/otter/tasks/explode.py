@@ -93,6 +93,7 @@ class Explode(Task):
                 subtask_queue.put(subtask_spec)
                 new_tasks += 1
         logger.info(f'exploded into {new_tasks} new tasks')
-        subtask_queue.shutdown()
+        # disabled for now to allow python versions < 3.13
+        # subtask_queue.shutdown()
         subtask_queue.join()
         return self
