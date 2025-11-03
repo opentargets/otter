@@ -5,7 +5,7 @@
   "required": [
     "work_path",
     "log_level",
-    "pool",
+    "pool_size",
     "steps"
   ],
   "properties": {
@@ -30,7 +30,7 @@
       ],
       "description": "Logging level for PIS"
     },
-    "pool": {
+    "pool_size": {
       "type": "integer",
       "description": "Number of parallel processes to use for task execution"
     },

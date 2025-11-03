@@ -1,6 +1,6 @@
 [project]
 name = "opentargets-otter"
-version = "25.0.13"
+version = "25.0.14"
 description = "Open Targets Task ExcutoR"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -47,6 +47,9 @@ include-package-data = false
 
 [tool.setuptools.packages.find]
 exclude = ["**/*_test.py"]
+
+[project.scripts]
+otter = "otter.core:main"
 
 [tool.pytest.ini_options]
 testpaths = ["src/test"]

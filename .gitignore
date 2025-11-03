@@ -9,5 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
-# sphinx build directory
+# Sphinx build directory
 _build/
+
+# Test files
+work/

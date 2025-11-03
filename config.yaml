@@ -1,0 +1,12 @@
+---
+work_path: ./work
+release_uri: gs://open-targets-pipeline-runs/jferrer
+log_level: DEBUG
+pool_size: 1
+
+scratchpad: {}
+
+steps:
+  test:
+    - name: hello_world test
+      who: test

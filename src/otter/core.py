@@ -111,3 +111,13 @@ class Runner:
         else:
             logger.error(f'step {step.name} failed')
             raise SystemExit(1)
+
+
+def main() -> None:
+    """Main function.
+
+    This main function runs a simple otter program for development and testing.
+    """
+    runner = Runner(name='otter')
+    runner.start()
+    runner.run()
