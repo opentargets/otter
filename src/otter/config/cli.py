@@ -86,8 +86,10 @@ def parse_cli(runner_name: str) -> BaseConfig:
         choices=['TRACE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         help='Log level for the application.',
     )
-
-    settings_vars = vars(parser.parse_args())
+    parsed_args, unknown_args = parser.parse_known_args()
+    if unknown_args:
+        logger.warning(f'unknown arguments: {unknown_args}')
+    settings_vars = vars(parsed_args)
     settings_dict = {k: v for k, v in settings_vars.items() if v is not None}
 
     return BaseConfig.model_validate(settings_dict)
