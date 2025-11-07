@@ -13,4 +13,6 @@ wheels/
 _build/
 
 # Test files
+.coverage
+coverage.xml
 work/

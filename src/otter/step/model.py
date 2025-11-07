@@ -127,6 +127,8 @@ class Step(StepReporter):
 
     def _process_results(self, results: list[Task]) -> None:
         for result in results:
+            if result.context.state is State.RUNNING:
+                self.task_registry.scratchpad.merge(result.context.scratchpad)
             result.context.state = result.get_next_state()
             if result.context.state is State.DONE:
                 result.context.task_queue.task_done()

@@ -2,10 +2,14 @@
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
+from otter.config.model import Config
 from otter.scratchpad.model import Scratchpad
+from otter.step.model import Step
+from otter.task.model import State
 
 
 class TestScratchpad:
@@ -43,3 +47,36 @@ class TestScratchpad:
         sp.store('replace', 'B')
         result = sp.replace_dict(dict_to_replace)
         assert result == expected_dict
+
+
+def test_process_results():
+    """Test that the scratchpad is merged correctly after processing results."""
+
+    # the new sentinel should be present here
+    global_scratchpad = Scratchpad()
+
+    # we don't care about config
+    mock_config = MagicMock(spec=Config)
+    task_registry = MagicMock()
+    task_registry.scratchpad = global_scratchpad
+
+    # we don't care about the task
+    mock_task = MagicMock()
+    mock_task.spec.name = 'test_task'
+    mock_task.context.state = State.RUNNING
+    mock_task.get_next_state.return_value = State.DONE
+
+    # this is where the sentinel should be picked up from
+    task_scratchpad = Scratchpad()
+    task_scratchpad.store('test_key', 'test_value')
+    mock_task.context.scratchpad = task_scratchpad
+
+    # we create a step with no tasks, the registry containing our global scratchpad
+    # and the mock config
+    step = Step('test_step', [], task_registry, mock_config)
+
+    # call the tested method with our mock task containing that sentinel in its scratchpad
+    step._process_results([mock_task])
+
+    # the global scratchpad should now contain that sentinel
+    assert global_scratchpad.sentinel_dict.get('test_key') == 'test_value'
