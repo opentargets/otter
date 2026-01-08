@@ -1,6 +1,5 @@
 """Helper that downloads files from various sources."""
 
-import functools
 import shutil
 from pathlib import Path
 from threading import Event
@@ -65,22 +64,17 @@ class Downloader:
     def _download(src: str, dst: Path, s: requests.Session, abort: Event | None = None):
         r = s.get(src, stream=True, timeout=(REQUEST_TIMEOUT, None))
         r.raise_for_status()
+        r.raw.decode_content = True
 
         if abort:
             # Wrap r.raw with an AbortableStreamWrapper
             abortable_stream = AbortableStreamWrapper(r.raw, abort=abort)
-            # Ensure we decode the content
-            abortable_stream.stream.read = functools.partial(
-                abortable_stream.stream.read,
-                decode_content=True,
-            )
 
             # Write the content to the destination file
             with open(dst, 'wb') as f:
                 shutil.copyfileobj(abortable_stream, f)
         else:
             with open(dst, 'wb') as f:
-                r.raw.decode_content = True
                 shutil.copyfileobj(r.raw, f)
 
 
