@@ -26,10 +26,14 @@ def v(func: Callable[..., bool], *args: Any, **kwargs: Any) -> None:
 
     :raises StepValidationError: If the validator returns False.
     """
-    logger.debug(f'running validator {func.__name__}')
+    name = getattr(func, '__name__', None)
+    if name is None:
+        raise TaskValidationError('invalid validator function passed to v')
+
+    logger.debug(f'running validator {name}')
 
     result = func(*args, **kwargs)
     if result is False:
-        raise TaskValidationError(f'validator {func.__name__} failed')
+        raise TaskValidationError(f'validator {name} failed')
 
-    logger.debug(f'validator {func.__name__} passed')
+    logger.debug(f'validator {name} passed')

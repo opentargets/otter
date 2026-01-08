@@ -14,6 +14,7 @@ import loguru
 from loguru import logger
 
 _runner_name: list[str] = ['otter']
+_early_logs: MessageQueue
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -112,8 +113,8 @@ def task_logging(task: Task) -> Generator[None]:
     :type task: Task
     """
     found = False
-    for h in logger._core.handlers.values():  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownVariableType]
-        if hasattr(h, '_sink') and hasattr(h._sink, '_stream') and h._sink._stream.name == '<stdout>':  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+    for h in logger._core.handlers.values():  # ty:ignore[unresolved-attribute]
+        if hasattr(h, '_sink') and hasattr(h._sink, '_stream') and h._sink._stream.name == '<stdout>':
             logger.debug('found stdout logger')
             found = True
     if not found:

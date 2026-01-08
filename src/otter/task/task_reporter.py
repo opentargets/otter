@@ -76,20 +76,24 @@ def report(func: Callable[..., Task]) -> Callable[..., Task]:
 
     @wraps(func)
     def wrapper(self: Task, *args: Any, **kwargs: Any) -> Task:
+        name = getattr(func, '__name__', None)
+        if name is None:
+            raise ValueError('wrapped function must have a __name__ attribute')
+
         try:
             # perform these before the wrapped method runs
-            if func.__name__ == 'run':
+            if name == 'run':
                 self.start_run()
-            elif func.__name__ == 'validate':
+            elif name == 'validate':
                 self.start_validation()
 
             # call the wrapped method
             result: TaskReporter = func(self, *args, **kwargs)
 
             # perform these after the wrapped method runs
-            if func.__name__ == 'run':
+            if name == 'run':
                 self.finish_run(done=self.is_next_state_done())
-            elif func.__name__ == 'validate':
+            elif name == 'validate':
                 self.finish_validation()
             return result
 
@@ -99,7 +103,7 @@ def report(func: Callable[..., Task]) -> Callable[..., Task]:
             if isinstance(e, TaskAbortedError):
                 self.abort()
             else:
-                self.fail(e, func.__name__)
+                self.fail(e, name)
             return self
 
     return wrapper
