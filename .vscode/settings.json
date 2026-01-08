@@ -9,9 +9,7 @@
   "ruff.nativeServer": true,
   "ruff.lint.enable": true,
   "ruff.organizeImports": true,
-  "python.analysis.autoImportCompletions": true,
-  "python.analysis.typeCheckingMode": "strict",
-  "python.languageServer": "Pylance",
+  "python.languageServer": "None",
   "files.exclude": {
     "**/__pycache__": true,
     "**/.pytest_cache": true,
@@ -19,7 +17,6 @@
     "*.egg-info": true,
     "build": true,
   },
-  "autoDocstring.docstringFormat": "sphinx",
   "yaml.schemas": {
     "./.vscode/config-schema.json": [
       "config.yaml"
