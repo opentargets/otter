@@ -42,7 +42,7 @@ def load_config(runner_name: str) -> Config:
         raise SystemExit(errno.EINVAL)
 
     # load the yaml config, changing the steps dict into a list of steps
-    config_path = (cli.config_path or env.config_path or dfl.config_path).resolve().absolute()
+    config_path = (cli.config_path or env.config_path or dfl.config_path).resolve()
     config_dict = parse_yaml(config_path)
     try:
         yml = YamlConfig(**config_dict | {'steps': list(config_dict.get('steps', {}))})
@@ -58,7 +58,7 @@ def load_config(runner_name: str) -> Config:
             step=step,
             steps=yml.steps,
             config_path=config_path,
-            work_path=(cli.work_path or env.work_path or yml.work_path or dfl.work_path).resolve().absolute(),
+            work_path=(cli.work_path or env.work_path or yml.work_path or dfl.work_path).resolve(),
             release_uri=cli.release_uri or env.release_uri or yml.release_uri or dfl.release_uri,
             pool_size=cli.pool_size or env.pool_size or yml.pool_size or dfl.pool_size,
             log_level=cli.log_level or env.log_level or yml.log_level or dfl.log_level,
