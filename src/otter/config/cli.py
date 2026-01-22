@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from otter.config.model import BaseConfig
+from otter.config.model import BaseConfig, Config
 
 if TYPE_CHECKING:
     from argparse import Action
@@ -33,7 +33,7 @@ def parse_cli(runner_name: str) -> BaseConfig:
         def _get_help_string(self, action: Action) -> str:
             if action.default is not argparse.SUPPRESS:
                 action.help = f'{action.help} (environment variable: {config_to_env(action.dest, runner_name)})'
-                default_value = BaseConfig.model_fields[action.dest].default
+                default_value = Config.model_fields[action.dest].default
                 if default_value != '':  # noqa: PLC1901
                     action.help += f' (default: {default_value})'
             return f'{action.help}'
