@@ -77,7 +77,7 @@ def parse_cli(runner_name: str) -> BaseConfig:
         type=int,
         help='The number of worker proccesses that will be spawned to run tasks'
         'in the step in parallel. It should be similar to the number of cores,'
-        'but could be higher because there is a lot of I/O blocking.',
+        'but could be higher because there is a lot of I/O blocking. Must be > 1.',
     )
 
     parser.add_argument(

@@ -32,7 +32,8 @@
     },
     "pool_size": {
       "type": "integer",
-      "description": "Number of parallel processes to use for task execution"
+      "description": "Number of parallel processes to use for task execution",
+      "minimum": 2
     },
     "scratchpad": {
       "type": "object",
