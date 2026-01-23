@@ -21,6 +21,12 @@ def _validate_uri(uri: str) -> str:
     return uri.rstrip('/')
 
 
+def _validate_pool_size(size: int) -> int:
+    if size < 2:
+        raise ValueError('pool_size must be > 1')
+    return size
+
+
 class BaseConfig(BaseModel):
     """Base config model."""
 
@@ -28,7 +34,7 @@ class BaseConfig(BaseModel):
     config_path: Path | None = None
     work_path: Path | None = None
     release_uri: Annotated[str, AfterValidator(_validate_uri)] | None = None
-    pool_size: int | None = None
+    pool_size: Annotated[int, AfterValidator(_validate_pool_size)] | None = None
     log_level: LOG_LEVELS | None = None
 
 
@@ -47,7 +53,7 @@ class YamlConfig(BaseModel):
 
     work_path: Path | None = None
     release_uri: Annotated[str, AfterValidator(_validate_uri)] | None = None
-    pool_size: int | None = None
+    pool_size: Annotated[int, AfterValidator(_validate_pool_size)] | None = None
     log_level: LOG_LEVELS | None = None
     steps: list[str] = []
 
@@ -92,7 +98,7 @@ class Config(BaseModel):
     """The release URI. If present, this is where resources, logs and manifest
     will be uploaded to."""
 
-    pool_size: int = 5
+    pool_size: Annotated[int, AfterValidator(_validate_pool_size)] = 5
     """The maximum number of workers in the pool where tasks will run."""
 
     log_level: LOG_LEVELS = 'INFO'
