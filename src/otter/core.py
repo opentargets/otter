@@ -94,10 +94,9 @@ class Runner:
 
         manifest = ManifestManager(
             runner_name=self.name,
-            remote_uri=self.config.release_uri,
-            local_path=self.config.work_path,
             relevant_step=step,
             steps=self.config.steps,
+            config=self.config,
         )
 
         step.run()

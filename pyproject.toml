@@ -55,6 +55,9 @@ otter = "otter.core:main"
 testpaths = ["src/test"]
 filterwarnings = "ignore:.*google._upb*" # warning from google protobuf library
 
+[tool.coverage.run]
+omit = ["src/test/*"]
+
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 

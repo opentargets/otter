@@ -1,53 +1,45 @@
-"""No-op storage class."""
+"""Noop storage class."""
+# ruff: noqa: D102 # docstring inheritance
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from otter.storage.model import RemoteStorage
-from otter.util.errors import NotFoundError
+from otter.storage.model import Revision, StatResult, Storage
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import IO
 
 
-class NoopStorage(RemoteStorage):
+class NoopStorage(Storage):
     """No-op storage helper class.
 
-    This class implements the RemoteStorage interface but does not perform any
-    operations. It is used when the run is local only.
+    Used as placeholder in not-implemented storage backends.
     """
 
     @property
     def name(self) -> str:
         """The name of the storage provider."""
-        return 'No-operation storage'
+        return 'Dummy storage'
 
-    def stat(self, uri: str) -> dict[str, Any]:
-        """Get metadata for a file."""
-        raise NotFoundError(uri)
+    def stat(self, location: str) -> StatResult:
+        raise NotImplementedError
 
-    def list(self, uri: str, pattern: str | None = None) -> list[str]:
-        """List files."""
-        raise NotFoundError(uri)
+    def open(self, location: str, mode: str = 'r', revision: Revision = None) -> IO:
+        raise NotImplementedError
 
-    def glob(self, uri: str) -> list[str]:
-        """List files matching a glob pattern."""
-        raise NotFoundError(uri)
+    def glob(self, location: str, pattern: str) -> list[str]:
+        raise NotImplementedError
 
-    def download_to_file(self, uri: str, dst: Path) -> int:
-        """Download a file to the local filesystem."""
-        raise NotFoundError(uri)
+    def download_to_file(self, src: str, dst: Path) -> int:
+        raise NotImplementedError
 
-    def download_to_string(self, uri: str) -> tuple[str, int]:
-        """Download a file and return its contents as a string."""
-        raise NotFoundError(uri)
+    def download_to_string(self, src: str) -> tuple[str, int]:
+        raise NotImplementedError
 
-    def upload(self, src: Path, uri: str, revision: int | None = None) -> int:
-        """Upload a file."""
-        return 0
+    def upload(self, src: Path, dst: str, revision: Revision = None) -> int:
+        raise NotImplementedError
 
-    def get_session(self) -> None:
-        """Return a session for making requests."""
-        return None
+    def copy_within(self, src: str, dst: str) -> int:
+        raise NotImplementedError

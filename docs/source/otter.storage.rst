@@ -12,6 +12,14 @@ storage.model module
    :undoc-members:
    :show-inheritance:
 
+storage.handle module
+---------------------
+
+.. automodule:: otter.storage.handle
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 storage.google module
 ---------------------
 

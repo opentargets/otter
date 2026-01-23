@@ -23,6 +23,10 @@ class StepFailedError(OtterError):
 
 
 # Task-related errors
+class TaskRunError(OtterError):
+    """Raise when a task fails to run."""
+
+
 class TaskAbortedError(OtterError):
     """Raise when a task is aborted."""
 
@@ -39,10 +43,21 @@ class DownloadError(OtterError):
     """Raise when an error occurs during a download."""
 
 
+class UploadError(OtterError):
+    """Raise when an error occurs during an upload."""
+
+
+class CopyError(OtterError):
+    """Raise when an error occurs during a copy operation."""
+
+
 class NotFoundError(OtterError):
     """Raise when something is not found."""
 
-    def __init__(self, thing: str | None = None) -> None:
+    def __init__(self, msg: str | None = None, thing: str | None = None) -> None:
+        if msg is not None:
+            super().__init__(msg)
+            return
         if thing is None:
             thing = 'item'
         super().__init__(f'{thing} not found')
@@ -58,3 +73,7 @@ class ScratchpadError(OtterError):
 
 class StorageError(OtterError):
     """Raise when an error occurs in a storage class."""
+
+
+class FSError(OtterError):
+    """Raise when an error occurs in the filesystem operations."""
