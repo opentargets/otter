@@ -5,79 +5,83 @@ from typing import Self
 
 from loguru import logger
 
-from otter.manifest.model import Artifact
+from otter.storage.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
-from otter.util.download import download
-from otter.validators import v
-from otter.validators.file import file_exists, file_size
+from otter.validators import file, v
 
 
 class DownloadSpec(Spec):
     """Configuration fields for the download task."""
 
     source: str
-    """The URL of the file to download. If it looks like a relative path, it will
-        be prepended the release_uri."""
-    destination: Path | None = None
-    """The local path to download the file to. If ommitted, the file will be
-        downloaded to the same path as the source."""
+    """The source location, relative to the release, of the file to download."""
 
 
 class Download(Task):
     """Download a file.
 
-    Downloads a file from `source` to `destination`. There are a few defaults and
-    conveniences built in to the task:
+    Downloads a file from ``source`` to a local destination. The source **must**
+    be relative to the release root. This should be used after a ``copy`` task
+    has put that artifact into the release, as modifying an external resource
+    would break reproducibility.
 
-    - If `source` does not contain a protocol (``://`` not present), the `release_uri` \
-        will be prepended to the source.
+    The destination will be the same as the source, but relative to the local
+    ``work_path``.
 
-    - If `destination` is not provided, the file will be downloaded to the same path \
-        as the source, prepending the work path.
+    This task should only be used when a later task needs an artifact to exist
+    locally for some reason. In most cases, downloading files should be avoided.
+    Instead:
 
-    Those two together are useful for downloading files from the release bucket.
+    * For copying artifacts into a release, use the ``copy`` task.
+    * For transforming data, whenever possible, open files already copied and work
+        with them directly.
+
+    .. note:: This task will not generate an artifact, as the downloaded file will
+        stay local only. It is a responsibility of subsequent tasks to put the
+        file in the release and generate the corresponding artifact. This is easy
+        because the relative part of the path once downloaded will be the same as
+        the one in the release.
     """
 
     def __init__(self, spec: DownloadSpec, context: TaskContext) -> None:
         super().__init__(spec, context)
         self.spec: DownloadSpec
-        self.source = spec.source
-        if '://' not in self.source:
-            if not context.config.release_uri:
-                raise ValueError('source must be a full url if release_uri is not provided')
-
-            self.source = f'{context.config.release_uri}/{spec.source}'
-            logger.info(f'prepending release_uri to source: {spec.source}')
-
-        self.destination = spec.destination
-        if not self.destination:
-            if '://' in self.spec.source:
-                raise ValueError('destination must be provided when source is a full url')
-            self.destination = context.config.work_path / spec.source
-            logger.info(f'using work_path as destination: {self.destination}')
+        self.destination = Path(f'{self.context.config.work_path}/{self.spec.source}')
 
     def _is_google_spreadsheet(self) -> bool:
         return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
 
     @report
     def run(self) -> Self:
-        assert self.destination is not None
-        download(self.source, self.destination, abort=self.context.abort)
-        self.artifact = Artifact(source=self.source, destination=str(self.destination))
-        logger.debug('download successful')
+        src = StorageHandle(self.spec.source, config=self.context.config)
+        if src.is_absolute:
+            raise ValueError('source must be relative to the release root')
+
+        src.download_to_file(self.destination)
         return self
 
     @report
     def validate(self) -> Self:
         """Check that the downloaded file exists and has a valid size."""
-        v(file_exists, self.destination)
+        v(
+            file.exists,
+            str(self.spec.source),  # source is relative destination
+            config=self.context.config,
+            force_local=True,
+        )
 
         # skip size validation for google spreadsheet
         if self._is_google_spreadsheet():
             logger.warning('skipping validation for google spreadsheet')
             return self
 
-        v(file_size, self.source, self.destination)
+        v(
+            file.size,
+            self.spec.source,
+            self.spec.source,  # source is relative destination
+            config=self.context.config,
+            force_local=True,
+        )
 
         return self

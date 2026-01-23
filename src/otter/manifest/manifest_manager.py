@@ -11,9 +11,10 @@ from filelock import FileLock, Timeout
 from loguru import logger
 from pydantic import ValidationError
 
+from otter.config.model import Config
 from otter.manifest.model import Result, RootManifest, StepManifest
 from otter.step.model import Step
-from otter.storage import get_remote_storage
+from otter.storage.handle import StorageHandle
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 from otter.util.logger import step_logging
 
@@ -27,51 +28,50 @@ class ManifestManager:
     def __init__(
         self,
         runner_name: str,
-        remote_uri: str | None,
-        local_path: Path,
         relevant_step: Step,
         steps: list[str],
+        config: Config,
     ) -> None:
         self.runner_name = runner_name
-        self._steps = steps
-        self.remote_uri = f'{remote_uri}/{MANIFEST_FILENAME}' if remote_uri else None
-        self.local_path = local_path / MANIFEST_FILENAME
         self.relevant_step = relevant_step
+        self.steps = steps
+        self.config: Config = config
         self._revision: int = 0
         self.manifest = self._load_remote() or self._load_local() or self._create_empty()
 
     def _load_remote(self) -> RootManifest | None:
-        if not self.remote_uri:
-            logger.info('no release uri provided, skipping remote manifest load')
+        if not self.config.release_uri:
             return None
-        remote_storage = get_remote_storage(self.remote_uri)
+
+        h = StorageHandle(MANIFEST_FILENAME, config=self.config)
         try:
-            manifest_str, self._revision = remote_storage.download_to_string(self.remote_uri)
-            logger.info(f'remote manifest read from {self.remote_uri} (revision {self._revision})')
+            manifest_str, self._revision = h.download_to_string()
+            logger.info(f'remote manifest read from {h.absolute} (revision {self._revision})')
             return self._validate(manifest_str)
         except NotFoundError:
-            logger.info(f'no remote manifest found in {self.remote_uri}')
+            logger.info(f'no remote manifest found in {h.absolute}')
             return None
         except StorageError as e:
-            logger.critical(f'error reading manifest from {self.remote_uri}: {e}')
+            logger.critical(f'error reading manifest from {h.absolute}: {e}')
             raise SystemExit(errno.EIO)
 
     def _load_local(self) -> RootManifest | None:
+        local_manifest_path = Path(self.config.work_path) / MANIFEST_FILENAME
         try:
-            manifest_str = self.local_path.read_text()
-            logger.info(f'local manifest read from {self.local_path}')
+            manifest_str = local_manifest_path.read_text()
+            logger.info(f'local manifest read from {local_manifest_path}')
             return self._validate(manifest_str)
         except FileNotFoundError:
-            logger.info(f'no local manifest found in {self.local_path}')
+            logger.info(f'no local manifest found in {local_manifest_path}')
             return None
         except (ValueError, OSError) as e:
-            logger.critical(f'error reading manifest from {self.local_path}: {e}')
+            logger.critical(f'error reading manifest from {local_manifest_path}: {e}')
             raise SystemExit(e.errno if isinstance(e, OSError) else errno.EIO)
 
     def _create_empty(self) -> RootManifest:
         logger.info('creating empty manifest')
         manifest = RootManifest()
-        for step in self._steps:
+        for step in self.steps:
             step_name = self.manifest_step_name(step)
             manifest.steps[step_name] = StepManifest(name=step)
         return manifest
@@ -96,36 +96,39 @@ class ManifestManager:
         self._save_local()
 
     def _save_remote(self) -> None:
-        if not self.remote_uri:
+        if not self.config.release_uri:
             return
+
         uploaded = False
-        remote_storage = get_remote_storage(self.remote_uri)
+        h = StorageHandle(MANIFEST_FILENAME, config=self.config)
+        local_manifest_path = Path(self.config.work_path) / MANIFEST_FILENAME
         while not uploaded:
             try:
-                logger.debug(f'uploading manifest to {self.remote_uri} (revision {self._revision})')
-                remote_storage.upload(self.local_path, self.remote_uri, self._revision)
+                logger.debug(f'uploading manifest to {h.absolute} (revision {self._revision})')
+                h.upload(local_manifest_path, self._revision)
                 uploaded = True
-                logger.success(f'remote manifest {self.remote_uri} uploaded')
+                logger.success(f'remote manifest saved to {h.absolute}')
             except PreconditionFailedError as e:
                 logger.debug(f'{e}, retrying after {UPLOAD_COOLDOWN} seconds...')
                 time.sleep(UPLOAD_COOLDOWN)
                 self._refresh_from_remote()
             except StorageError as e:
-                logger.critical(f'error uploading manifest: {e}')
+                logger.critical(f'error saving remote manifest: {e}')
                 raise SystemExit(errno.EIO)
 
     def _save_local(self) -> None:
-        lock_path = f'{self.local_path}.lock'
+        local_manifest_path = Path(self.config.work_path) / MANIFEST_FILENAME
+        lock_path = f'{local_manifest_path}.lock'
         manifest_str = self._serialize()
         lock = FileLock(lock_path, timeout=5)
         try:
             lock.acquire()
-            self.local_path.write_text(manifest_str)
+            Path(local_manifest_path).write_text(manifest_str)
             lock.release()
             Path(lock_path).unlink(missing_ok=True)
-            logger.debug(f'local manifest {self.local_path} written')
+            logger.debug(f'local manifest saved to {local_manifest_path}')
         except (OSError, Timeout) as e:
-            logger.critical(f'error writing local manifest to {self.local_path}: {e}')
+            logger.critical(f'error saving local manifest to {local_manifest_path}: {e}')
             raise SystemExit(e.errno)
 
     def _check_steps(self) -> None:

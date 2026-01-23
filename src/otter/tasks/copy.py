@@ -1,76 +1,66 @@
 """Copy a file."""
 
-from pathlib import Path
 from typing import Self
 
 from loguru import logger
 
 from otter.manifest.model import Artifact
-from otter.storage import get_remote_storage
+from otter.storage.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
-from otter.util.download import download
-from otter.validators import v
-from otter.validators.file import file_exists, file_size
+from otter.validators import file, v
 
 
 class CopySpec(Spec):
     """Configuration fields for the copy task."""
 
     source: str
-    """The URL of the file to download."""
+    """The source URI of the file to copy. Must be absolute."""
     destination: str
-    """The path, relative to `release_uri` to upload the file to."""
+    """The destination for the file, relative to the release root."""
 
 
 class Copy(Task):
     """Copy a file.
 
-    Downloads a file from `source`, then uploads it to `destination`.
+    Copies a file from an external source to a destination inside the release. If
+    no `release_uri` is provided in the configuration, the file will be downloaded
+    to the local `work_path`.
 
-    .. note:: `destination` will be prepended with the :py:obj:`otter.config.model.Config.release_uri`
-        config field.
+    .. note:: `source` must be absolute. This task is intended for external resources.
 
-    If no `release_uri` is provided in the configuration, the file will only be
-    downloaded locally. This is useful for local runs or debugging. The local path
-    will be created by prepeding :py:obj:`otter.config.model.Config.work_path` to the
-    destination field.
+    .. note:: `destination` will be prepended with either :py:obj:`otter.config.model.Config.release_uri`
+        or :py:obj:`otter.config.model.Config.work_path` config fields.
     """
 
     def __init__(self, spec: CopySpec, context: TaskContext) -> None:
         super().__init__(spec, context)
         self.spec: CopySpec
-        self.local_path: Path = context.config.work_path / spec.destination
-        self.remote_uri: str | None = None
-        if context.config.release_uri:
-            self.remote_uri = f'{context.config.release_uri}/{spec.destination}'
 
     def _is_google_spreadsheet(self) -> bool:
         return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
 
     @report
     def run(self) -> Self:
-        download(self.spec.source, self.local_path, abort=self.context.abort)
-        logger.debug('download successful')
+        logger.info(f'copying file from {self.spec.source} to {self.spec.destination}')
+        src = StorageHandle(self.spec.source)
+        dst = StorageHandle(self.spec.destination, config=self.context.config)
 
-        if self.remote_uri:
-            remote_storage = get_remote_storage(self.remote_uri)
-            remote_storage.upload(self.local_path, self.remote_uri)
-            logger.debug('upload successful')
+        src.copy_to(dst)
 
-        self.artifacts = [Artifact(source=self.spec.source, destination=self.remote_uri or str(self.local_path))]
+        self.artifacts = [Artifact(source=src.absolute, destination=dst.absolute)]
         return self
 
     @report
     def validate(self) -> Self:
-        """Check that the downloaded file exists and has a valid size."""
-        v(file_exists, self.local_path)
+        """Check that the copied file exists and has a valid size."""
+        v(file.exists, self.spec.destination, config=self.context.config)
 
         # skip size validation for google spreadsheet
         if self._is_google_spreadsheet():
             logger.warning('skipping validation for google spreadsheet')
             return self
 
-        v(file_size, self.spec.source, self.local_path)
+        v(file.size, self.spec.source, self.spec.destination, config=self.context.config)
 
         return self

@@ -1,64 +1,79 @@
 """Validators for files."""
 
-from pathlib import Path
-
-import requests
 from loguru import logger
+
+from otter.config.model import Config
+from otter.storage.handle import StorageHandle
 
 REQUEST_TIMEOUT = 10
 
 
-def file_exists(path: Path) -> bool:
+def exists(
+    location: str,
+    config: Config | None = None,
+    force_local: bool = False,
+) -> bool:
     """Check if a file exists.
 
-    :param path: The path to the file.
-    :type path: Path
+    Optionally takes a :class:`otter.config.model.Config` instance to work with
+    relative locations.
 
+    :param location: The file location.
+    :type location: str
+    :param config: The :class:`otter.config.model.Config` instance.
+    :type config: Config | None
+    :param force_local: Whether to force local resolution.
+    :type local: bool
     :return: True if the file exists, False otherwise.
     :rtype: bool
     """
-    logger.trace(path)
-    return path.exists()
+    logger.trace(location)
+    try:
+        StorageHandle(location, config=config, force_local=force_local).stat()
+        logger.trace(f'file {location} exists')
+    except Exception as e:
+        logger.warning(f'error when doing stat: {e}')
+        return False
+    return True
 
 
-def file_size(source: str, destination: Path) -> bool:
-    """Check if the file size of a remote file matches the local file.
+def size(
+    one: str,
+    two: str,
+    config: Config | None = None,
+    force_local: bool = False,
+) -> bool:
+    """Check if two files have the same size.
 
-    :param source: The URL of the remote file.
-    :type source: str
-    :param destination: The path to the local file.
-    :type destination: Path
+    Optionally takes a :class:`otter.config.model.Config` instance to work with
+    relative locations.
 
+    :param one: The first file location
+    :type one: str
+    :param two: The second file location
+    :type two: str
+    :param config: The :class:`otter.config.model.Config` instance.
+    :type config: Config | None
+    :param force_local: Whether to force local resolution on the second file.
+    :type local: bool
     :return: True if the file sizes match, False otherwise.
     :rtype: bool
     """
-    logger.debug(f'checking if {source} and {destination} are the same size')
-
-    # this ensures no gzip encoding is used
-    headers = {'accept-encoding': 'identity'}
+    logger.debug(f'checking if {one} and {two} are the same size')
 
     try:
-        resp = requests.head(
-            source,
-            headers=headers,
-            allow_redirects=True,
-            timeout=REQUEST_TIMEOUT,
-        )
+        one_handle = StorageHandle(one, config=config)
+        one_stat = one_handle.stat()
+        if not one_stat.size:
+            logger.warning(f'could not determine size of {one}, skipping size comparison')
+            return True
+        two_handle = StorageHandle(two, config=config, force_local=force_local)
+        two_stat = two_handle.stat()
+        if not two_stat.size:
+            logger.warning(f'could not determine size of {two}, skipping size comparison')
+            return True
+        logger.trace(f'size of {one}: {one_stat.size}, size of {two}: {two_stat.size}')
     except Exception as e:
-        logger.warning(f'head request failed: {e}')
-        return True
-
-    if not resp.ok:
-        logger.warning(f'head request returned {resp.status_code}, cannot validate file size')
-        return True
-
-    remote_size = 0
-    if 'Content-Length' not in resp.headers:
-        logger.warning('no content-length header in response, cannot validate file size')
-        return True
-
-    remote_size = int(resp.headers['Content-Length'])
-    local_size = Path(destination).stat().st_size
-
-    logger.debug(f'checking if {remote_size} == {local_size}')
-    return remote_size == local_size
+        logger.warning(f'error when doing stat: {e}')
+        return False
+    return one_stat.size == two_stat.size

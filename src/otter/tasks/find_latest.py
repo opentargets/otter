@@ -4,9 +4,10 @@ from typing import Self
 
 from loguru import logger
 
-from otter.storage import get_remote_storage
+from otter.storage.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
+from otter.util.util import split_glob
 
 
 class FindLatestSpec(Spec):
@@ -14,12 +15,7 @@ class FindLatestSpec(Spec):
 
     source: str
     """The prefix from where the file with the latest modification date will be
-        found."""
-    pattern: str | None = None
-    """The pattern to match files against. The pattern should be a simple string
-        match, preceded by an exclamation mark to exclude files. For example,
-        ``foo`` will match only files containing ``foo``, while ``!foo`` will
-        exclude all files containing ``foo``."""
+        found. It can include glob patterns."""
     scratchpad_key: str | None = None
     """The scratchpad key where the path of the latest file will be stored.
         Defaults to the task name."""
@@ -34,22 +30,20 @@ class FindLatest(Task):
 
     @report
     def run(self) -> Self:
-        remote_storage = get_remote_storage(self.spec.source)
-        files = remote_storage.list(self.spec.source, self.spec.pattern)
-        if not files:
-            raise ValueError(f'no files found in {self.spec.source} with pattern {self.spec.pattern}')
+        prefix, glob = split_glob(self.spec.source)
+        h = StorageHandle(prefix)
+        file_paths = h.glob(glob)
 
-        newest_file = files.pop(0)
+        latest, latest_mtime = None, None
+        for p in file_paths:
+            f = StorageHandle(p)
+            s = f.stat()
+            if latest_mtime is None or s.mtime > latest_mtime:
+                latest, latest_mtime = f, s.mtime
 
-        if len(files):
-            mtime = remote_storage.stat(newest_file)['mtime']
-
-            for file in files:
-                new_mtime = remote_storage.stat(file).get('mtime', 0)
-                if remote_storage.stat(file).get('mtime', 0) > mtime:
-                    newest_file = file
-                    mtime = new_mtime
-
-        logger.info(f'latest file is {newest_file}')
-        self.context.scratchpad.store(self.spec.scratchpad_key or self.spec.name, newest_file)
+        if latest is None:
+            raise FileNotFoundError(f'no files found matching {self.spec.source}')
+        else:
+            logger.info(f'latest file is {latest.absolute}')
+            self.context.scratchpad.store(self.spec.scratchpad_key or self.spec.name, latest.absolute)
         return self
