@@ -24,14 +24,6 @@ manifest.model module
    :undoc-members:
    :show-inheritance:
 
-manifest.manifest\_manager module
----------------------------------
-
-.. automodule:: otter.manifest.manifest_manager
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

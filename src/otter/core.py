@@ -1,5 +1,6 @@
 """Main module."""
 
+import asyncio
 from importlib.metadata import version
 
 from loguru import logger
@@ -8,6 +9,7 @@ from otter.config import load_config
 from otter.manifest.manifest_manager import ManifestManager
 from otter.manifest.model import Result
 from otter.scratchpad import load_scratchpad
+from otter.step.coordinator import Coordinator
 from otter.step.model import Step
 from otter.task import load_specs
 from otter.task.task_registry import TaskRegistry
@@ -81,26 +83,22 @@ class Runner:
         """
         self.task_registry.register(task_package)
 
-    def run(self) -> None:
-        """Run the step."""
+    async def run(self) -> Step:
+        """Run the step.
+
+        :return: The final step object after the run.
+        :rtype: Step
+        """
         step = Step(
             name=self.config.step,
             specs=self.specs,
+        coordinator = Coordinator(
+            step=step,
             task_registry=self.task_registry,
             config=self.config,
         )
-        step.check_cycles()
 
-        manifest = ManifestManager(
-            runner_name=self.name,
-            relevant_step=step,
-            steps=self.config.steps,
-            config=self.config,
-        )
-
-        step.run()
-
-        manifest.complete(step)
+        await coordinator.run()
 
         if manifest.manifest.result not in [Result.PENDING, Result.SUCCESS]:
             logger.warning('there are failed steps in the manifest')
@@ -110,6 +108,8 @@ class Runner:
             logger.error(f'step {step.name} failed')
             raise SystemExit(1)
 
+        return step
+
 
 def main() -> None:
     """Main function.
@@ -118,4 +118,4 @@ def main() -> None:
     """
     runner = Runner(name='otter')
     runner.start()
-    runner.run()
+    asyncio.run(runner.run())

@@ -56,15 +56,15 @@ class Scratchpad:
         'Hello, Alice!'
 
     The `Scratchpad` class is used to perform template substitution in a `Spec`,
-    right before the task instantiation.
+    right before the task is built.
 
     .. important:: You can use internal scratchpads in tasks. For example, to have
         private variables that are only replaced in one of the specs.
 
         To be able to do this, however, you must set the
         ``scratchpad_ignore_missing`` attribute to ``True`` in the task model.
-        This will allow the task to be instantiated even if keys are missing
-        from the global scratchpad.
+        This will allow the task to be built even if keys are missing from the
+        global scratchpad.
 
         You are responsible, however, of ensuring that the keys are present in
         the internal scratchpad. It is good practice to leave the internal
@@ -78,7 +78,7 @@ class Scratchpad:
             def model_post_init(self, __context: Any) -> None:
                 self.scratchpad_ignore_missing = True
 
-    .. seealso::  :py:meth:`otter.task.task_registry.TaskRegistry.instantiate`
+    .. seealso::  :py:meth:`otter.task.task_registry.TaskRegistry.build`
     """
 
     def __init__(self, sentinel_dict: dict[str, Any] | None = None) -> None:

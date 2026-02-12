@@ -13,10 +13,18 @@ model module
    :undoc-members:
    :show-inheritance:
 
-step\_reporter module
----------------------
+coordinator module
+------------------
 
-.. automodule:: otter.step.step_reporter
+.. automodule:: otter.step.coordinator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+worker module
+-------------
+
+.. automodule:: otter.step.worker
    :members:
    :undoc-members:
    :show-inheritance:

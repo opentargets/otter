@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from enum import Enum
-from queue import Queue
 from threading import Event
 from typing import Self, final
 
 from loguru import logger
-from pydantic import BaseModel, SkipValidation, field_validator
+from pydantic import BaseModel, field_validator
 
 from otter.config.model import Config
 from otter.scratchpad.model import Scratchpad
@@ -53,17 +52,14 @@ class Spec(BaseModel, extra='allow', arbitrary_types_allowed=True):
     """The name of the task. It is used to identify the task in the manifest and
         in the configuration file."""
     requires: list[str] = []
-    """A list of task names that this task depends on. The task will only run when
-        all the prerequisites are completed."""
+    """A list of tasks that this one depends on. The task will only run when all
+        the prerequisites are completed."""
     scratchpad_ignore_missing: bool = False
-    """Whether to ignore missing keys in the scratchpad when replacing placeholders.
-
-        This is useful for tasks that use their own placeholders, which will happen
-        after the spec is instantiated and the placeholders contained in the global
-        scratchpad are replaced.
+    """Whether to ignore missing sentinels from the scratchpad when building the
+        task. This is useful for tasks that use their own placeholders and internal
+        scratchpads when running, e.g.: explode task.
 
         Defaults to ``False``."""
-    task_queue: SkipValidation[Queue[Spec]] | None = None
 
     @property
     def task_type(self) -> str:
@@ -85,11 +81,9 @@ class State(Enum):
     RUNNING = 1
     PENDING_VALIDATION = 2
     VALIDATING = 3
-    DONE = 4
+    WAITING_FOR_SUBTASKS = 4
+    DONE = 5
 
-
-DEP_READY_STATES = [State.PENDING_VALIDATION, State.VALIDATING, State.DONE]
-"""States on which a task can be considered as ready for others depending on it."""
 
 READY_STATES = [State.PENDING_RUN, State.PENDING_VALIDATION]
 """States on which a task can be considered as ready to be sent to a worker."""
@@ -102,8 +96,6 @@ class TaskContext:
         self,
         config: Config,
         scratchpad: Scratchpad,
-        task_queue: Queue[Spec],
-        sub_queue: Queue[Spec],
     ) -> None:
         self.state: State = State.PENDING_RUN
         """The state of the task. See :class:`otter.task.model.State`."""
@@ -112,36 +104,22 @@ class TaskContext:
         """An event that will trigger if another task fails. The `abort` event
             is assigned to the `task context` when the task is sent to run."""
 
-        self.task_queue: Queue[Spec] = task_queue
-        """A queue where the task itself belongs."""
-
-        self.sub_queue: Queue[Spec] = sub_queue
-        """A queue where new specs can be added to be instantiated into
-            new tasks, i.e. subtasks."""
-
         self.config: Config = config
         """The configuration object. See :class:`otter.config.model.Config`."""
 
         self.scratchpad: Scratchpad = scratchpad
         """The scratchpad object. See :class:`otter.scratchpad.model.Scratchpad`."""
 
-        self._specs: list[Spec] = []
-        """The list of generated specs."""
+        self.specs: list[Spec] = []
+        """The list of new specs to be added to the step."""
 
-    @property
-    def specs(self) -> list[Spec]:
-        """The list of generated specs."""
-        return self._specs
-
-    def add_specs(self, specs: Sequence[Spec]) -> None:
+    def add_specs(self, specs: Spec | Sequence[Spec]) -> None:
         """Add specs to the context.
 
-        This method can be called from inside a task and passed a list of specs.
-        As soon as the task is finished, the specs will be instantiated into new
-        tasks and added to the queue.
+        The coordinator will take these new specs, build tasks from them and add
+        them to the step's queue.
 
-        This enables tasks to dynamically generate new tasks based on the result
-        of the current task.
+        This enables tasks to dynamically generate new tasks.
 
         .. warning:: Adding requirements to these specs can cause cycles in the
             graph. This can only be checked at runtime, and can cause long running
@@ -150,29 +128,32 @@ class TaskContext:
         :param specs: The list of specs to add.
         :type specs: Sequence[Spec]
         """
-        self._specs.extend(specs)
+        if isinstance(specs, Spec):
+            self.specs.append(specs)
+        else:
+            self.specs.extend(specs)
 
 
 class Task(TaskReporter):
     """Base class for tasks.
 
-    `Task` is the main building block for a `Step`. They are the main unit of work
+    ``Task`` is the main building block for a ``Step``. They are the main unit of work
     in Otter.
 
-    The config for a `Task` is contained in a :py:class:`otter.task.model.Spec`
+    The config for a ``Task`` is contained in a :py:class:`otter.task.model.Spec`
     object.
 
-    A `Task` can optionally have a list of :py:class:`otter.manifest.model.Artifact`,
+    A ``Task`` can optionally have a list of :py:class:`otter.manifest.model.Artifact`,
     which will contain metadata related to its input input and output and will be
     added to the step manifest.
 
     Tasks subclass :py:class:`otter.task.model.TaskReporter` to provide automatic
     logging, tracking and error handling.
 
-    | To implement a new `Task`:
-    | 1. Create a new class that extends `Spec` with the required config fields.
-    | 2. Create a subclass of `Task` and implement the `run` and, optionally,
-        `validate` methods.
+    | To implement a new ``Task``:
+    | 1. Create a new class that extends ``Spec`` with the required config fields.
+    | 2. Create a subclass of ``Task`` and implement the :py:meth:`run` method.
+         Optionally, implement the :py:meth:`validate` method.
     """
 
     def __init__(self, spec: Spec, context: TaskContext) -> None:
@@ -182,11 +163,29 @@ class Task(TaskReporter):
         logger.debug(f'initialized task {self.spec.name}')
 
     @final
-    def get_state_execution_method(self) -> Callable[..., Task]:
+    def has_validation(self) -> bool:
+        """Determine if the task has validation.
+
+        :return: True if the task has validation, False otherwise.
+        :rtype: bool
+        """
+        return self.__class__.__dict__.get('validate', None) is not Task.validate
+
+    @final
+    def has_subtasks(self) -> bool:
+        """Determine if the task has generated subtasks.
+
+        :return: True if the task has generated subtasks, False otherwise.
+        :rtype: bool
+        """
+        return len(self.context.specs) > 0
+
+    @final
+    def get_execution_method(self) -> Callable[..., Self] | Callable[..., Awaitable[Self]]:
         """Get the method to execute based on the task state.
 
         :return: The method to execute.
-        :rtype: Callable[..., Task]
+        :rtype: Callable[..., Self] | Callable[..., Awaitable[Self]]
         """
         match self.context.state:
             case State.RUNNING:
@@ -200,63 +199,66 @@ class Task(TaskReporter):
     def get_next_state(self) -> State:
         """Get the next state.
 
-        Checks if the task has a validation method to determine if the next state
-        should be `PENDING_VALIDATION` or `DONE`.
+        Returns the immediately next state, except in these cases:
+        - If the current state is ``RUNNING`` and the task does not implement
+          validation, check for subtasks. If there are subtasks, return
+          ``WAITING_FOR_SUBTASKS``, else return ``DONE``.
+        - If the current state is ``VALIDATING``, check for subtasks. If there
+          are subtasks, return ``WAITING_FOR_SUBTASKS``, else return ``DONE``.
 
         :return: The next state.
         :rtype: State
         """
         if self.context.state is State.RUNNING:
-            task_validate = self.__class__.__dict__.get('validate', None)
-            if not task_validate:
+            if not self.has_validation():
                 logger.warning(f'task {self.name} does not implement validation')
+                if self.has_subtasks():
+                    return State.WAITING_FOR_SUBTASKS
                 return State.DONE
+        if self.context.state is State.VALIDATING:
+            if self.has_subtasks():
+                return State.WAITING_FOR_SUBTASKS
+            return State.DONE
+
         return State(self.context.state.value + 1)
-
-    @final
-    def is_next_state_done(self) -> bool:
-        """Check if the next state is DONE.
-
-        This is used to determine if the task has finished running and has no
-        validation phase, or if the task has finished validating.
-
-        :return: True if the next state is DONE, False otherwise.
-        :rtype: bool
-        """
-        return self.get_next_state() is State.DONE
 
     @abstractmethod
     @report
-    def run(self) -> Self:
+    async def run(self) -> Self:
         """Run the task.
 
-        This method contains the actual work of a `Task`. All tasks must implement
-        `run`.
+        This method contains the actual work of a ``Task``. Tasks must implement
+        ``run``.
 
-        Optionally, a list of :class:`otter.manifest.models.Artifact` object can be
-        assigned to ``self.artifacts`` in the body of the method. These will be added
-        to the step manifest.
+        Optionally, a list of :class:`otter.manifest.models.Artifact` object can
+        be assigned to ``self.artifacts`` in the body of the method. These will
+        be added to the step manifest.
 
-        Optionally, an `abort` event can be watched to stop the task if another
+        Optionally, an ``abort`` event can be watched to stop the task if another
         fails. This is useful for long running work that can be stopped midway
         once the run is deemed to be a failure.
 
-        :return: The `Task` instance itself must be returned.
+        :return: The ``Task`` instance itself must be returned.
         :rtype: Self
         """
         return self
 
     @report
-    def validate(self) -> Self:
+    async def validate(self) -> Self:
         """Validate the task result.
 
         This method should be implemented if the task requires validation. If not
         implemented, the task will always be considered valid.
 
-        The validate method should make use of the `v` method from the validators
-        module to invoke a series of validators. See :func:`otter.validators.v`.
+        The validate method should call validators from the :py:mod:`otter.validators`
+        module to perform validation. The validators must always return ``None``
+        and raise :py:class:`otter.util.errors.TaskValidationError` if the validation
+        fails.
 
-        :return: The `Task` instance itself must be returned.
+        .. seealso:: :py:mod:`otter.validators` for some built-in validators that
+            can be used as examples to implement your own.
+
+        :return: The ``Task`` instance itself must be returned.
         :rtype: Self
         """
         return self
