@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from functools import wraps
 from typing import TYPE_CHECKING
@@ -71,11 +73,11 @@ class TaskReporter:
         logger.opt(exception=sys.exc_info()).error(f'task {where} failed: {error}')
 
 
-def report(func: Callable[..., Task]) -> Callable[..., Task]:
+def report(func: Callable[..., Task] | Callable[..., Awaitable[Task]]) -> Callable[..., Awaitable[Task]]:
     """Decorator for logging and updating tasks in the manifest."""
 
     @wraps(func)
-    def wrapper(self: Task, *args: Any, **kwargs: Any) -> Task:
+    async def wrapper(self: Task, *args: Any, **kwargs: Any) -> Task:
         name = getattr(func, '__name__', None)
         if name is None:
             raise ValueError('wrapped function must have a __name__ attribute')
@@ -87,17 +89,22 @@ def report(func: Callable[..., Task]) -> Callable[..., Task]:
             elif name == 'validate':
                 self.start_validation()
 
-            # call the wrapped method
-            result: TaskReporter = func(self, *args, **kwargs)
+            # call the wrapped method (handle both async and sync)
+            result: Task
+            if asyncio.iscoroutinefunction(func):
+                result = await func(self, *args, **kwargs)
+            else:
+                result = func(self, *args, **kwargs)  # type: ignore[assignment]
 
             # perform these after the wrapped method runs
             if name == 'run':
-                self.finish_run(done=self.is_next_state_done())
+                self.finish_run(done=not self.has_validation())
             elif name == 'validate':
                 self.finish_validation()
+
             return result
 
-        # handle exceptions that happen during the call to the wrapped method
+        # handle exceptions
         except Exception as e:
             self.context.abort.set()
             if isinstance(e, TaskAbortedError):
