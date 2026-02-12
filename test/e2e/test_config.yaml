@@ -1,0 +1,30 @@
+---
+# Test configuration for end-to-end testing
+work_path: ./test-work
+log_level: DEBUG
+pool_size: 2
+
+scratchpad: {}
+
+steps:
+  simple:
+    - name: hello_world simple
+      who: simple
+
+  multi_task:
+    - name: hello_world first
+      who: first
+    - name: hello_world second
+      who: second
+    - name: hello_world third with requirements
+      requires: [hello_world first, hello_world second]
+      who: third
+
+  explode_test:
+    - name: explode a test
+      foreach:
+        - alice
+        - bob
+      do:
+        - name: hello_world for ${each}
+          who: ${each}
