@@ -135,6 +135,10 @@ class Coordinator:
             self._task_subtasks.setdefault(task.spec.name, []).extend(spec.name for spec in new_specs)
             logger.info(f'task {task.spec.name} generated {len(new_specs)} new specs')
 
+    def _add_sentinels_to_global_scratchpad(self, task: Task) -> None:
+        """Add any sentinels from the task context to the global scratchpad."""
+        self.task_registry.scratchpad.merge(task.context.scratchpad)
+
     def _process_done_tasks(self) -> None:
         """Process done tasks."""
         for task in self._get_task_results():
@@ -143,6 +147,7 @@ class Coordinator:
             if task.context.state == State.PENDING_VALIDATION:
                 logger.trace(f'task {task.spec.name} completed running, adding new specs from it')
                 self._add_new_specs_from_task(task)
+                self._add_sentinels_to_global_scratchpad(task)
                 self._enqueue_tasks([task])
             if task.context.state == State.DONE:
                 self.step.upsert_task_manifest(task)

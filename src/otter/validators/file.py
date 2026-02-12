@@ -31,9 +31,7 @@ async def exists(
         await StorageHandle(location, config=config, force_local=force_local).stat()
         logger.trace(f'file {location} exists')
     except Exception as e:
-        # log as warning because this is expected if validator fails
-        logger.warning(f'error when doing stat: {e}')
-        raise TaskValidationError(f'file does not exist: {location}') from e
+        raise TaskValidationError from e
 
 
 async def size(
