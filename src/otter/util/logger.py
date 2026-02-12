@@ -19,7 +19,6 @@ _early_logs: MessageQueue
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from otter.step.model import Step
     from otter.task.model import Task
 
 
@@ -127,25 +126,6 @@ def task_logging(task: Task) -> Generator[None]:
             filter=lambda record: record['extra'].get('task') == task.spec.name,
             format=get_format_log(include_task=False),
             level=task.context.config.log_level or 'TRACE',
-        )
-
-        yield
-
-
-@contextmanager
-def step_logging(step: Step) -> Generator[None]:
-    """Context manager that appends log messages to the step's manifest.
-
-    :param step: The step to log messages to.
-    :type step: Step
-    """
-    with logger.contextualize(step=step.name):
-        sink_step: Callable[[str], None] = lambda message: step.manifest.log.append(message)
-        logger.add(
-            sink=sink_step,
-            filter=lambda record: record['extra'].get('step') == step.name,
-            format=get_format_log(include_task=False),
-            level=step.config.log_level or 'TRACE',
         )
 
         yield

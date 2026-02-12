@@ -3,8 +3,6 @@
 from pathlib import Path
 from typing import Self
 
-from loguru import logger
-
 from otter.storage.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
@@ -49,9 +47,6 @@ class Download(Task):
         self.spec: DownloadSpec
         self.destination = Path(f'{self.context.config.work_path}/{self.spec.source}')
 
-    def _is_google_spreadsheet(self) -> bool:
-        return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
-
     @report
     async def run(self) -> Self:
         src = StorageHandle(self.spec.source, config=self.context.config)
@@ -66,20 +61,16 @@ class Download(Task):
     @report
     async def validate(self) -> Self:
         """Check that the downloaded file exists and has a valid size."""
+        # remember: self.spec.source is relative, so destination is work_dir/{source}
         await file.exists(
-            str(self.spec.source),  # source is relative destination
+            str(self.spec.source),
             config=self.context.config,
             force_local=True,
         )
 
-        # skip size validation for google spreadsheet
-        if self._is_google_spreadsheet():
-            logger.warning('skipping validation for google spreadsheet')
-            return self
-
         await file.size(
             self.spec.source,
-            self.spec.source,  # source is relative destination
+            self.spec.source,  # same as above
             config=self.context.config,
             force_local=True,
         )
