@@ -37,9 +37,6 @@ class Copy(Task):
         super().__init__(spec, context)
         self.spec: CopySpec
 
-    def _is_google_spreadsheet(self) -> bool:
-        return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
-
     @report
     async def run(self) -> Self:
         logger.info(f'copying file from {self.spec.source} to {self.spec.destination}')
@@ -58,11 +55,6 @@ class Copy(Task):
             self.spec.destination,
             config=self.context.config,
         )
-
-        # skip size validation for google spreadsheet
-        if self._is_google_spreadsheet():
-            logger.warning('skipping validation for google spreadsheet')
-            return self
 
         await file.size(
             self.spec.source,
