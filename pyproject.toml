@@ -1,19 +1,19 @@
 [project]
 name = "opentargets-otter"
-version = "25.0.16"
+version = "26.0.0-dev.1"
 description = "Open Targets Task ExcutoR"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Open Targets Core Team", email = "devs@opentargets.org" }]
 license = { text = "Apache-2.0" }
 dependencies = [
-  "filelock==3.20.2",
-  "google-cloud-storage==3.7.0",
+  "filelock==3.20.3",
+  "gcloud-aio-storage==9.6.1",
+  "httpx==0.28.1",
   "loguru==0.7.3",
   "pydantic==2.12.5",
   "PyYAML==6.0.3",
-  "requests==2.32.5",
-  "urllib3==2.6.3",              # must be <= 2 for elasticsearch, see overrides
+  "urllib3==2.6.3",
 ]
 
 [dependency-groups]

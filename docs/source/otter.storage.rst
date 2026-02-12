@@ -20,6 +20,22 @@ storage.handle module
    :undoc-members:
    :show-inheritance:
 
+storage.filesystem module
+-------------------------
+
+.. automodule:: otter.storage.filesystem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+storage.http module
+-------------------------
+
+.. automodule:: otter.storage.http
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 storage.google module
 ---------------------
 

@@ -3,19 +3,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import TYPE_CHECKING
-
 from otter.storage.model import Revision, StatResult, Storage
-
-if TYPE_CHECKING:
-    from typing import IO
 
 
 class NoopStorage(Storage):
     """No-op storage helper class.
 
-    Used as placeholder in not-implemented storage backends.
+    Used as placeholder for unrecognized protocols.
     """
 
     @property
@@ -23,23 +17,50 @@ class NoopStorage(Storage):
         """The name of the storage provider."""
         return 'Dummy storage'
 
-    def stat(self, location: str) -> StatResult:
+    async def stat(
+        self,
+        location: str,
+    ) -> StatResult:
         raise NotImplementedError
 
-    def open(self, location: str, mode: str = 'r', revision: Revision = None) -> IO:
+    async def glob(
+        self,
+        location: str,
+        pattern: str,
+    ) -> list[str]:
         raise NotImplementedError
 
-    def glob(self, location: str, pattern: str) -> list[str]:
+    async def read(
+        self,
+        location: str,
+    ) -> tuple[bytes, Revision]:
         raise NotImplementedError
 
-    def download_to_file(self, src: str, dst: Path) -> int:
+    async def read_text(
+        self,
+        location: str,
+        encoding: str = 'utf-8',
+    ) -> tuple[str, Revision]:
         raise NotImplementedError
 
-    def download_to_string(self, src: str) -> tuple[str, int]:
+    async def write(
+        self,
+        location: str,
+        data: bytes,
+        *,
+        expected_revision: Revision = None,
+    ) -> Revision:
         raise NotImplementedError
 
-    def upload(self, src: Path, dst: str, revision: Revision = None) -> int:
+    async def write_text(
+        self,
+        location: str,
+        data: str,
+        *,
+        encoding: str = 'utf-8',
+        expected_revision: Revision = None,
+    ) -> Revision:
         raise NotImplementedError
 
-    def copy_within(self, src: str, dst: str) -> int:
+    async def copy_within(self, src: str, dst: str) -> Revision:
         raise NotImplementedError

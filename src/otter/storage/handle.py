@@ -2,28 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import TYPE_CHECKING
-
 from loguru import logger
 
 from otter.config.model import Config
-from otter.storage.filesystem import FilesystemStorage
-from otter.storage.google import GoogleStorage
-from otter.storage.http import HTTPStorage
 from otter.storage.model import Revision, StatResult, Storage
-from otter.storage.noop import NoopStorage
-from otter.util.errors import NotFoundError
-
-if TYPE_CHECKING:
-    from typing import IO
-
-storage_registry: dict[str | None, type[Storage]] = {
-    'gs': GoogleStorage,
-    'http': HTTPStorage,
-    'https': HTTPStorage,
-    None: FilesystemStorage,
-}
+from otter.storage.registry import storage_registry
 
 
 class StorageHandle:
@@ -60,7 +43,7 @@ class StorageHandle:
         self.config = config
         self.force_local = force_local
         self._resolved = self._resolve(location)
-        self._storage = self._get_storage()
+        self._storage = storage_registry.get_storage(self._resolved)
 
     def _resolve(self, location: str):
         if location.startswith('/'):
@@ -81,13 +64,6 @@ class StorageHandle:
         resolved = f'{self.config.work_path}/{location}'
         logger.debug(f'location {location} resolved to local {resolved}')
         return resolved
-
-    def _get_storage(self) -> Storage:
-        proto = None
-        if '://' in self._resolved:
-            proto = self._resolved.split('://', 1)[0]
-        storage_class = storage_registry.get(proto, NoopStorage)
-        return storage_class()
 
     @property
     def storage(self) -> Storage:
@@ -111,35 +87,21 @@ class StorageHandle:
     def is_absolute(self) -> bool:
         """Check if the location is absolute.
 
-        :return: True if the location is absolute, False otherwise.
+        :return: ``True`` if the location is absolute, ``False`` otherwise.
         :rtype: bool
         """
         return self.location == self._resolved
 
-    def stat(self) -> StatResult:
+    async def stat(self) -> StatResult:
         """Get metadata for this resource.
 
         :return: A :class:`StatResult` object containing the resource metadata.
         :rtype: :class:`StatResult`
         :raises NotFoundError: If the resource does not exist.
         """
-        return self._storage.stat(self._resolved)
+        return await self._storage.stat(self._resolved)
 
-    def open(self, mode: str = 'r', revision: Revision = None) -> IO:
-        """Open this resource for reading or writing.
-
-        This method returns a file-like object that can be used to read
-        from or write to the resource at the given location. A revision can be
-        optionally provided to open a specific version of the resource. If ``None``,
-        the latest version should be opened.
-
-        :param mode: The mode to open the resource in. Defaults to ``r`` for read.
-        :type mode: str
-        :return: A file-like object for the resource.
-        """
-        return self._storage.open(self._resolved, mode=mode, revision=revision)
-
-    def glob(self, pattern: str) -> list[str]:
+    async def glob(self, pattern: str) -> list[str]:
         """List resources matching a glob under this storage handle's location.
 
         :param pattern: The pattern to match files against.
@@ -147,108 +109,89 @@ class StorageHandle:
         :return: A list of absolute locations for the matched resources.
         :rtype: list[str]
         """
-        return self._storage.glob(location=self._resolved, pattern=pattern)
+        return await self._storage.glob(location=self._resolved, pattern=pattern)
 
-    def download_to_file(self, dst: Path) -> int:
-        """Download this resource to a local file.
+    async def read(self) -> tuple[bytes, Revision]:
+        """Read the contents of this resource.
 
-        :param dst: The local destination file path.
-        :type dst: Path
-        :return: The revision of the downloaded resource.
-        :rtype: int
+        :return: The file contents as bytes.
+        :rtype: bytes
         :raises NotFoundError: If the resource does not exist.
-        :raises DownloadError: If an error occurs during download.
+        :raises TimeoutError: If the read operation times out.
         """
-        if not self.stat().is_reg:
-            raise ValueError(f'{self._resolved} is not a regular file')
+        return await self._storage.read(self._resolved)
 
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        return self._storage.download_to_file(self._resolved, dst)
+    async def read_text(self, encoding: str = 'utf-8') -> tuple[str, Revision]:
+        """Read the contents of this resource as text.
 
-    def download_to_string(self) -> tuple[str, int]:
-        """Download this resource and return its contents as a string.
-
-        :return: A tuple containing the file contents and the revision.
-        :rtype: tuple[str, int]
-        :raises ValueError: If the resource is not a regular file.
-        :raises DownloadError: If an error occurs during download.
+        :param encoding: The text encoding. Defaults to 'utf-8'.
+        :type encoding: str
+        :return: The file contents as a string.
+        :rtype: str
+        :raises NotFoundError: If the resource does not exist.
         """
-        if not self.stat().is_reg:
-            raise ValueError(f'{self._resolved} is not a regular file')
+        return await self._storage.read_text(self._resolved, encoding=encoding)
 
-        return self._storage.download_to_string(self._resolved)
+    async def write(
+        self,
+        data: bytes,
+        *,
+        expected_revision: Revision = None,
+    ) -> Revision:
+        """Write data to this resource.
 
-    def upload(self, src: Path, revision: Revision = None) -> Revision:
-        """Upload a local file to this storage handle.
+        Optionally, an expected revision can be provided to fail the write if
+        the current revision does not match.
 
-        :param src: The local file path to upload.
-        :type src: Path
-        :param revision: The expected revision for precondition checks.
-        :type revision: Revision
-        :return: The revision of the uploaded resource.
+        :param data: The data to write.
+        :type data: bytes
+        :return: The revision of the written resource.
         :rtype: Revision
-        :raises UploadError: If an error occurs during upload.
-        :raises PreconditionFailedError: If the revision does not match.
         """
-        if not src.is_file():
-            raise ValueError(f'{self._resolved} is not a regular file')
+        return await self._storage.write(self._resolved, data)
 
-        return self._storage.upload(src, self._resolved, revision)
+    async def write_text(
+        self,
+        data: str,
+        encoding: str = 'utf-8',
+        *,
+        expected_revision: Revision = None,
+    ) -> Revision:
+        """Write text to this resource.
 
-    def copy_to(self, dest: StorageHandle) -> Revision:
+        Optionally, an expected revision can be provided to fail the write if
+        the current revision does not match.
+
+        :param data: The text to write.
+        :type data: str
+        :param encoding: The text encoding. Defaults to 'utf-8'.
+        :type encoding: str
+        :return: The revision of the written resource.
+        :rtype: Revision
+        """
+        return await self._storage.write_text(self._resolved, data, encoding=encoding)
+
+    async def copy_to(self, dest: StorageHandle) -> Revision:
         """Copy this resource to the destination handle.
 
-        This method copies the resource represented by this storage handle
-        to the destination storage handle ``dest``. It follows a multi-strategy
-        approach to optimize the copy operation:
-
-        1. If both source and destination are in the same storage backend, it
-           attempts to use the backend's native copy method (``copy_within``) for
-           efficiency.
-        2. If the native copy method is not implemented or if the source and
-           destination are in different backends, it falls back to downloading
-           the resource to a temporary local file and then uploading it to the
-           destination.
-        3. If any of those operations are not implemented, it tries using ``open``
-            to read and write the resource in chunks.
+        If both source and destination are in the same storage backend, it
+        attempts to use the backend's native copy method (``copy_within``) for
+        efficiency. Otherwise, it reads from source and writes to destination.
 
         :param dest: The destination storage handle.
         :type dest: StorageHandle
         :return: The revision of the copied resource at the destination.
         :rtype: Revision
+        :raises NotFoundError: If the source does not exist.
         """
-        try:
-            if not self.stat().is_reg:
-                raise ValueError('only regular files can be copied')
-        except FileNotFoundError:
-            raise NotFoundError(f'source file {self._resolved} does not exist')
-
+        # try optimized copy_within if same storage type
         if type(self.storage) is type(dest.storage):
             try:
                 logger.debug(f'attempting optimized copy_within: {self._resolved} to {dest._resolved}')
-                revision = self.storage.copy_within(self._resolved, dest._resolved)
+                return await self.storage.copy_within(self._resolved, dest._resolved)
             except NotImplementedError:
-                logger.debug('copy_within not implemented, falling back to download/upload')
-            else:
-                return revision
-        # Fallback to download and upload
-        try:
-            if type(dest.storage) is FilesystemStorage:
-                # If destination is filesystem, download directly there
-                logger.debug(f'downloading directly to filesystem at {dest._resolved}')
-                revision = self.storage.download_to_file(self.absolute, Path(dest.absolute))
-            else:
-                import tempfile
+                logger.debug('copy_within not implemented, falling back to read/write')
 
-                with tempfile.NamedTemporaryFile() as tmp_file:
-                    self.storage.download_to_file(self._resolved, Path(tmp_file.name))
-                    revision = dest.storage.upload(Path(tmp_file.name), dest._resolved)
-        # Fallback to open read/write
-        except NotImplementedError:
-            logger.debug('download/upload not implemented, falling back to open read/write')
-            revision = 0
-            with self.storage.open(self._resolved, 'rb') as src_file:
-                with dest.storage.open(dest._resolved, 'wb') as dest_file:
-                    while chunk := src_file.read(8192):
-                        dest_file.write(chunk)
-        return revision
+        # fallback to read and write
+        data, _ = await self.read()
+        return await dest.write(data)
