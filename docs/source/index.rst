@@ -5,16 +5,16 @@ Otter — Open Targets Task ExecutoR
    :maxdepth: 1
    :hidden:
 
+   otter.config
    otter.core
-   otter.step
-   otter.task
    otter.manifest
    otter.scratchpad
-   otter.tasks
-   otter.validators
-   otter.config
+   otter.step
    otter.storage
+   otter.task
+   otter.tasks
    otter.util
+   otter.validators
 
 
 Otter is a the task execution framework used in the Open Targets data Pipeline.
@@ -83,7 +83,6 @@ The main elements used when writing an application using Otter are:
 - :class:`otter.task.model.Spec` — Holds the task specification.
 - :class:`otter.task.model.Task` — A Task itself.
 - :class:`otter.task.model.TaskContext` — Holds the context of a task.
-- :meth:`otter.validators.v` — The method used to run validators for a task.
 - :class:`otter.scratchpad.model.Scratchpad` — A place to store variables to overwrite in the config file.
 - :mod:`otter.util` — A bunch of utilities to help you write tasks.
 - :mod:`otter.storage` — Remote storage interfaces to use Google Cloud Storage and similar services.

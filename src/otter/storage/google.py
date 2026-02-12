@@ -3,256 +3,185 @@
 
 from __future__ import annotations
 
-import re
-import sys
-from pathlib import Path
-from typing import TYPE_CHECKING
-
-from google import auth
-from google.api_core.exceptions import GoogleAPICallError, PreconditionFailed
-from google.auth import exceptions as auth_exceptions
-from google.auth.transport.requests import AuthorizedSession
-from google.cloud import storage
-from google.cloud.exceptions import NotFound
+from aiohttp import ServerTimeoutError
+from gcloud.aio.storage import Bucket
+from gcloud.aio.storage import Storage as GCSClient
 from loguru import logger
 
 from otter.storage.model import Revision, StatResult, Storage
-from otter.util import fs
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
-
-if TYPE_CHECKING:
-    from typing import IO
-
-    from google.auth.credentials import Credentials
-
-GOOGLE_SCOPES = [
-    'https://www.googleapis.com/auth/cloud-platform',
-    'https://www.googleapis.com/auth/spreadsheets',
-]
-
-_cached_google_state: dict | None = None
 
 
 class GoogleStorage(Storage):
-    """Google Cloud Storage class.
+    """Google Cloud Storage class using gcloud-aio-storage for async operations."""
 
-    This class implements the Storage interface for Google Cloud Storage.
+    def __init__(self) -> None:
+        self._client: GCSClient | None = None
 
-    :ivar credentials: The Google Cloud Storage credentials.
-    :vartype credentials: google.auth.credentials.Credentials
-    :ivar client: The Google Cloud Storage client.
-    :vartype client: google.cloud.storage.client.Client
-    """
+    def _get_client(self) -> GCSClient:
+        if self._client is None:
+            self._client = GCSClient()
+        return self._client
 
     @property
     def name(self) -> str:
         return 'Google Cloud Storage'
 
-    def __init__(self) -> None:
-        global _cached_google_state  # noqa: PLW0603
-        if _cached_google_state is not None:
-            self.client = _cached_google_state['client']
-            self.credentials = _cached_google_state['credentials']
-            self.project_id = _cached_google_state['project_id']
-            logger.trace('gcp storage client is cached')
-            return
-        try:
-            credentials: Credentials
-            project_id: str | None
-            credentials, project_id = auth.default(scopes=GOOGLE_SCOPES)
-            logger.trace(f'gcp authenticated on project {project_id}')
-        except auth_exceptions.DefaultCredentialsError as e:
-            logger.critical(f'error authenticating on gcp: {e}')
-            sys.exit(1)
-
-        self.credentials = credentials
-        self.project_id = project_id
-        self.client = storage.Client(credentials=credentials)
-        _cached_google_state = {
-            'client': self.client,
-            'credentials': self.credentials,
-            'project_id': self.project_id,
-        }
-
     @classmethod
-    def _parse_uri(cls, uri: str) -> tuple[str, str | None]:
+    def _parse_uri(cls, uri: str) -> tuple[str, str]:
         uri_parts = uri.replace('gs://', '').split('/', 1)
         bucket_name = uri_parts[0]
-        bucket_re = r'^[a-z0-9][a-z0-9-_.]{2,221}[a-z0-9]$'
-        if re.match(bucket_re, bucket_name) is None:
-            raise StorageError(f'invalid bucket name: {bucket_name}')
+        prefix = uri_parts[1] if len(uri_parts) > 1 else ''
+        return bucket_name, prefix
 
-        file_path = uri_parts[1] if len(uri_parts) > 1 else None
-        return bucket_name, file_path
+    async def stat(self, location: str) -> StatResult:
+        bucket_name, blob_name = self._parse_uri(location)
+        client = self._get_client()
 
-    def _prepare_blob(
-        self,
-        bucket: storage.Bucket,
-        prefix: str | None,
-        generation: int | None = None,
-    ) -> storage.Blob:
-        if prefix is None:
-            raise StorageError(f'invalid prefix: {prefix}')
+        # root of the bucket
+        if not blob_name:
+            return StatResult(
+                is_dir=True,
+                is_reg=False,
+                size=0,
+            )
+        # regular blob
         try:
-            blob = bucket.blob(prefix, generation=generation)
-        except GoogleAPICallError as e:
-            raise StorageError(f'error preparing blob: {e}')
-        return blob
-
-    def stat(self, location: str) -> StatResult:
-        bucket_name, prefix = self._parse_uri(location)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        assert isinstance(bucket, storage.Bucket)
-        blob = bucket.get_blob(prefix)
-        assert isinstance(blob, storage.Blob) or blob is None
-
-        if blob:
+            metadata = await client.download_metadata(bucket_name, blob_name)
+            logger.trace(f'got metadata for blob {location}')
+            return StatResult(
+                is_dir=False,
+                is_reg=True,
+                size=int(metadata.get('size', 0)),
+                revision=metadata.get('generation'),
+            )
+        # maybe a prefix if blobs exist underneath
+        except Exception:
             try:
-                blob.reload()
-                logger.trace(f'got metadata for blob {location}')
-                return StatResult(
-                    is_dir=False,
-                    is_reg=True,
-                    size=blob.size or 0,
-                    revision=blob.generation,
-                    mtime=blob.updated.timestamp() if blob.updated else None,
-                )
-            except GoogleAPICallError as e:
-                raise StorageError(f'error getting metadata for {location}: {e}')
-        else:
-            # could be a prefix
-            try:
-                is_prefix = len(list(bucket.list_blobs(prefix=prefix, max_results=1))) > 0
-                if is_prefix:
+                bucket = Bucket(client, bucket_name)
+                prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
+                blobs = await bucket.list_blobs(prefix=prefix)
+                if blobs:
                     logger.trace(f'got metadata for prefix {location}')
                     return StatResult(
                         is_dir=True,
                         is_reg=False,
                         size=0,
-                        revision=None,
-                        mtime=None,
                     )
-            except GoogleAPICallError as e:
+            except Exception as e:
                 raise StorageError(f'error getting metadata for {location}: {e}')
+        # not found
         raise NotFoundError(thing=location)
 
-    def open(self, location: str, mode: str = 'r', revision: Revision = None) -> IO:
+    async def glob(self, location: str, pattern: str = '*') -> list[str]:
         bucket_name, prefix = self._parse_uri(location)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        blob = self._prepare_blob(bucket, prefix)
+        client = self._get_client()
+        bucket = Bucket(client, bucket_name)
+        if prefix.endswith('/'):
+            search_prefix = f'{prefix}{pattern}'
+        elif prefix:
+            search_prefix = f'{prefix}/{pattern}'
+        full_pattern = f'gs://{bucket_name}/{search_prefix}'
 
         try:
-            # If reading and no generation specified, get the latest generation
-            if mode == 'r' and revision is None:
-                blob.reload()
-                revision = blob.generation
-            blob_file = blob.open(mode=mode, generation=revision)
-            logger.debug(f'opened blob {location} in mode {mode}')
-            return blob_file
-        except NotFound:
-            raise NotFoundError(thing=location)
-        except GoogleAPICallError as e:
-            raise StorageError(f'error opening {location}: {e}')
+            blobs = await bucket.list_blobs(prefix=search_prefix, match_glob=pattern)
+        except Exception as e:
+            raise StorageError(f'error listing blobs in {location}: {e}')
 
-    def glob(self, location: str, pattern: str) -> list[str]:
-        bucket_name, prefix = self._parse_uri(location)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
+        if not blobs:
+            logger.warning(f'no files found matching glob {full_pattern}')
 
-        if prefix:
-            if prefix.endswith('/'):
-                prefix_with_glob = f'{prefix}{pattern}'
-            else:
-                prefix_with_glob = f'{prefix}/{pattern}'
-        else:
-            prefix_with_glob = pattern
+        return [f'gs://{bucket_name}/{name}' for name in blobs]
 
-        entries: list[str] = [n.name for n in list(bucket.list_blobs(match_glob=prefix_with_glob))]
-
-        if len(entries) == 0:
-            logger.warning(f'no files found matching glob {prefix_with_glob}')
-
-        return [f'gs://{bucket_name}/{entry}' for entry in entries]
-
-    def download_to_file(self, src: str, dst: Path) -> int:
-        bucket_name, prefix = self._parse_uri(src)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        blob = self._prepare_blob(bucket, prefix)
-
-        fs.check_destination(dst, delete=True)
+    async def read(
+        self,
+        location: str,
+    ) -> tuple[bytes, Revision]:
+        bucket_name, blob_name = self._parse_uri(location)
+        client = self._get_client()
 
         try:
-            blob.open()
-            blob.download_to_filename(dst)
-            logger.debug(f'downloaded {src} to {dst}')
-        except NotFound:
-            raise NotFoundError(thing=src)
-        except (GoogleAPICallError, OSError) as e:
-            raise StorageError(f'error downloading {src}: {e}')
-        return blob.generation or 0
+            while True:
+                metadata = await client.download_metadata(bucket_name, blob_name)
+                revision = metadata.get('generation')
+                data = await client.download(bucket_name, blob_name)
+                new_metadata = await client.download_metadata(bucket_name, blob_name)
+                new_revision = new_metadata.get('generation')
+                if revision is None or revision == new_revision:
+                    logger.debug(f'downloaded {location}')
+                    return data, revision
+                logger.info(f'{location} modified during read, retrying')
+        except (TimeoutError, ServerTimeoutError) as e:
+            raise TimeoutError(f'timeout downloading {location}: {e}')
+        except Exception as e:
+            if 'Not Found' in str(e) or '404' in str(e):
+                raise NotFoundError(thing=location)
+            raise StorageError(f'error downloading {location}: {e}')
 
-    def download_to_string(self, src: str) -> tuple[str, int]:
-        bucket_name, prefix = self._parse_uri(src)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        blob = self._prepare_blob(bucket, prefix)
-
+    async def read_text(
+        self,
+        location: str,
+        encoding: str = 'utf-8',
+    ) -> tuple[str, Revision]:
+        data, revision = await self.read(location)
         try:
-            blob_str = blob.download_as_string()
-        except NotFound:
-            raise NotFoundError(thing=src)
-
-        decoded_blob = None
-        try:
-            decoded_blob = blob_str.decode('utf-8')
-            logger.debug(f'downloaded {src} to string')
+            return data.decode(encoding), revision
         except UnicodeDecodeError as e:
-            raise StorageError(f'error decoding file {src}: {e}')
-        assert blob.generation is not None
-        return (decoded_blob, blob.generation)
+            raise StorageError(f'error decoding {location}: {e}')
 
-    def upload(self, src: Path, dst: str, revision: Revision = None) -> int:
-        bucket_name, prefix = self._parse_uri(dst)
-        bucket = self.client.bucket(bucket_name, user_project=self.project_id)
-        blob = self._prepare_blob(bucket, prefix)
-
-        try:
-            if revision is not None:
-                blob.upload_from_filename(src, if_generation_match=revision)
-            else:
-                blob.upload_from_filename(src)
-            logger.debug(f'uploaded {src} to {dst}')
-        except PreconditionFailed:
-            raise PreconditionFailedError(f'upload of {src} failed due to generation mismatch')
-        except (GoogleAPICallError, OSError) as e:
-            raise StorageError(f'error uploading {src}: {e}')
-        blob.reload()
-        return blob.generation or 0
-
-    def copy_within(self, src: str, dst: str) -> int:
-        src_bucket_name, src_prefix = self._parse_uri(src)
-        src_bucket = self.client.bucket(src_bucket_name, user_project=self.project_id)
-        src_blob = self._prepare_blob(src_bucket, src_prefix)
-
-        dst_bucket_name, dst_prefix = self._parse_uri(dst)
-        dst_bucket = self.client.bucket(dst_bucket_name, user_project=self.project_id)
-        dst_blob = self._prepare_blob(dst_bucket, dst_prefix)
+    async def write(
+        self,
+        location: str,
+        data: bytes,
+        *,
+        expected_revision: Revision | None = None,
+    ) -> Revision:
+        bucket_name, blob_name = self._parse_uri(location)
+        client = self._get_client()
+        headers = None
+        if expected_revision is not None:
+            headers = {'x-goog-if-generation-match': str(expected_revision)}
 
         try:
-            new_blob = src_bucket.copy_blob(
-                src_blob,
-                dst_bucket,
-                dst_blob.name,
+            metadata = await client.upload(
+                bucket_name,
+                blob_name,
+                data,
+                headers=headers,
             )
+            logger.debug(f'uploaded to {location}')
+            return metadata.get('generation')
+        except Exception as e:
+            if hasattr(e, 'status') and e.status == 412:
+                raise PreconditionFailedError(f'generation mismatch at {location}')
+            raise StorageError(f'error uploading to {location}: {e}')
+
+    async def write_text(
+        self,
+        location: str,
+        data: str,
+        *,
+        encoding: str = 'utf-8',
+        expected_revision: Revision | None = None,
+    ) -> Revision:
+        return await self.write(
+            location,
+            data.encode(encoding),
+            expected_revision=expected_revision,
+        )
+
+    async def copy_within(self, src: str, dst: str) -> Revision:
+        src_bucket, src_blob = self._parse_uri(src)
+        dst_bucket, dst_blob = self._parse_uri(dst)
+        client = self._get_client()
+
+        try:
+            await client.copy(src_bucket, src_blob, dst_bucket, new_name=dst_blob)
             logger.debug(f'copied {src} to {dst}')
-        except NotFound:
-            raise NotFoundError(thing=src)
-        except GoogleAPICallError as e:
+            # Get generation of new blob
+            metadata = await client.download_metadata(dst_bucket, dst_blob)
+            return metadata.get('generation')
+        except Exception as e:
+            if 'Not Found' in str(e) or '404' in str(e):
+                raise NotFoundError(thing=src)
             raise StorageError(f'error copying {src} to {dst}: {e}')
-        return new_blob.generation or 0
-
-    def get_session(self) -> AuthorizedSession:
-        """Get the current authenticated session.
-
-        :return: An authorized session.
-        :rtype: AuthorizedSession
-        """
-        return AuthorizedSession(self.credentials)
