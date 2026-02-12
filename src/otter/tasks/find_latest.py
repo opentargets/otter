@@ -29,15 +29,15 @@ class FindLatest(Task):
         self.spec: FindLatestSpec
 
     @report
-    def run(self) -> Self:
+    async def run(self) -> Self:
         prefix, glob = split_glob(self.spec.source)
         h = StorageHandle(prefix)
-        file_paths = h.glob(glob)
+        file_paths = await h.glob(glob)
 
         latest, latest_mtime = None, None
         for p in file_paths:
             f = StorageHandle(p)
-            s = f.stat()
+            s = await f.stat()
             if latest_mtime is None or s.mtime > latest_mtime:
                 latest, latest_mtime = f, s.mtime
 

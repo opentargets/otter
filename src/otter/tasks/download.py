@@ -8,7 +8,7 @@ from loguru import logger
 from otter.storage.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
-from otter.validators import file, v
+from otter.validators import file
 
 
 class DownloadSpec(Spec):
@@ -53,19 +53,20 @@ class Download(Task):
         return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
 
     @report
-    def run(self) -> Self:
+    async def run(self) -> Self:
         src = StorageHandle(self.spec.source, config=self.context.config)
         if src.is_absolute:
             raise ValueError('source must be relative to the release root')
+        dst = StorageHandle(self.spec.source, config=self.context.config, force_local=True)
 
-        src.download_to_file(self.destination)
+        src.copy_to(dst)
+
         return self
 
     @report
-    def validate(self) -> Self:
+    async def validate(self) -> Self:
         """Check that the downloaded file exists and has a valid size."""
-        v(
-            file.exists,
+        await file.exists(
             str(self.spec.source),  # source is relative destination
             config=self.context.config,
             force_local=True,
@@ -76,8 +77,7 @@ class Download(Task):
             logger.warning('skipping validation for google spreadsheet')
             return self
 
-        v(
-            file.size,
+        await file.size(
             self.spec.source,
             self.spec.source,  # source is relative destination
             config=self.context.config,

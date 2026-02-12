@@ -1,7 +1,6 @@
 """Generate more tasks based on a glob."""
 
 import re
-from queue import Queue
 from typing import Any, Self
 from uuid import uuid4
 
@@ -108,12 +107,14 @@ class ExplodeGlob(Task):
         """Internal scratchpad used to replace values in subtask specs."""
 
     @report
-    def run(self) -> Self:
+    async def run(self) -> Self:
         prefix, glob = split_glob(self.spec.glob)
         h = StorageHandle(prefix, config=self.context.config)
-        files = h.glob(glob)
+        files = await h.glob(glob)
         release_uri = self.context.config.release_uri
         work_path = str(self.context.config.work_path)
+
+        logger.debug(f'exploding glob {self.spec.glob} into {len(files)} sets of {len(self.spec.do)} tasks')
 
         new_tasks = 0
         for f in files:
@@ -139,7 +140,6 @@ class ExplodeGlob(Task):
             self.scratchpad.store('match_ext', match_ext)
             self.scratchpad.store('uuid', str(uuid4()))
 
-            subtask_queue: Queue[Spec] = self.context.sub_queue
             for do_spec in self.spec.do:
                 replaced_model = self.scratchpad.replace_dict(do_spec.model_dump())
                 # clean up any double slashes that may have been introduced
@@ -147,12 +147,8 @@ class ExplodeGlob(Task):
                     if isinstance(v, str):
                         replaced_model[k] = re.sub(r'(?<!:)//+', '/', v)
                 subtask_spec = do_spec.model_validate(replaced_model)
-                subtask_spec.task_queue = subtask_queue
-                subtask_queue.put(subtask_spec)
+                self.context.specs.append(subtask_spec)
                 new_tasks += 1
 
         logger.info(f'exploded into {new_tasks} new tasks')
-        # disabled for now to allow python versions < 3.13
-        # subtask_queue.shutdown()
-        subtask_queue.join()
         return self
