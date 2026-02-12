@@ -22,6 +22,14 @@ def load_specs(config_path: Path, step_name: str) -> list[Spec]:
     config_dict = parse_yaml(config_path)
     spec_dicts = config_dict.get('steps', {}).get(step_name, [])
 
+    # check for duplicate task names
+    seen_names = set()
+    for spec in spec_dicts:
+        name = spec.get('name')
+        if name in seen_names:
+            logger.critical(f'duplicate task name found: {name}')
+            raise SystemExit(errno.EINVAL)
+        seen_names.add(name)
     logger.trace(f'loaded task specs for step {step_name}: {spec_dicts}')
 
     try:

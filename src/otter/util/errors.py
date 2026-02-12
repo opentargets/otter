@@ -75,5 +75,9 @@ class StorageError(OtterError):
     """Raise when an error occurs in a storage class."""
 
 
+class ManifestError(OtterError):
+    """Raise when an error occurs in the manifest management."""
+
+
 class FSError(OtterError):
     """Raise when an error occurs in the filesystem operations."""
