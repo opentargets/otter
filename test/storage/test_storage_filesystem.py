@@ -1,5 +1,6 @@
 """Tests for the FilesystemStorage class."""
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -228,6 +229,7 @@ class TestFilesystemStorage:
     ) -> None:
         test_file = tmp_path / 'test.txt'
         test_file.write_text('initial content')
+        os.utime(test_file, (0, 0))  # ensure write changes mtime
         stat = await storage.stat(str(test_file))
         current_revision = stat.revision
 
