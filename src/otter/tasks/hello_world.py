@@ -1,5 +1,6 @@
 """Simple hello world example."""
 
+import asyncio
 from typing import Self
 
 from loguru import logger
@@ -24,8 +25,18 @@ class HelloWorld(Task):
         self.spec: HelloWorldSpec
 
     @report
-    def run(self) -> Self:
+    async def run(self) -> Self:
         """Say hello, then create an artifact about it."""
+        logger.info('saying hello...')
+        await asyncio.sleep(0.1)
         logger.success(f'hello {self.spec.who}')
         self.artifact = Artifact(source='me', destination=self.spec.who or 'world')
+        return self
+
+    @report
+    async def validate(self) -> Self:
+        """Dummy validation step."""
+        logger.info('did we say hello properly?')
+        await asyncio.sleep(0.1)
+        logger.success('yes we did!')
         return self

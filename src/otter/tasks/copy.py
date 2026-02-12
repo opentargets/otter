@@ -8,7 +8,7 @@ from otter.manifest.model import Artifact
 from otter.storage.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
-from otter.validators import file, v
+from otter.validators import file
 
 
 class CopySpec(Spec):
@@ -41,26 +41,33 @@ class Copy(Task):
         return self.spec.source.startswith('https://docs.google.com/spreadsheets/')
 
     @report
-    def run(self) -> Self:
+    async def run(self) -> Self:
         logger.info(f'copying file from {self.spec.source} to {self.spec.destination}')
         src = StorageHandle(self.spec.source)
         dst = StorageHandle(self.spec.destination, config=self.context.config)
 
-        src.copy_to(dst)
+        await src.copy_to(dst)
 
         self.artifacts = [Artifact(source=src.absolute, destination=dst.absolute)]
         return self
 
     @report
-    def validate(self) -> Self:
+    async def validate(self) -> Self:
         """Check that the copied file exists and has a valid size."""
-        v(file.exists, self.spec.destination, config=self.context.config)
+        await file.exists(
+            self.spec.destination,
+            config=self.context.config,
+        )
 
         # skip size validation for google spreadsheet
         if self._is_google_spreadsheet():
             logger.warning('skipping validation for google spreadsheet')
             return self
 
-        v(file.size, self.spec.source, self.spec.destination, config=self.context.config)
+        await file.size(
+            self.spec.source,
+            self.spec.destination,
+            config=self.context.config,
+        )
 
         return self
