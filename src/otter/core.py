@@ -12,7 +12,7 @@ from otter.step.model import Step
 from otter.task import load_specs
 from otter.task.task_registry import TaskRegistry
 from otter.util.fs import check_dir
-from otter.util.logger import early_init_logger, init_logger
+from otter.util.logger import init_logger, init_logger_early
 
 
 class Runner:
@@ -21,12 +21,11 @@ class Runner:
     This class is the main entry point for Otter.
 
     Upon instantiation, it will load the configuration, the scratchpad, and the
-    specs. It will inialize the logger, create a task registry and register the
+    specs. It will initialize the logger, create a task registry and register the
     built-in tasks.
 
     .. warning:: The instantiation will raise `SystemExit` and end the program if
-        any of the listed actions fail. Logging is done in a helpful way to aid
-        in debugging.
+        any of the listed actions fail.
     """
 
     def __init__(self, name: str) -> None:
@@ -43,7 +42,7 @@ class Runner:
         The name should beetween 2 and 32 characters and only contain lowercase
         letters, numbers and the underscore character.
         """
-        early_init_logger()
+        init_logger_early()
         self.config = load_config(self.name)
         init_logger(self.config.log_level, self.name)
         logger.info(f'otter v{version("opentargets-otter")} starting!')

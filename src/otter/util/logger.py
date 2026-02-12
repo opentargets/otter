@@ -178,7 +178,7 @@ class MessageQueue:
             logger.patch(patcher).log(msg.record['level'].name, msg.record['message'])
 
 
-def early_init_logger() -> None:
+def init_logger_early() -> None:
     """Initialize early logging."""
     global _early_logs  # noqa: PLW0603
     _early_logs = MessageQueue()
