@@ -7,7 +7,6 @@ perform template substition.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from pathlib import Path
 from string import Template
 from typing import Any
@@ -20,24 +19,10 @@ from otter.util.errors import ScratchpadError
 class ScratchpadTemplate(Template):
     """Scratchpad Template class.
 
-    A subclass of `string.Template` that allows dots and spaces in placeholders,
-    and will keep sentinels there when the key is not found in the sentinel dict.
+    A subclass of `string.Template` that allows dots and spaces in placeholders.
     """
 
     idpattern = r'(?a:[_a-z][._a-z0-9\s]*[_a-z0-9])'
-
-    def substitute(self, mapping: Mapping[str, object] = {}, **kwargs: Any) -> Any:
-        """Perform template substitution."""
-        mapping = {**mapping, **kwargs}
-
-        # build a new mapping that preserves missing values
-        def get_or_preserve(key: Any) -> Any:
-            if key in mapping:
-                return mapping[key]
-            return self.delimiter + '{' + key + '}'
-
-        preserved_mapping = {k: get_or_preserve(k) for k in self.get_identifiers()}
-        return super().safe_substitute(preserved_mapping)
 
 
 class Scratchpad:
@@ -98,15 +83,6 @@ class Scratchpad:
         """
         self.sentinel_dict[key] = value
 
-    def merge(self, other: Scratchpad) -> None:
-        """Merge the sentinels from another scratchpad.
-
-        :param other: The scratchpad to merge.
-        :type other: Scratchpad
-        """
-        for key, value in other.sentinel_dict.items():
-            self.sentinel_dict[key] = value
-
     def _replace_str(self, string: str, *, ignore_missing: bool = False) -> str:
         """Replace placeholders in a string.
 
@@ -117,18 +93,18 @@ class Scratchpad:
         :param ignore_missing: Whether to ignore missing keys in the scratchpad.
             Defaults to ``False``.
         :type ignore_missing: bool
-        :raises ScratchpadError: If ``self.ignore_missing`` is ``False`` and one of
-            the placeholder in the string does not have a corresponding key in the
-            scratchpad.
+        :raises ScratchpadError: If ``self.ignore_missing`` is ``False`` and one
+            of the placeholder in the string does not have a corresponding key in
+            the scratchpad.
         """
         replacer = ScratchpadTemplate(string)
 
-        try:
-            return replacer.substitute(self.sentinel_dict)
-        except KeyError as e:
-            if ignore_missing:
-                return str(string)
-            else:
+        if ignore_missing:
+            return replacer.safe_substitute(self.sentinel_dict)
+        else:
+            try:
+                return replacer.substitute(self.sentinel_dict)
+            except KeyError as e:
                 logger.critical(f'key {e} not found in scratchpad')
                 raise ScratchpadError(e)
 
@@ -150,9 +126,9 @@ class Scratchpad:
             case None:
                 return None
             case dict():
-                return self.replace_dict(v, ignore_missing=ignore_missing)  # type: ignore[arg-type]
+                return self.replace_dict(v, ignore_missing=ignore_missing)
             case list():
-                return [self._replace_any(e, ignore_missing=ignore_missing) for e in v]  # type: ignore[arg-type]
+                return [self._replace_any(e, ignore_missing=ignore_missing) for e in v]
             case Path():
                 return Path(self._replace_str(str(v), ignore_missing=ignore_missing))
             case str():
