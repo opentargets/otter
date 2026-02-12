@@ -81,3 +81,38 @@ class TestScratchpad:
         result = sp.replace_dict({'x': 'Value ${missing_key}'}, ignore_missing=True)
         assert result == {'x': 'Value ${missing_key}'}
         assert result == {'x': 'Value ${missing_key}'}
+
+    def test_merge_no_overlap(self) -> None:
+        sp1 = Scratchpad()
+        sp1.store('key1', 'value1')
+        sp1.store('key2', 'value2')
+
+        sp2 = Scratchpad()
+        sp2.store('key3', 'value3')
+        sp2.store('key4', 'value4')
+
+        sp1.merge(sp2)
+
+        assert sp1.sentinel_dict == {
+            'key1': 'value1',
+            'key2': 'value2',
+            'key3': 'value3',
+            'key4': 'value4',
+        }
+
+    def test_merge_does_not_overwrite_existing_keys(self) -> None:
+        sp1 = Scratchpad()
+        sp1.store('key1', 'original')
+        sp1.store('key2', 'value2')
+
+        sp2 = Scratchpad()
+        sp2.store('key1', 'new')  # should not overwrite
+        sp2.store('key3', 'value3')  # should be added
+
+        sp1.merge(sp2)
+
+        assert sp1.sentinel_dict == {
+            'key1': 'original',
+            'key2': 'value2',
+            'key3': 'value3',
+        }

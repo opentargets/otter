@@ -83,6 +83,19 @@ class Scratchpad:
         """
         self.sentinel_dict[key] = value
 
+    def merge(self, other: Scratchpad) -> None:
+        """Merge the sentinels from another scratchpad.
+
+        :param other: The scratchpad to merge.
+        :type other: Scratchpad
+        """
+        added = 0
+        for key, value in other.sentinel_dict.items():
+            if key not in self.sentinel_dict:
+                added += 1
+                self.sentinel_dict[key] = value
+        logger.info(f'added {added} new entries to scratchpad')
+
     def _replace_str(self, string: str, *, ignore_missing: bool = False) -> str:
         """Replace placeholders in a string.
 
