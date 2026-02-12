@@ -55,6 +55,7 @@ def load_config(runner_name: str) -> Config:
     # order or precedence: cli > env > yaml > defaults
     try:
         config = Config(
+            runner_name=runner_name,
             step=step,
             steps=yml.steps,
             config_path=config_path,

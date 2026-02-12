@@ -30,6 +30,7 @@ def _validate_pool_size(size: int) -> int:
 class BaseConfig(BaseModel):
     """Base config model."""
 
+    runner_name: str | None = None
     step: str | None = None
     config_path: Path | None = None
     work_path: Path | None = None
@@ -41,6 +42,7 @@ class BaseConfig(BaseModel):
 class Defaultconfig(BaseModel):
     """Default config model."""
 
+    runner_name: str = 'otter'
     config_path: Path = Path('config.yaml')
     work_path: Path = Path('./output')
     release_uri: str | None = None
@@ -80,6 +82,9 @@ class Config(BaseModel):
         if self.step not in self.steps:
             raise StepInvalidError(f'invalid step: {self.step}')
         return self
+
+    runner_name: str = 'otter'
+    """The name of the runner/application."""
 
     step: str
     """The step to run. This is a required field."""

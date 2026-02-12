@@ -6,8 +6,7 @@ from importlib.metadata import version
 from loguru import logger
 
 from otter.config import load_config
-from otter.manifest.manifest_manager import ManifestManager
-from otter.manifest.model import Result
+from otter.manifest.model import Manifest, Result
 from otter.scratchpad import load_scratchpad
 from otter.step.coordinator import Coordinator
 from otter.step.model import Step
@@ -89,9 +88,15 @@ class Runner:
         :return: The final step object after the run.
         :rtype: Step
         """
+        manifest = Manifest(
+            self.config,
+        )
+
         step = Step(
             name=self.config.step,
             specs=self.specs,
+        )
+
         coordinator = Coordinator(
             step=step,
             task_registry=self.task_registry,
@@ -99,12 +104,9 @@ class Runner:
         )
 
         await coordinator.run()
+        await manifest.update(step.manifest)
 
-        if manifest.manifest.result not in [Result.PENDING, Result.SUCCESS]:
-            logger.warning('there are failed steps in the manifest')
-        if step.manifest.result == Result.SUCCESS:
-            logger.success(f'step {step.name} ran successfully')
-        else:
+        if step.manifest.result not in [Result.PENDING, Result.SUCCESS]:
             logger.error(f'step {step.name} failed')
             raise SystemExit(1)
 
