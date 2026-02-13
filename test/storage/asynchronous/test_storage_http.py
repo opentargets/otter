@@ -1,24 +1,24 @@
-"""Tests for the HTTPStorage class."""
+"""Tests for the AsyncHTTPStorage class."""
 
 from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 
-from otter.storage.http import HTTPStorage
+from otter.storage.asynchronous.http import AsyncHTTPStorage
 
 DATE_RFC_1123 = 'Sun, 06 Nov 1994 08:49:37 GMT'
 
 
 class TestHTTPStorage:
     @pytest.fixture
-    def storage(self) -> HTTPStorage:
-        return HTTPStorage()
+    def storage(self) -> AsyncHTTPStorage:
+        return AsyncHTTPStorage()
 
     @pytest.mark.asyncio
     async def test_stat(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.headers = {
@@ -41,7 +41,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_stat_without_content_length(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.headers = {}
@@ -56,7 +56,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_stat_raises_on_http_error(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
@@ -70,7 +70,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_glob_not_implemented(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         with pytest.raises(NotImplementedError):
             await storage.glob('http://example.com/', '*.txt')
@@ -78,7 +78,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_read(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.content = b'file content'
@@ -94,7 +94,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_read_raises_on_http_error(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
@@ -108,7 +108,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_read_text(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.content = b'Hello, World!'
@@ -124,7 +124,7 @@ class TestHTTPStorage:
     @pytest.mark.asyncio
     async def test_read_text_raises_on_http_error(
         self,
-        storage: HTTPStorage,
+        storage: AsyncHTTPStorage,
     ) -> None:
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(

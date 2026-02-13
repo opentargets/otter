@@ -7,7 +7,7 @@ from uuid import uuid4
 from loguru import logger
 
 from otter.scratchpad.model import Scratchpad
-from otter.storage.handle import StorageHandle
+from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 from otter.util.util import split_glob
@@ -107,10 +107,10 @@ class ExplodeGlob(Task):
         """Internal scratchpad used to replace values in subtask specs."""
 
     @report
-    async def run(self) -> Self:
+    def run(self) -> Self:
         prefix, glob = split_glob(self.spec.glob)
         h = StorageHandle(prefix, config=self.context.config)
-        files = await h.glob(glob)
+        files = h.glob(glob)
         release_uri = self.context.config.release_uri
         work_path = str(self.context.config.work_path)
 

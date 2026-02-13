@@ -104,7 +104,8 @@ class Runner:
         )
 
         await coordinator.run()
-        await manifest.update(step.manifest)
+
+        manifest.update(step.manifest)
 
         if step.manifest.result not in [Result.PENDING, Result.SUCCESS]:
             logger.error(f'step {step.name} failed')

@@ -10,7 +10,7 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError, computed_field
 
 from otter.config.model import Config
-from otter.storage.handle import StorageHandle
+from otter.storage.synchronous.handle import StorageHandle
 from otter.util.errors import ManifestError, NotFoundError, PreconditionFailedError, StorageError
 
 if TYPE_CHECKING:
@@ -161,7 +161,7 @@ class Manifest:
             logger.critical(f'error serializing manifest: {e}')
             raise ManifestError('error serializing manifest') from e
 
-    async def update(self, step_manifest: StepManifest) -> None:
+    def update(self, step_manifest: StepManifest) -> None:
         """Update manifest with the given step and save it.
 
         :param step_manifest: The :class:`otter.manifest.model.StepManifest` to
@@ -183,20 +183,20 @@ class Manifest:
             h = StorageHandle(MANIFEST_FILENAME, self.config, force_local=True)
 
         try:
-            await h.stat()
+            h.stat()
         except NotFoundError:
             logger.info(f'no manifest found at {h.absolute}, creating new one')
             self._root = self._create_empty()
             self._root.steps[step_name] = step_manifest
             self._root.modified_at = datetime.now()
             self._recalculate_result()
-            await h.write_text(self._serialize())
+            h.write_text(self._serialize())
             logger.success(f'step {step_manifest.name} updated successfully')
             return
 
         while True:
             try:
-                manifest, revision = await h.read_text()
+                manifest, revision = h.read_text()
             except StorageError as e:
                 logger.critical(f'error reading manifest from {h.absolute}: {e}')
                 raise ManifestError('error reading manifest') from e
@@ -209,12 +209,12 @@ class Manifest:
             self._root.modified_at = datetime.now()
             self._recalculate_result()
             try:
-                await h.write_text(self._serialize(), expected_revision=revision)
+                h.write_text(self._serialize(), expected_revision=revision)
                 logger.success(f'step {step_manifest.name} updated successfully')
                 return
             except PreconditionFailedError:
                 logger.warning(f'manifest at {h.absolute} was modified by another process, retrying')
-                await asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
+                asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
             except StorageError as e:
                 logger.critical(f'error writing manifest to {h.absolute}: {e}')
                 raise ManifestError(f'error writing manifest: {e}') from e

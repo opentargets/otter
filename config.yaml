@@ -1,12 +1,119 @@
 ---
 work_path: ./work
-release_uri: gs://open-targets-pipeline-runs/jferrer
-log_level: DEBUG
-pool_size: 1
+# release_uri: gs://open-targets-pipeline-runs/jferrer
+log_level: TRACE
+pool_size: 5
 
 scratchpad: {}
 
 steps:
+  simple:
+    - name: hello_world simple
+      who: simple
+
   test:
-    - name: hello_world test
+    - name: hello_world test1
       who: test
+    - name: hello_world test2
+      who: test2
+    - name: hello_world test3
+      who: test3
+    - name: hello_world test with requirements
+      requires: [hello_world test1, hello_world test2, hello_world test3]
+      who: test4
+
+  explode:
+    - name: explode a test
+      foreach:
+        - alice
+        - bob
+        - charlie
+      do:
+        - name: hello_world for ${each}
+          who: ${each}
+
+  explode-requires:
+    - name: explode some stuff
+      foreach:
+        - dave
+        - eve
+        - frank
+      do:
+        - name: hello_world for ${each} with requires
+          who: ${each}
+    - name: hello_world final
+      requires: [explode some stuff]
+      who: final
+
+  inception:
+    - name: explode inception
+      foreach:
+        - gina
+        - hank
+      each_placeholder: outer
+      do:
+        - name: explode inner for ${outer}
+          foreach:
+            - iris
+            - jack
+          each_placeholder: inner
+          do:
+            - name: hello_world for ${outer} to ${inner}
+              who: says ${outer} to ${inner}
+            - name: hello_world for ${inner} to ${outer}
+              who: also says ${inner} to ${outer}
+
+  explode-glob:
+    - name: explode_glob inception
+      glob: explode-glob/*.txt
+      do:
+        - name: hello_world for ${match_stem} in ${uri}
+          who: says hello to ${match_stem} in ${uri}
+
+  copy:
+    - name: copy from http
+      source: https://www.w3.org/TR/2003/REC-PNG-20031110/iso_8859-1.txt
+      destination: destination/copiedfromhttp.txt
+
+    - name: copy from gcp
+      source: gs://open-targets-pipeline-runs/jferrer/otterfs/source/copyfromgcp.txt
+      destination: destination/copiedfromgcp.txt
+
+    # - name: copy otar meta spreadsheet
+    #   source: https://docs.google.com/spreadsheets/d/1CV_shXJy1ACM09HZBB_-3Nl6l_dfkrA26elMAF0ttHs/export?format=csv&gid=1179867447
+    #   destination: destination/otar_meta.csv
+
+  download:
+    - name: download from gcp
+      source: source/downloadfromgcp.txt
+      destination: destination/downloadedfromgcp.txt
+
+  upload:
+    - name: upload to gcp
+      source: source/uploadtogcp.txt
+      destination: destination/uploadedtogcp.txt
+
+  # explode-glob:
+  #   - name: explode_glob test files
+  #     glob: test-explode-glob/**/*.txt
+  #     do:
+  #       - name: copy ${match_stem}
+  #         source: gs://open-targets-pipeline-runs/jferrer/otterfs/${match_prefix}/${match_path}/${match_stem}.${match_ext}
+  #         destination: test-explode-glob-copy/${match_path}/${match_stem}.${match_ext}
+
+  find-latest:
+    - name: find_latest cosmic
+      source: gs://otar007-cosmic
+
+  copy-many:
+    - name: copy many test files
+      sources:
+        - https://www.encodeproject.org/files/ENCFF002CTW/@@download/ENCFF002CTW.bed.gz
+        - https://www.encodeproject.org/files/ENCFF557AUI/@@download/ENCFF557AUI.bed.gz
+        - https://www.encodeproject.org/files/ENCFF734HLS/@@download/ENCFF734HLS.bed.gz
+        - https://www.encodeproject.org/files/ENCFF458LUT/@@download/ENCFF458LUT.bed.gz
+        - https://www.encodeproject.org/files/ENCFF813RRM/@@download/ENCFF813RRM.bed.gz
+        - https://www.encodeproject.org/files/ENCFF509PMS/@@download/ENCFF509PMS.bed.gz
+        - https://www.encodeproject.org/files/ENCFF071ZPG/@@download/ENCFF071ZPG.bed.gz
+        - https://www.encodeproject.org/files/ENCFF086JUL/@@download/ENCFF086JUL.bed.gz
+      destination: test-copy-many/

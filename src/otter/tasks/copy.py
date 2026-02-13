@@ -5,7 +5,7 @@ from typing import Self
 from loguru import logger
 
 from otter.manifest.model import Artifact
-from otter.storage.handle import StorageHandle
+from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 from otter.validators import file
@@ -38,25 +38,25 @@ class Copy(Task):
         self.spec: CopySpec
 
     @report
-    async def run(self) -> Self:
+    def run(self) -> Self:
         logger.info(f'copying file from {self.spec.source} to {self.spec.destination}')
         src = StorageHandle(self.spec.source)
         dst = StorageHandle(self.spec.destination, config=self.context.config)
 
-        await src.copy_to(dst)
+        src.copy_to(dst)
 
         self.artifacts = [Artifact(source=src.absolute, destination=dst.absolute)]
         return self
 
     @report
-    async def validate(self) -> Self:
+    def validate(self) -> Self:
         """Check that the copied file exists and has a valid size."""
-        await file.exists(
+        file.exists(
             self.spec.destination,
             config=self.context.config,
         )
 
-        await file.size(
+        file.size(
             self.spec.source,
             self.spec.destination,
             config=self.context.config,

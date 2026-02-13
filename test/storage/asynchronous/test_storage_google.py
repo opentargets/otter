@@ -1,20 +1,17 @@
-"""Tests for the GoogleStorage class."""
+"""Tests for the AsyncGoogleStorage class."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from otter.storage.google import GoogleStorage
+from otter.storage.asynchronous.google import AsyncGoogleStorage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
 
 class TestGoogleStorage:
-    """Test the GoogleStorage class."""
-
     @pytest.fixture
-    def storage(self) -> GoogleStorage:
-        """Create a GoogleStorage instance."""
-        return GoogleStorage()
+    def storage(self) -> AsyncGoogleStorage:
+        return AsyncGoogleStorage()
 
     @pytest.mark.parametrize(
         ('uri', 'expected_bucket', 'expected_blob'),
@@ -27,7 +24,7 @@ class TestGoogleStorage:
     )
     def test_parse_uri(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
         uri: str,
         expected_bucket: str,
         expected_blob: str,
@@ -39,14 +36,14 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_stat_prefix(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_client.download_metadata = AsyncMock(side_effect=Exception('Not Found'))
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.google.Bucket') as mock_bucket_class:
+            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
                 mock_bucket = MagicMock()
                 mock_bucket.list_blobs = AsyncMock(return_value=['file1.txt', 'file2.txt'])
                 mock_bucket_class.return_value = mock_bucket
@@ -60,14 +57,14 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_stat_not_found(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_client.download_metadata = AsyncMock(side_effect=Exception('Not Found'))
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.google.Bucket') as mock_bucket_class:
+            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
                 mock_bucket = MagicMock()
                 mock_bucket.list_blobs = AsyncMock(return_value=[])
                 mock_bucket_class.return_value = mock_bucket
@@ -78,13 +75,13 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_glob(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.google.Bucket') as mock_bucket_class:
+            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
                 mock_bucket = MagicMock()
                 mock_bucket.list_blobs = AsyncMock(return_value=['data/file1.txt', 'data/file2.txt'])
                 mock_bucket_class.return_value = mock_bucket
@@ -98,13 +95,13 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_glob_raises_on_error(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.google.Bucket') as mock_bucket_class:
+            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
                 mock_bucket = MagicMock()
                 mock_bucket.list_blobs = AsyncMock(side_effect=Exception('API Error'))
                 mock_bucket_class.return_value = mock_bucket
@@ -115,7 +112,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_read(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         mock_metadata = {'generation': '42'}
         mock_data = b'file content'
@@ -134,7 +131,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_read_retries_on_modification(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         mock_data = b'file content'
 
@@ -160,7 +157,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_read_not_found(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
@@ -173,7 +170,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_read_text_encoding_error(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         mock_metadata = {'generation': '42'}
         mock_data = b'\x80\x81\x82'  # Invalid UTF-8
@@ -190,7 +187,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_write(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         mock_metadata = {'generation': '43'}
         mock_data = b'new content'
@@ -207,7 +204,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_write_with_expected_revision(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         mock_metadata = {'generation': '43'}
         mock_data = b'new content'
@@ -226,7 +223,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_write_precondition_failed(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
@@ -241,7 +238,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_copy_within(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         mock_metadata = {'generation': '44'}
 
@@ -259,7 +256,7 @@ class TestGoogleStorage:
     @pytest.mark.asyncio
     async def test_copy_within_not_found(
         self,
-        storage: GoogleStorage,
+        storage: AsyncGoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
