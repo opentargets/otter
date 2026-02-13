@@ -5,9 +5,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import httpx
+import requests
 
-from otter.storage.model import Revision, StatResult, Storage
+from otter.storage.model import Revision, StatResult
+from otter.storage.synchronous.model import Storage
 
 REQUEST_TIMEOUT = 60
 
@@ -16,28 +17,28 @@ class HTTPStorage(Storage):
     """HTTP Storage class.
 
     This class implements the Storage interface for HTTP resources.
-    Uses httpx.AsyncClient for async HTTP operations with connection pooling.
+    Uses requests.Session for HTTP operations with connection pooling.
     """
 
     def __init__(self) -> None:
-        self._client: httpx.AsyncClient | None = None
+        self._session: requests.Session | None = None
 
-    def _get_client(self) -> httpx.AsyncClient:
-        if self._client is None:
-            self._client = httpx.AsyncClient(timeout=REQUEST_TIMEOUT)
-        return self._client
+    def _get_session(self) -> requests.Session:
+        if self._session is None:
+            self._session = requests.Session()
+        return self._session
 
     @property
     def name(self) -> str:
         return 'HTTP Storage'
 
-    async def stat(self, location: str) -> StatResult:
-        client = self._get_client()
-        resp = await client.request(
-            'HEAD',
+    def stat(self, location: str) -> StatResult:
+        session = self._get_session()
+        resp = session.head(
             location,
             headers={'Accept-Encoding': 'identity'},  # prevent compression to get real size
-            follow_redirects=True,
+            allow_redirects=True,
+            timeout=REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
 
@@ -60,36 +61,50 @@ class HTTPStorage(Storage):
             mtime=mtime,
         )
 
-    async def glob(self, location: str, pattern: str) -> list[str]:
-        """Glob is not supported for HTTP storage.
+    def open(
+        self,
+        location: str,
+        mode: str = 'r',
+    ):
+        """Open is not supported for HTTP storage.
 
-        :raises NotImplementedError: Always, since HTTP storage does not support globbing.
+        :raises NotImplementedError: Always, since HTTP storage does not support
+            opening file-like objects.
         """
         raise NotImplementedError
 
-    async def read(
+    def glob(self, location: str, pattern: str) -> list[str]:
+        """Glob is not supported for HTTP storage.
+
+        :raises NotImplementedError: Always, since HTTP storage does not support
+            globbing.
+        """
+        raise NotImplementedError
+
+    def read(
         self,
         location: str,
     ) -> tuple[bytes, Revision]:
         try:
-            resp = await self._get_client().get(
+            resp = self._get_session().get(
                 location,
-                follow_redirects=True,
+                allow_redirects=True,
+                timeout=REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
             return resp.content, resp.headers.get('Last-Modified', None)
-        except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.TimeoutException):
+        except requests.exceptions.Timeout:
             raise TimeoutError(f'timeout while reading {location}')
 
-    async def read_text(
+    def read_text(
         self,
         location: str,
         encoding: str = 'utf-8',
     ) -> tuple[str, Revision]:
-        data, revision = await self.read(location)
+        data, revision = self.read(location)
         return data.decode(encoding), revision
 
-    async def write(
+    def write(
         self,
         location: str,
         data: bytes,
@@ -103,7 +118,7 @@ class HTTPStorage(Storage):
         """
         raise NotImplementedError
 
-    async def write_text(
+    def write_text(
         self,
         location: str,
         data: str,
@@ -117,7 +132,7 @@ class HTTPStorage(Storage):
         """
         raise NotImplementedError
 
-    async def copy_within(self, src: str, dst: str) -> Revision:
+    def copy_within(self, src: str, dst: str) -> Revision:
         """Copying is not supported for HTTP storage.
 
         :raises NotImplementedError: Always, since HTTP storage is read-only.

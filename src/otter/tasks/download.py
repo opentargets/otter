@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Self
 
-from otter.storage.handle import StorageHandle
+from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 from otter.validators import file
@@ -48,7 +48,7 @@ class Download(Task):
         self.destination = Path(f'{self.context.config.work_path}/{self.spec.source}')
 
     @report
-    async def run(self) -> Self:
+    def run(self) -> Self:
         src = StorageHandle(self.spec.source, config=self.context.config)
         if src.is_absolute:
             raise ValueError('source must be relative to the release root')
@@ -59,16 +59,16 @@ class Download(Task):
         return self
 
     @report
-    async def validate(self) -> Self:
+    def validate(self) -> Self:
         """Check that the downloaded file exists and has a valid size."""
         # remember: self.spec.source is relative, so destination is work_dir/{source}
-        await file.exists(
+        file.exists(
             str(self.spec.source),
             config=self.context.config,
             force_local=True,
         )
 
-        await file.size(
+        file.size(
             self.spec.source,
             self.spec.source,  # same as above
             config=self.context.config,

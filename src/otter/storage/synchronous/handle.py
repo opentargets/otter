@@ -5,8 +5,9 @@ from __future__ import annotations
 from loguru import logger
 
 from otter.config.model import Config
-from otter.storage.model import Revision, StatResult, Storage
+from otter.storage.model import Revision, StatResult
 from otter.storage.registry import storage_registry
+from otter.storage.synchronous.model import Storage
 
 
 class StorageHandle:
@@ -43,7 +44,7 @@ class StorageHandle:
         self.config = config
         self.force_local = force_local
         self._resolved = self._resolve(location)
-        self._storage = storage_registry.get_storage(self._resolved)
+        self._storage: Storage = storage_registry.get_storage(self._resolved)
 
     def _resolve(self, location: str):
         if location.startswith('/'):
@@ -92,16 +93,16 @@ class StorageHandle:
         """
         return self.location == self._resolved
 
-    async def stat(self) -> StatResult:
+    def stat(self) -> StatResult:
         """Get metadata for this resource.
 
         :return: A :class:`StatResult` object containing the resource metadata.
         :rtype: :class:`StatResult`
         :raises NotFoundError: If the resource does not exist.
         """
-        return await self._storage.stat(self._resolved)
+        return self._storage.stat(self._resolved)
 
-    async def glob(self, pattern: str) -> list[str]:
+    def glob(self, pattern: str) -> list[str]:
         """List resources matching a glob under this storage handle's location.
 
         :param pattern: The pattern to match files against.
@@ -109,9 +110,18 @@ class StorageHandle:
         :return: A list of absolute locations for the matched resources.
         :rtype: list[str]
         """
-        return await self._storage.glob(location=self._resolved, pattern=pattern)
+        return self._storage.glob(location=self._resolved, pattern=pattern)
 
-    async def read(self) -> tuple[bytes, Revision]:
+    def open(self, mode: str = 'r'):
+        """Open this resource as a file-like object.
+
+        :param mode: The file mode. Defaults to 'r' for reading.
+        :type mode: str
+        :return: A file-like object for this resource.
+        """
+        return self._storage.open(self._resolved, mode=mode)
+
+    def read(self) -> tuple[bytes, Revision]:
         """Read the contents of this resource.
 
         :return: The file contents as bytes.
@@ -119,9 +129,9 @@ class StorageHandle:
         :raises NotFoundError: If the resource does not exist.
         :raises TimeoutError: If the read operation times out.
         """
-        return await self._storage.read(self._resolved)
+        return self._storage.read(self._resolved)
 
-    async def read_text(self, encoding: str = 'utf-8') -> tuple[str, Revision]:
+    def read_text(self, encoding: str = 'utf-8') -> tuple[str, Revision]:
         """Read the contents of this resource as text.
 
         :param encoding: The text encoding. Defaults to 'utf-8'.
@@ -130,9 +140,9 @@ class StorageHandle:
         :rtype: str
         :raises NotFoundError: If the resource does not exist.
         """
-        return await self._storage.read_text(self._resolved, encoding=encoding)
+        return self._storage.read_text(self._resolved, encoding=encoding)
 
-    async def write(
+    def write(
         self,
         data: bytes,
         *,
@@ -148,9 +158,9 @@ class StorageHandle:
         :return: The revision of the written resource.
         :rtype: Revision
         """
-        return await self._storage.write(self._resolved, data)
+        return self._storage.write(self._resolved, data)
 
-    async def write_text(
+    def write_text(
         self,
         data: str,
         encoding: str = 'utf-8',
@@ -169,9 +179,9 @@ class StorageHandle:
         :return: The revision of the written resource.
         :rtype: Revision
         """
-        return await self._storage.write_text(self._resolved, data, encoding=encoding)
+        return self._storage.write_text(self._resolved, data, encoding=encoding)
 
-    async def copy_to(self, dest: StorageHandle) -> Revision:
+    def copy_to(self, dest: StorageHandle) -> Revision:
         """Copy this resource to the destination handle.
 
         If both source and destination are in the same storage backend, it
@@ -188,10 +198,10 @@ class StorageHandle:
         if type(self.storage) is type(dest.storage):
             try:
                 logger.debug(f'attempting optimized copy_within: {self._resolved} to {dest._resolved}')
-                return await self.storage.copy_within(self._resolved, dest._resolved)
+                return self.storage.copy_within(self._resolved, dest._resolved)
             except NotImplementedError:
                 logger.debug('copy_within not implemented, falling back to read/write')
 
         # fallback to read and write
-        data, _ = await self.read()
-        return await dest.write(data)
+        data, _ = self.read()
+        return dest.write(data)

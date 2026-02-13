@@ -438,8 +438,6 @@ class TestCompleteTasksWaitingForSubtasks:
 
 
 class TestStartStopWorkers:
-    """Tests for _start_workers and _stop_workers methods."""
-
     def test_start_workers_creates_processes(
         self,
         coordinator,

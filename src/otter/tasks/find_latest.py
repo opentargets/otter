@@ -4,7 +4,7 @@ from typing import Self
 
 from loguru import logger
 
-from otter.storage.handle import StorageHandle
+from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 from otter.util.util import split_glob
@@ -29,15 +29,15 @@ class FindLatest(Task):
         self.spec: FindLatestSpec
 
     @report
-    async def run(self) -> Self:
+    def run(self) -> Self:
         prefix, glob = split_glob(self.spec.source)
         h = StorageHandle(prefix)
-        file_paths = await h.glob(glob)
+        file_paths = h.glob(glob)
 
         latest, latest_mtime = None, None
         for p in file_paths:
             f = StorageHandle(p)
-            s = await f.stat()
+            s = f.stat()
             if latest_mtime is None or s.mtime > latest_mtime:
                 latest, latest_mtime = f, s.mtime
 

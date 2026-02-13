@@ -1,4 +1,4 @@
-"""Tests for the FilesystemStorage class."""
+"""Tests for the AsyncFilesystemStorage class."""
 
 import os
 from pathlib import Path
@@ -7,21 +7,19 @@ from unittest.mock import MagicMock, patch
 import pytest
 from filelock import Timeout
 
-from otter.storage.filesystem import FilesystemStorage
+from otter.storage.asynchronous.filesystem import AsyncFilesystemStorage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
 
 class TestFilesystemStorage:
-    """Test the FilesystemStorage class."""
-
     @pytest.fixture
-    def storage(self) -> FilesystemStorage:
-        return FilesystemStorage()
+    def storage(self) -> AsyncFilesystemStorage:
+        return AsyncFilesystemStorage()
 
     @pytest.mark.asyncio
     async def test_stat_file(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -37,7 +35,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_stat_directory(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_dir = tmp_path / 'subdir'
@@ -52,7 +50,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_stat_nonexistent_raises(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         nonexistent = tmp_path / 'does_not_exist.txt'
@@ -63,7 +61,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_read_text(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -77,7 +75,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_text(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -90,7 +88,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_read_binary(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.bin'
@@ -104,7 +102,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_read_retries(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -130,7 +128,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_read_nonexistent_raises(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         nonexistent = tmp_path / 'does_not_exist.txt'
@@ -141,7 +139,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_read_text_with_invalid_encoding(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'invalid.txt'
@@ -153,7 +151,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_glob_wildcard(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         (tmp_path / 'file1.txt').write_text('a')
@@ -169,7 +167,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_glob_recursive(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         (tmp_path / 'file1.txt').write_text('a')
@@ -184,7 +182,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_glob_no_match(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         result = await storage.glob(str(tmp_path), '*.nonexistent')
@@ -194,7 +192,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.bin'
@@ -209,7 +207,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_read(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.bin'
@@ -224,7 +222,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_with_expected_revision_succeeds(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -245,7 +243,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_with_wrong_expected_revision_fails(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -262,7 +260,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_with_expected_revision_on_nonexistent_file_fails(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'nonexistent.txt'
@@ -277,13 +275,13 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_with_lock_timeout(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
         test_file.write_text('initial content')
 
-        with patch('otter.storage.filesystem.FileLock') as mock_lock_class:
+        with patch('otter.storage.asynchronous.filesystem.FileLock') as mock_lock_class:
             mock_lock = mock_lock_class.return_value
             mock_lock.__enter__.side_effect = Timeout(str(test_file))
 
@@ -298,7 +296,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_cleans_up_lock_on_error(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'test.txt'
@@ -306,7 +304,7 @@ class TestFilesystemStorage:
         mock_lock = MagicMock()
         mock_lock.is_locked = True
 
-        with patch('otter.storage.filesystem.FileLock', return_value=mock_lock):
+        with patch('otter.storage.asynchronous.filesystem.FileLock', return_value=mock_lock):
             with patch('aiofiles.open', side_effect=OSError):
                 stat = await storage.stat(str(test_file))
                 with pytest.raises(OSError):
@@ -321,7 +319,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_write_creates_parent_directories(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         test_file = tmp_path / 'deep' / 'nested' / 'path' / 'file.txt'
@@ -335,7 +333,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_copy_within_source_not_found(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         src_file = tmp_path / 'nonexistent.txt'
@@ -347,7 +345,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_copy_within_source_is_directory_raises(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         src_dir = tmp_path / 'srcdir'
@@ -360,7 +358,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_copy_within_falls_back_to_copy_when_hardlink_fails(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         src_file = tmp_path / 'source.txt'
@@ -381,7 +379,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_copy_within(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         src_file = tmp_path / 'source.txt'
@@ -397,7 +395,7 @@ class TestFilesystemStorage:
     @pytest.mark.asyncio
     async def test_copy_within_prefers_hardlink(
         self,
-        storage: FilesystemStorage,
+        storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
         src_file = tmp_path / 'source.txt'

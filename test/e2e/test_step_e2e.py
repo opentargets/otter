@@ -1,10 +1,11 @@
 """End-to-end tests for step execution."""
 
+from pathlib import Path
+
 import pytest
 
 from otter.manifest.model import Result
-
-from .conftest import run_step_e2e
+from test.e2e.conftest import run_step_e2e
 
 
 @pytest.mark.e2e
@@ -17,9 +18,17 @@ from .conftest import run_step_e2e
         ('explode_test', 2),
     ],
 )
-async def test_step_runs_successfully(step_name, expected_task_count, e2e_config_path, e2e_work_dir):
-    """Test that steps run and complete successfully."""
-    step = await run_step_e2e(step_name, e2e_config_path, e2e_work_dir)
+async def test_step_runs_successfully(
+    step_name: str,
+    expected_task_count: int,
+    e2e_config_path: Path,
+    e2e_work_dir: Path,
+):
+    step = await run_step_e2e(
+        step_name,
+        e2e_config_path,
+        e2e_work_dir,
+    )
 
     assert step.manifest.result == Result.SUCCESS
     assert len(step.manifest.tasks) == expected_task_count

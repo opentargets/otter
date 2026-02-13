@@ -8,7 +8,7 @@ from httpx import ReadTimeout
 from loguru import logger
 
 from otter.manifest.model import Artifact
-from otter.storage.handle import StorageHandle
+from otter.storage.asynchronous.handle import AsyncStorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 
@@ -49,8 +49,8 @@ class CopyMany(Task):
 
             for attempt in range(MAX_RETRIES + 1):
                 try:
-                    src = StorageHandle(source)
-                    dst = StorageHandle(dest_path, config=self.context.config)
+                    src = AsyncStorageHandle(source)
+                    dst = AsyncStorageHandle(dest_path, config=self.context.config)
                     await src.copy_to(dst)
                     logger.info(f'copied {source} to {dest_path}')
                     return Artifact(source=src.absolute, destination=dst.absolute)
@@ -72,5 +72,5 @@ class CopyMany(Task):
         tasks = [self._copy_single_file(source, semaphore) for source in self.spec.sources]
         self.artifacts = await asyncio.gather(*tasks)
 
-        logger.info(f'successfully copied {len(self.artifacts)} files')
+        logger.info(f'successfully copied {len(self.artifacts or [])} files')
         return self

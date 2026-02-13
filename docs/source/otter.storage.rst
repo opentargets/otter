@@ -12,42 +12,74 @@ storage.model module
    :undoc-members:
    :show-inheritance:
 
-storage.handle module
----------------------
+storage.synchronous.handle module
+---------------------------------
 
-.. automodule:: otter.storage.handle
+.. automodule:: otter.storage.synchronous.handle
    :members:
    :undoc-members:
    :show-inheritance:
 
-storage.filesystem module
--------------------------
+storage.synchronous.filesystem module
+-------------------------------------
 
-.. automodule:: otter.storage.filesystem
+.. automodule:: otter.storage.synchronous.filesystem
    :members:
    :undoc-members:
    :show-inheritance:
 
-storage.http module
--------------------------
+storage.synchronous.http module
+-------------------------------
 
-.. automodule:: otter.storage.http
+.. automodule:: otter.storage.synchronous.http
    :members:
    :undoc-members:
    :show-inheritance:
 
-storage.google module
----------------------
+storage.synchronous.google module
+---------------------------------
 
-.. automodule:: otter.storage.google
+.. automodule:: otter.storage.synchronous.google
    :members:
    :undoc-members:
    :show-inheritance:
 
-storage.noop module
--------------------
+storage.synchronous.noop module
+-------------------------------
 
-.. automodule:: otter.storage.noop
+.. automodule:: otter.storage.synchronous.noop
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+storage.asynchronous.handle module
+----------------------------------
+
+.. automodule:: otter.storage.asynchronous.handle
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+storage.asynchronous.filesystem module
+--------------------------------------
+
+.. automodule:: otter.storage.asynchronous.filesystem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+storage.asynchronous.http module
+--------------------------------
+
+.. automodule:: otter.storage.asynchronous.http
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+storage.asynchronous.google module
+----------------------------------
+
+.. automodule:: otter.storage.asynchronous.google
    :members:
    :undoc-members:
    :show-inheritance:

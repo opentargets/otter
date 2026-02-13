@@ -7,11 +7,11 @@ import shutil
 from pathlib import Path
 from typing import cast
 
-import aiofiles
 from filelock import FileLock
 from loguru import logger
 
-from otter.storage.model import Revision, StatResult, Storage
+from otter.storage.model import Revision, StatResult
+from otter.storage.synchronous.model import Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 from otter.util.fs import check_destination
 
@@ -23,7 +23,7 @@ class FilesystemStorage(Storage):
     def name(self) -> str:
         return 'Filesystem Storage'
 
-    async def stat(self, location: str) -> StatResult:
+    def stat(self, location: str) -> StatResult:
         p = Path(location)
         try:
             s = p.stat()
@@ -37,49 +37,60 @@ class FilesystemStorage(Storage):
             mtime=s.st_mtime,
         )
 
-    async def glob(self, location: str, pattern: str = '*') -> list[str]:
+    def glob(
+        self,
+        location: str,
+        pattern: str = '*',
+    ) -> list[str]:
         return [str(p) for p in Path(location).glob(pattern)]
 
-    async def _read(
+    def open(
+        self,
+        location: str,
+        mode: str = 'r',
+    ):
+        return open(location, mode)
+
+    def _read(
         self,
         location: str,
         mode: str = 'rb',
         encoding: str | None = None,
     ) -> tuple[bytes | str, Revision]:
         while True:
-            previous_stat = await self.stat(location)
+            previous_stat = self.stat(location)
             previous_mtime = previous_stat.mtime
             try:
-                async with aiofiles.open(location, mode, encoding=encoding) as f:
-                    data = await f.read()
+                with open(location, mode, encoding=encoding) as f:
+                    data = f.read()
             except FileNotFoundError:
                 raise NotFoundError(thing=location)
-            current_stat = await self.stat(location)
+            current_stat = self.stat(location)
             current_mtime = current_stat.mtime
             if current_mtime == previous_mtime:
                 logger.info(f'downloaded {location}')
                 return data, current_stat.revision
             logger.debug(f'file {location} modified during read, retrying')
 
-    async def read(
+    def read(
         self,
         location: str,
     ) -> tuple[bytes, Revision]:
-        data, revision = await self._read(location, mode='rb')
+        data, revision = self._read(location, mode='rb')
         return cast(bytes, data), revision
 
-    async def read_text(
+    def read_text(
         self,
         location: str,
         encoding: str = 'utf-8',
     ) -> tuple[str, Revision]:
         try:
-            data, revision = await self._read(location, mode='r', encoding=encoding)
+            data, revision = self._read(location, mode='r', encoding=encoding)
         except UnicodeDecodeError:
             raise StorageError(f'error decoding {location}')
         return cast(str, data), revision
 
-    async def write(
+    def write(
         self,
         location: str,
         data: bytes,
@@ -93,23 +104,21 @@ class FilesystemStorage(Storage):
             lock = FileLock(lock_path, timeout=10)
             try:
                 with lock:
-                    s = await self.stat(str(p))
+                    s = self.stat(str(p))
                     r = s.revision
                     if r != expected_revision:
                         raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
-                    async with aiofiles.open(location, 'wb') as f:
-                        await f.write(data)
+                    Path(location).write_bytes(data)
                     return p.stat().st_mtime
             finally:
                 if lock.is_locked:
                     lock.release()
                 lock_path.unlink(missing_ok=True)
         else:
-            async with aiofiles.open(location, 'wb') as f:
-                await f.write(data)
+            Path(location).write_bytes(data)
             return p.stat().st_mtime
 
-    async def write_text(
+    def write_text(
         self,
         location: str,
         data: str,
@@ -117,13 +126,13 @@ class FilesystemStorage(Storage):
         encoding: str = 'utf-8',
         expected_revision: Revision = None,
     ) -> Revision:
-        return await self.write(
+        return self.write(
             location,
             data.encode(encoding),
             expected_revision=expected_revision,
         )
 
-    async def copy_within(self, src: str, dst: str) -> Revision:
+    def copy_within(self, src: str, dst: str) -> Revision:
         src_path = Path(src)
         dst_path = Path(dst)
 

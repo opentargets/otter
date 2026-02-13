@@ -8,11 +8,12 @@ from gcloud.aio.storage import Bucket
 from gcloud.aio.storage import Storage as GCSClient
 from loguru import logger
 
-from otter.storage.model import Revision, StatResult, Storage
+from otter.storage.asynchronous.model import AsyncStorage
+from otter.storage.model import Revision, StatResult
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
 
-class GoogleStorage(Storage):
+class AsyncGoogleStorage(AsyncStorage):
     """Google Cloud Storage class using gcloud-aio-storage for async operations."""
 
     def __init__(self) -> None:

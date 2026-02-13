@@ -1,14 +1,14 @@
-"""Tests for the StorageHandle class."""
+"""Tests for the AsyncStorageHandle class."""
 
 from pathlib import Path
 
 import pytest
 
-from otter.storage.filesystem import FilesystemStorage
-from otter.storage.google import GoogleStorage
-from otter.storage.handle import StorageHandle
-from otter.storage.http import HTTPStorage
-from otter.storage.noop import NoopStorage
+from otter.storage.asynchronous.filesystem import AsyncFilesystemStorage
+from otter.storage.asynchronous.google import AsyncGoogleStorage
+from otter.storage.asynchronous.handle import AsyncStorageHandle
+from otter.storage.asynchronous.http import AsyncHTTPStorage
+from otter.storage.synchronous.noop import NoopStorage
 from otter.util.errors import NotFoundError
 from test.mocks import fake_config
 
@@ -26,41 +26,41 @@ class TestStorageHandleResolution:
         self,
         url: str,
     ) -> None:
-        handle = StorageHandle(url)
+        handle = AsyncStorageHandle(url)
 
         assert handle.absolute == url
         assert handle.is_absolute is True
 
     def test_relative_with_release_uri_resolves_to_remote(self) -> None:
         config = fake_config(release_uri='gs://bucket/release/path')
-        handle = StorageHandle('data/file.txt', config)
+        handle = AsyncStorageHandle('data/file.txt', config)
 
         assert handle.absolute == 'gs://bucket/release/path/data/file.txt'
         assert handle.is_absolute is False
 
     def test_relative_without_release_uri_resolves_to_work_path(self) -> None:
         config = fake_config(work_path='/tmp/work', release_uri=None)
-        handle = StorageHandle('data/file.txt', config)
+        handle = AsyncStorageHandle('data/file.txt', config)
 
         assert handle.absolute == '/tmp/work/data/file.txt'
         assert handle.is_absolute is False
 
     def test_absolute_local_path_raises(self) -> None:
         with pytest.raises(ValueError, match='absolute local paths are not allowed'):
-            StorageHandle('/absolute/path/file.txt')
+            AsyncStorageHandle('/absolute/path/file.txt')
 
     def test_relative_without_config_raises(self) -> None:
         with pytest.raises(ValueError, match='config must be provided'):
-            StorageHandle('relative/path/file.txt')
+            AsyncStorageHandle('relative/path/file.txt')
 
 
 class TestStorageHandleStorageSelection:
     @pytest.mark.parametrize(
         ('url', 'expected_storage'),
         [
-            ('gs://bucket/path/file.txt', GoogleStorage),
-            ('http://example.com/file.txt', HTTPStorage),
-            ('https://example.com/file.txt', HTTPStorage),
+            ('gs://bucket/path/file.txt', AsyncGoogleStorage),
+            ('http://example.com/file.txt', AsyncHTTPStorage),
+            ('https://example.com/file.txt', AsyncHTTPStorage),
             ('ftp://example.com/file.txt', NoopStorage),
         ],
     )
@@ -69,15 +69,15 @@ class TestStorageHandleStorageSelection:
         url: str,
         expected_storage: type,
     ) -> None:
-        handle = StorageHandle(url)
+        handle = AsyncStorageHandle(url)
 
         assert isinstance(handle.storage, expected_storage)
 
     def test_no_protocol_selects_filesystem_storage(self) -> None:
         config = fake_config(work_path='/tmp/work', release_uri=None)
-        handle = StorageHandle('data/file.txt', config)
+        handle = AsyncStorageHandle('data/file.txt', config)
 
-        assert isinstance(handle.storage, FilesystemStorage)
+        assert isinstance(handle.storage, AsyncFilesystemStorage)
 
 
 class TestStorageHandleCopyTo:
@@ -93,8 +93,8 @@ class TestStorageHandleCopyTo:
         src_file.write_text('source content')
         dst_dir = work_path / 'dst'
         dst_dir.mkdir()
-        src_handle = StorageHandle('src/file.txt', config)
-        dst_handle = StorageHandle('dst/file.txt', config)
+        src_handle = AsyncStorageHandle('src/file.txt', config)
+        dst_handle = AsyncStorageHandle('dst/file.txt', config)
 
         revision = await src_handle.copy_to(dst_handle)
 
@@ -115,8 +115,8 @@ class TestStorageHandleCopyTo:
         src_file.write_text('source content')
         dst_dir = work_path / 'dst'
         dst_dir.mkdir()
-        src_handle = StorageHandle('src/file.txt', config)
-        dst_handle = StorageHandle('dst/file.txt', config)
+        src_handle = AsyncStorageHandle('src/file.txt', config)
+        dst_handle = AsyncStorageHandle('dst/file.txt', config)
 
         await src_handle.copy_to(dst_handle)
 
@@ -129,8 +129,8 @@ class TestStorageHandleCopyTo:
         work_path: Path,
     ) -> None:
         config = fake_config(work_path=work_path, release_uri=None)
-        src_handle = StorageHandle('nonexistent/file.txt', config)
-        dst_handle = StorageHandle('dst/file.txt', config)
+        src_handle = AsyncStorageHandle('nonexistent/file.txt', config)
+        dst_handle = AsyncStorageHandle('dst/file.txt', config)
 
         with pytest.raises(NotFoundError, match='not found'):
             await src_handle.copy_to(dst_handle)
@@ -143,8 +143,8 @@ class TestStorageHandleCopyTo:
         config = fake_config(work_path=work_path, release_uri=None)
         src_dir = work_path / 'srcdir'
         src_dir.mkdir()
-        src_handle = StorageHandle('srcdir', config)
-        dst_handle = StorageHandle('dst/file.txt', config)
+        src_handle = AsyncStorageHandle('srcdir', config)
+        dst_handle = AsyncStorageHandle('dst/file.txt', config)
 
         with pytest.raises(ValueError, match='only copy regular files'):
             await src_handle.copy_to(dst_handle)
@@ -159,7 +159,7 @@ class TestStorageHandleDownload:
         config = fake_config(work_path=work_path, release_uri=None)
         src_file = work_path / 'source.txt'
         src_file.write_text('file content')
-        handle = StorageHandle('source.txt', config)
+        handle = AsyncStorageHandle('source.txt', config)
 
         content, revision = await handle.read()
 
@@ -174,7 +174,7 @@ class TestStorageHandleDownload:
         config = fake_config(work_path=work_path, release_uri=None)
         src_file = work_path / 'source.txt'
         src_file.write_text('string content')
-        handle = StorageHandle('source.txt', config)
+        handle = AsyncStorageHandle('source.txt', config)
 
         content, revision = await handle.read_text()
 
@@ -189,7 +189,7 @@ class TestStorageHandleDownload:
         config = fake_config(work_path=work_path, release_uri=None)
         test_file = work_path / 'test.txt'
         test_file.write_text('hello')
-        handle = StorageHandle('test.txt', config)
+        handle = AsyncStorageHandle('test.txt', config)
 
         result = await handle.stat()
 
@@ -205,7 +205,7 @@ class TestStorageHandleDownload:
         config = fake_config(work_path=work_path, release_uri=None)
         test_dir = work_path / 'subdir'
         test_dir.mkdir()
-        handle = StorageHandle('subdir', config)
+        handle = AsyncStorageHandle('subdir', config)
 
         result = await handle.stat()
 

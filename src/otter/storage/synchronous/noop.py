@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-from otter.storage.model import Revision, StatResult, Storage
+from otter.storage.model import Revision, StatResult
+from otter.storage.synchronous.model import Storage
 
 
 class NoopStorage(Storage):
@@ -17,33 +18,40 @@ class NoopStorage(Storage):
         """The name of the storage provider."""
         return 'Dummy storage'
 
-    async def stat(
+    def stat(
         self,
         location: str,
     ) -> StatResult:
         raise NotImplementedError
 
-    async def glob(
+    def glob(
         self,
         location: str,
         pattern: str,
     ) -> list[str]:
         raise NotImplementedError
 
-    async def read(
+    def open(
+        self,
+        location: str,
+        mode: str = 'r',
+    ):
+        raise NotImplementedError
+
+    def read(
         self,
         location: str,
     ) -> tuple[bytes, Revision]:
         raise NotImplementedError
 
-    async def read_text(
+    def read_text(
         self,
         location: str,
         encoding: str = 'utf-8',
     ) -> tuple[str, Revision]:
         raise NotImplementedError
 
-    async def write(
+    def write(
         self,
         location: str,
         data: bytes,
@@ -52,7 +60,7 @@ class NoopStorage(Storage):
     ) -> Revision:
         raise NotImplementedError
 
-    async def write_text(
+    def write_text(
         self,
         location: str,
         data: str,
@@ -62,5 +70,5 @@ class NoopStorage(Storage):
     ) -> Revision:
         raise NotImplementedError
 
-    async def copy_within(self, src: str, dst: str) -> Revision:
+    def copy_within(self, src: str, dst: str) -> Revision:
         raise NotImplementedError
