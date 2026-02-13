@@ -107,6 +107,7 @@ class TestFilesystemStorage:
     ) -> None:
         test_file = tmp_path / 'test.txt'
         test_file.write_text('initial content')
+        os.utime(test_file, (0, 0))  # ensure write changes mtime
         attempt_count = 0
         original_stat = storage.stat
 
