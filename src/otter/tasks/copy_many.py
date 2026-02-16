@@ -9,6 +9,7 @@ from loguru import logger
 
 from otter.manifest.model import Artifact
 from otter.storage.asynchronous.handle import AsyncStorageHandle
+from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
 
@@ -19,8 +20,13 @@ RETRY_DELAY = 1.0
 class CopyManySpec(Spec):
     """Configuration fields for the copy_many task."""
 
-    sources: list[str]
-    """The list of source URIs of files to copy. Must be absolute."""
+    sources: list[str] | None = None
+    """The list of source URIs of files to copy. Must be absolute. Optional, if
+        not provided, the ``source_list_file`` field must be provided."""
+    source_list_file: str | None = None
+    """Path (relative to release root) to a file containing a list of source URIs,
+        one per line. Optional. If provided, the ``sources`` field will not be
+        used."""
     destination: str
     """The destination directory, relative to the release root."""
     max_concurrency: int = 10
@@ -66,10 +72,20 @@ class CopyMany(Task):
 
     @report
     async def run(self) -> Self:
-        logger.info(f'copying {len(self.spec.sources)} files to {self.spec.destination}')
+        if self.spec.source_list_file is None and self.spec.sources is None:
+            raise ValueError('either sources or source_list_file must be provided')
+
+        sources = self.spec.sources or []
+        if self.spec.source_list_file:
+            logger.info(f'reading source list from {self.spec.source_list_file}')
+            source_list = StorageHandle(self.spec.source_list_file, config=self.context.config)
+            content, _ = source_list.read_text()
+            sources = content.splitlines()
+
+        logger.info(f'copying {len(sources)} files to {self.spec.destination}')
 
         semaphore = asyncio.Semaphore(self.spec.max_concurrency)
-        tasks = [self._copy_single_file(source, semaphore) for source in self.spec.sources]
+        tasks = [self._copy_single_file(source, semaphore) for source in sources]
         self.artifacts = await asyncio.gather(*tasks)
 
         logger.info(f'successfully copied {len(self.artifacts or [])} files')

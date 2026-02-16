@@ -105,8 +105,8 @@ steps:
     - name: find_latest cosmic
       source: gs://otar007-cosmic
 
-  copy-many:
-    - name: copy many test files
+  copy-many-list:
+    - name: copy_many a list of files
       sources:
         - https://www.encodeproject.org/files/ENCFF002CTW/@@download/ENCFF002CTW.bed.gz
         - https://www.encodeproject.org/files/ENCFF557AUI/@@download/ENCFF557AUI.bed.gz
@@ -116,4 +116,9 @@ steps:
         - https://www.encodeproject.org/files/ENCFF509PMS/@@download/ENCFF509PMS.bed.gz
         - https://www.encodeproject.org/files/ENCFF071ZPG/@@download/ENCFF071ZPG.bed.gz
         - https://www.encodeproject.org/files/ENCFF086JUL/@@download/ENCFF086JUL.bed.gz
-      destination: test-copy-many/
+      destination: test-copy-many-list/
+
+  copy-many-file:
+    - name: copy_many from a source list file
+      source_list_file: src.txt
+      destination: test-copy-many-file/
