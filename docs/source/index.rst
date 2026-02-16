@@ -46,6 +46,8 @@ This is a list of what you get *for free* by using Otter:
 - **Parallel execution**: Tasks are run in parallel, and Otter will take care
   of the dependency planning.
 
+- **Async** supported: Tasks can be either sync or async.
+
 - **Declarative configuration**: Steps are described in a YAML file, as list of
   tasks with different specifications. The task themselves are implemented in
   Python enabling a lot of flexibility.
@@ -69,8 +71,8 @@ This is a list of what you get *for free* by using Otter:
 - **Utilities**: Otter provides interfaces to use Google Cloud Storage and other
   remote storage services, and a bunch of utilities to help you write tasks.
 
-Of course, "for free" means there is not an extreme degree of flexibility some of
-these are limited in scope. The aim is ease of use and simplicity. You can jump
+Of course, "for free" means there is not an extreme degree of flexibility. Some
+of these are limited in scope. The aim is ease of use and simplicity. You can jump
 down to read more about the :ref:`philosophy behind Otter <otter.philosophy>`.
 
 
@@ -112,7 +114,7 @@ Here is an example of a configuration file for a really simple pipeline:
 
 
 It defines a ``my_step`` step that has two tasks, out of which the second one will
-only run once the first has finished. An application to run this step would be:
+only run once the first has finished. A simple application that runs this step:
 
 .. code-block:: python
 
@@ -120,7 +122,8 @@ only run once the first has finished. An application to run this step would be:
 
    def main() -> None:
       runner = Runner()
-      runner.run()
+      runner.start()
+      asyncio.run(runner.run())  # or any other way you want to handle the event loop
 
 .. tip::
    | Some other examples:
