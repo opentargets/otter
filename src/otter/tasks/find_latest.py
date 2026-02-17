@@ -32,6 +32,13 @@ class FindLatest(Task):
     def run(self) -> Self:
         prefix, glob = split_glob(self.spec.source)
         h = StorageHandle(prefix)
+        logger.debug(f'finding latest file matching {glob} under {prefix}')
+        if '*' not in glob:
+            if glob.endswith('/') or not glob:
+                glob += '*'
+            else:
+                glob += '/*'
+
         file_paths = h.glob(glob)
 
         latest, latest_mtime = None, None
