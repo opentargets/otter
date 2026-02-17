@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import shutil
+from io import IOBase
 from pathlib import Path
 from typing import cast
 
@@ -48,7 +49,9 @@ class FilesystemStorage(Storage):
         self,
         location: str,
         mode: str = 'r',
-    ):
+    ) -> IOBase:
+        if 'w' in mode:
+            Path(location).parent.mkdir(parents=True, exist_ok=True)
         return open(location, mode)
 
     def _read(

@@ -1,6 +1,8 @@
 """Storage Handle class."""
 
 from __future__ import annotations
+
+from io import IOBase
 from pathlib import Path
 
 from loguru import logger
@@ -114,7 +116,7 @@ class StorageHandle:
         """
         return self._storage.glob(location=self._resolved, pattern=pattern)
 
-    def open(self, mode: str = 'r'):
+    def open(self, mode: str = 'r') -> IOBase:
         """Open this resource as a file-like object.
 
         :param mode: The file mode. Defaults to 'r' for reading.

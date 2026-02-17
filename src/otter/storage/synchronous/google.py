@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from io import IOBase
+
 from google.api_core.exceptions import NotFound, PreconditionFailed
 from google.cloud import storage
 from loguru import logger
@@ -105,7 +107,7 @@ class GoogleStorage(Storage):
         self,
         location: str,
         mode: str = 'r',
-    ):
+    ) -> IOBase:
         bucket_name, blob_name = self._parse_uri(location)
         client = self._get_client()
         bucket = client.bucket(bucket_name)
