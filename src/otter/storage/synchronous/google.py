@@ -90,16 +90,16 @@ class GoogleStorage(Storage):
         else:
             search_prefix = ''
 
-        full_pattern = f'gs://{bucket_name}/{search_prefix}{pattern}'
+        full_glob_pattern = f'{search_prefix}{pattern}' if search_prefix else pattern
 
         try:
-            blobs = bucket.list_blobs(prefix=search_prefix, match_glob=pattern)
+            blobs = bucket.list_blobs(prefix=search_prefix, match_glob=full_glob_pattern)
             blob_names = [blob.name for blob in blobs]
         except Exception as e:
             raise StorageError(f'error listing blobs in {location}: {e}')
 
         if not blob_names:
-            logger.warning(f'no files found matching glob {full_pattern}')
+            logger.warning(f'no files found matching glob gs://{bucket_name}/{full_glob_pattern}')
 
         return [f'gs://{bucket_name}/{name}' for name in blob_names]
 
