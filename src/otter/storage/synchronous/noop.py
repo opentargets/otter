@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from io import IOBase
+
 from otter.storage.model import Revision, StatResult
 from otter.storage.synchronous.model import Storage
 
@@ -35,7 +37,7 @@ class NoopStorage(Storage):
         self,
         location: str,
         mode: str = 'r',
-    ):
+    ) -> IOBase:
         raise NotImplementedError
 
     def read(
