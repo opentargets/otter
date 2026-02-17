@@ -12,6 +12,7 @@ from otter.storage.asynchronous.handle import AsyncStorageHandle
 from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
+from otter.util.util import split_glob
 
 MAX_RETRIES = 3
 RETRY_DELAY = 1.0
@@ -20,8 +21,9 @@ RETRY_DELAY = 1.0
 class CopyManySpec(Spec):
     """Configuration fields for the copy_many task."""
 
-    sources: list[str] | None = None
-    """The list of source URIs of files to copy. Must be absolute. Optional, if
+    sources: list[str] | str | None = None
+    """A list of sources or a single entry with a glob or a prefix (when sources
+        are from a cloud storage provider). Must be absolute. Optional, if
         not provided, the ``source_list_file`` field must be provided."""
     source_list_file: str | None = None
     """Path (relative to release root) to a file containing a list of source URIs,
@@ -76,6 +78,11 @@ class CopyMany(Task):
             raise ValueError('either sources or source_list_file must be provided')
 
         sources = self.spec.sources or []
+        if isinstance(sources, str):
+            logger.info(f'resolving sources from glob {sources}')
+            prefix, glob = split_glob(sources)
+            h = StorageHandle(prefix, config=self.context.config)
+            sources = h.glob(glob)
         if self.spec.source_list_file:
             logger.info(f'reading source list from {self.spec.source_list_file}')
             source_list = StorageHandle(self.spec.source_list_file, config=self.context.config)
