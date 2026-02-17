@@ -111,7 +111,6 @@ async def async_size(
         raise
     except Exception as e:
         logger.warning(f'error when doing stat: {e}')
-        raise TaskValidationError(f'could not compare file sizes: {one} and {two}') from e
 
 
 def size(
@@ -163,4 +162,3 @@ def size(
         raise
     except Exception as e:
         logger.warning(f'error when doing stat: {e}')
-        raise TaskValidationError(f'could not compare file sizes: {one} and {two}') from e
