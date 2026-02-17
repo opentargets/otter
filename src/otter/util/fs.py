@@ -8,17 +8,20 @@ from loguru import logger
 from otter.util.errors import FSError
 
 
-def check_dir(path: Path) -> None:
+def check_dir(path: Path | str) -> None:
     """Check working conditions for a directory.
 
     The function will make sure that the directory exists and is writable. If it
     does not exist, the function will attempt to create it.
 
     :param path: The directory to check.
-    :type path: Path
+    :type path: Path | str
     :raises FSError: If the path exists but is not a directory or is not writable;
         or if the directory does not exist and cannot be created.
     """
+    if isinstance(path, str):
+        path = Path(path)
+
     if path.is_file():
         raise FSError(f'not a directory: {path}')
     if path.is_dir():
@@ -33,15 +36,18 @@ def check_dir(path: Path) -> None:
     logger.trace(f'directory {path} passed checks')
 
 
-def check_source(path: Path) -> None:
+def check_source(path: Path | str) -> None:
     """Check working conditions for a file.
 
     The function will make sure that the file exists and is readable.
 
     :param path: The path to check. Must be a file.
-    :type path: Path
+    :type path: Path | str
     :raises FSError: If the path is not a file, does not exist, or is not readable.
     """
+    if isinstance(path, str):
+        path = Path(path)
+
     if not path.exists():
         raise FSError(f'file not found: {path}')
     if not path.is_file():
@@ -51,7 +57,7 @@ def check_source(path: Path) -> None:
     logger.trace('source passed checks')
 
 
-def check_destination(path: Path, *, delete: bool = False) -> None:
+def check_destination(path: Path | str, *, delete: bool = False) -> None:
     """Check working conditions for a destination path.
 
     The function will make sure that the file does not exist and that the parent
@@ -64,12 +70,15 @@ def check_destination(path: Path, *, delete: bool = False) -> None:
     .. warning:: This function can potentially delete files!
 
     :param path: The path to check. Must be a file.
-    :type path: Path
+    :type path: Path | str
     :param delete: Whether to delete the file if it already exists.
     :type delete: bool
     :raises FSError: If the parent directory checks fail, or if the file exists
         and ``delete`` is ``False``.
     """
+    if isinstance(path, str):
+        path = Path(path)
+
     check_dir(path.parent)
     if path.is_file():
         if delete:
