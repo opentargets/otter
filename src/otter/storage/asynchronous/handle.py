@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from loguru import logger
 
 from otter.config.model import Config
@@ -33,10 +35,12 @@ class AsyncStorageHandle:
 
     def __init__(
         self,
-        location: str,
+        location: str | Path,
         config: Config | None = None,
         force_local: bool = False,
     ) -> None:
+        if isinstance(location, Path):
+            location = str(location)
         if config and location.startswith(str(config.work_path)):
             location = location[len(str(config.work_path)) :].lstrip('/')
         self.location = location
