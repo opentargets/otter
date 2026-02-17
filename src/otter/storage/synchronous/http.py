@@ -10,7 +10,7 @@ import requests
 from otter.storage.model import Revision, StatResult
 from otter.storage.synchronous.model import Storage
 
-REQUEST_TIMEOUT = 60
+REQUEST_TIMEOUT = 300
 
 
 class HTTPStorage(Storage):

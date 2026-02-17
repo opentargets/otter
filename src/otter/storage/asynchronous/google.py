@@ -12,6 +12,8 @@ from otter.storage.asynchronous.model import AsyncStorage
 from otter.storage.model import Revision, StatResult
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
+REQUEST_TIMEOUT = 300
+
 
 class AsyncGoogleStorage(AsyncStorage):
     """Google Cloud Storage class using gcloud-aio-storage for async operations."""
@@ -105,7 +107,7 @@ class AsyncGoogleStorage(AsyncStorage):
             while True:
                 metadata = await client.download_metadata(bucket_name, blob_name)
                 revision = metadata.get('generation')
-                data = await client.download(bucket_name, blob_name)
+                data = await client.download(bucket_name, blob_name, timeout=REQUEST_TIMEOUT)
                 new_metadata = await client.download_metadata(bucket_name, blob_name)
                 new_revision = new_metadata.get('generation')
                 if revision is None or revision == new_revision:
