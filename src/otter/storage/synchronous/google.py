@@ -10,6 +10,8 @@ from loguru import logger
 from otter.storage.synchronous.model import Revision, StatResult, Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
+REQUEST_TIMEOUT = 300
+
 
 class GoogleStorage(Storage):
     """Google Cloud Storage class using google-cloud-storage for operations."""
@@ -129,7 +131,7 @@ class GoogleStorage(Storage):
                 blob = bucket.blob(blob_name)
                 blob.reload()
                 revision = str(blob.generation) if blob.generation else None
-                data = blob.download_as_bytes()
+                data = blob.download_as_bytes(timeout=REQUEST_TIMEOUT)
                 blob.reload()
                 new_revision = str(blob.generation) if blob.generation else None
                 if revision is None or revision == new_revision:

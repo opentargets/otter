@@ -10,7 +10,7 @@ import httpx
 from otter.storage.asynchronous.model import AsyncStorage
 from otter.storage.model import Revision, StatResult
 
-REQUEST_TIMEOUT = 60
+REQUEST_TIMEOUT = 300
 
 
 class AsyncHTTPStorage(AsyncStorage):
