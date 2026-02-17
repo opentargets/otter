@@ -45,10 +45,6 @@ class TestStorageHandleResolution:
         assert handle.absolute == '/tmp/work/data/file.txt'
         assert handle.is_absolute is False
 
-    def test_absolute_local_path_raises(self) -> None:
-        with pytest.raises(ValueError, match='absolute local paths are not allowed'):
-            AsyncStorageHandle('/absolute/path/file.txt')
-
     def test_relative_without_config_raises(self) -> None:
         with pytest.raises(ValueError, match='config must be provided'):
             AsyncStorageHandle('relative/path/file.txt')

@@ -26,9 +26,6 @@ class AsyncStorageHandle:
     2. If ``force_local`` is False and there is a ``remote_uri``, prepend it.
     3. Otherwise prepend ``work_path``.
 
-    Absolute local paths are disallowed, as everything local must be relative
-    to the work path.
-
     When a new cloud storage interface is written, it must be registered in the
     ``storage_registry`` dictionary to be usable by the AsyncStorageHandle class. The
     key is the protocol prefix (e.g., 'gs' for Google Storage).
@@ -40,6 +37,8 @@ class AsyncStorageHandle:
         config: Config | None = None,
         force_local: bool = False,
     ) -> None:
+        if config and location.startswith(str(config.work_path)):
+            location = location[len(str(config.work_path)) :].lstrip('/')
         self.location = location
         self.config = config
         self.force_local = force_local
@@ -48,7 +47,7 @@ class AsyncStorageHandle:
 
     def _resolve(self, location: str):
         if location.startswith('/'):
-            raise ValueError('absolute local paths are not allowed')
+            return location
 
         if '://' in location:
             logger.debug(f'location {location} is absolute, using as is')
