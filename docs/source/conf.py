@@ -1,6 +1,6 @@
 """Configuration file for Sphinx."""
 
-import sphinx_rtd_theme  # type: ignore[import] # noqa: F401
+import sphinx_rtd_theme  # noqa: F401
 
 import otter
 
@@ -41,3 +41,8 @@ coverage_show_missing_items = True
 autodoc_pydantic_model_show_json = True
 autodoc_pydantic_settings_show_json = False
 autodoc_member_order = 'bysource'
+
+# -- Options for issues -----------------------------------------------------
+issues_user_uri = 'https://github.com/{user}'
+issues_github_path = 'opentargets/otter'
+extlinks_detect_hardcoded_links = True

@@ -200,11 +200,11 @@ class Task(TaskReporter):
         """Get the next state.
 
         Returns the immediately next state, except in these cases:
-        - If the current state is ``RUNNING`` and the task does not implement
-          validation, check for subtasks. If there are subtasks, return
-          ``WAITING_FOR_SUBTASKS``, else return ``DONE``.
-        - If the current state is ``VALIDATING``, check for subtasks. If there
-          are subtasks, return ``WAITING_FOR_SUBTASKS``, else return ``DONE``.
+            - If the current state is ``RUNNING`` and the task does not implement
+              validation, check for subtasks. If there are subtasks, return
+              ``WAITING_FOR_SUBTASKS``, else return ``DONE``.
+            - If the current state is ``VALIDATING``, check for subtasks. If there
+              are subtasks, return ``WAITING_FOR_SUBTASKS``, else return ``DONE``.
 
         :return: The next state.
         :rtype: State
