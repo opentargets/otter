@@ -15,6 +15,7 @@ Otter — Open Targets Task ExecutoR
    otter.tasks
    otter.util
    otter.validators
+   CHANGES
 
 
 Otter is a the task execution framework used in the Open Targets data Pipeline.
