@@ -1,0 +1,247 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.step.worker &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.step.worker</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.step.worker</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Worker process requests tasks from the coordinator and runs them.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Event</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.util.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">task_logging</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
+
+<span class="n">WORKER_POLLING_INTERVAL</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="sd">&quot;&quot;&quot;Default polling interval for the worker loop, in seconds.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Worker">
+<a class="viewcode-back" href="../../../otter.step.html#otter.step.worker.Worker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Worker</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Worker that executes tasks with a persistent event loop.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize worker with event loop.</span>
+
+<span class="sd">        :param worker_id: Unique identifier for this worker</span>
+<span class="sd">        :type worker_id: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">worker_id</span> <span class="o">=</span> <span class="n">worker_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Worker.run">
+<a class="viewcode-back" href="../../../otter.step.html#otter.step.worker.Worker.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">task_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+        <span class="n">result_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+        <span class="n">shutdown_event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the worker loop.</span>
+
+<span class="sd">        Executes tasks from ``task_queue``, and puts the results in ``result_queue``.</span>
+<span class="sd">        The worker will stop when ``shutdown_event`` is set.</span>
+
+<span class="sd">        :param task_queue: Queue to get tasks from</span>
+<span class="sd">        :type task_queue: Queue</span>
+<span class="sd">        :param result_queue: Queue to put results in</span>
+<span class="sd">        :type result_queue: Queue</span>
+<span class="sd">        :param shutdown_event: Event to signal shutdown</span>
+<span class="sd">        :type shutdown_event: Event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># set process role for logging</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;OTTER_PROCESS_ROLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;W&#39;</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;worker </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_id</span><span class="si">}</span><span class="s1"> started&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">shutdown_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">task</span> <span class="o">=</span> <span class="n">task_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">WORKER_POLLING_INTERVAL</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: S112</span>
+                    <span class="k">continue</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;worker </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_id</span><span class="si">}</span><span class="s1"> executing task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">shutdown_event</span><span class="p">)</span>
+
+                <span class="n">result_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;worker </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_id</span><span class="si">}</span><span class="s1"> completed task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;worker </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_id</span><span class="si">}</span><span class="s1"> shutting down&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Worker.execute_task">
+<a class="viewcode-back" href="../../../otter.step.html#otter.step.worker.Worker.execute_task">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span> <span class="n">abort_event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute a single task.</span>
+
+<span class="sd">        :param task: Task to execute</span>
+<span class="sd">        :type task: Task</span>
+<span class="sd">        :param abort_event: Event to signal abort</span>
+<span class="sd">        :type abort_event: Event</span>
+<span class="sd">        :return: The executed task</span>
+<span class="sd">        :rtype: Task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># update task state to running/validating</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_next_state</span><span class="p">()</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">abort</span> <span class="o">=</span> <span class="n">abort_event</span>
+
+        <span class="k">with</span> <span class="n">task_logging</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">abort_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_execution_method</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">iscoroutinefunction</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">func</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">func</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">abort</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">task</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="worker_process">
+<a class="viewcode-back" href="../../../otter.step.html#otter.step.worker.worker_process">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">worker_process</span><span class="p">(</span>
+    <span class="n">worker_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">task_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">result_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">shutdown_event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Worker process entry point.</span>
+
+<span class="sd">    Creates a Worker instance and runs it.</span>
+
+<span class="sd">    :param worker_id: Unique identifier for this worker</span>
+<span class="sd">    :type worker_id: int</span>
+<span class="sd">    :param task_queue: Queue to get tasks from</span>
+<span class="sd">    :type task_queue: Queue</span>
+<span class="sd">    :param result_queue: Queue to put results in</span>
+<span class="sd">    :type result_queue: Queue</span>
+<span class="sd">    :param shutdown_event: Event to signal shutdown</span>
+<span class="sd">    :type shutdown_event: Event</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">worker</span> <span class="o">=</span> <span class="n">Worker</span><span class="p">(</span><span class="n">worker_id</span><span class="p">)</span>
+    <span class="n">worker</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">result_queue</span><span class="p">,</span> <span class="n">shutdown_event</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

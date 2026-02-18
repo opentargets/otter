@@ -1,0 +1,503 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Core" href="otter.core.html" />
+    <link rel="prev" title="Otter — Open Targets Task ExecutoR" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.config.model">config.model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.model.LOG_LEVELS"><code class="docutils literal notranslate"><span class="pre">LOG_LEVELS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.model.BaseConfig"><code class="docutils literal notranslate"><span class="pre">BaseConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.runner_name"><code class="docutils literal notranslate"><span class="pre">BaseConfig.runner_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.step"><code class="docutils literal notranslate"><span class="pre">BaseConfig.step</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.config_path"><code class="docutils literal notranslate"><span class="pre">BaseConfig.config_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.work_path"><code class="docutils literal notranslate"><span class="pre">BaseConfig.work_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.release_uri"><code class="docutils literal notranslate"><span class="pre">BaseConfig.release_uri</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.pool_size"><code class="docutils literal notranslate"><span class="pre">BaseConfig.pool_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.log_level"><code class="docutils literal notranslate"><span class="pre">BaseConfig.log_level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.BaseConfig.model_config"><code class="docutils literal notranslate"><span class="pre">BaseConfig.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.model.Defaultconfig"><code class="docutils literal notranslate"><span class="pre">Defaultconfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.runner_name"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.runner_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.config_path"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.config_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.work_path"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.work_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.release_uri"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.release_uri</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.pool_size"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.pool_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.log_level"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.log_level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Defaultconfig.model_config"><code class="docutils literal notranslate"><span class="pre">Defaultconfig.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.model.YamlConfig"><code class="docutils literal notranslate"><span class="pre">YamlConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.YamlConfig.work_path"><code class="docutils literal notranslate"><span class="pre">YamlConfig.work_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.YamlConfig.release_uri"><code class="docutils literal notranslate"><span class="pre">YamlConfig.release_uri</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.YamlConfig.pool_size"><code class="docutils literal notranslate"><span class="pre">YamlConfig.pool_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.YamlConfig.log_level"><code class="docutils literal notranslate"><span class="pre">YamlConfig.log_level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.YamlConfig.steps"><code class="docutils literal notranslate"><span class="pre">YamlConfig.steps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.YamlConfig.model_config"><code class="docutils literal notranslate"><span class="pre">YamlConfig.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.model.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.model_config"><code class="docutils literal notranslate"><span class="pre">Config.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.runner_name"><code class="docutils literal notranslate"><span class="pre">Config.runner_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.step"><code class="docutils literal notranslate"><span class="pre">Config.step</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.steps"><code class="docutils literal notranslate"><span class="pre">Config.steps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.config_path"><code class="docutils literal notranslate"><span class="pre">Config.config_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.work_path"><code class="docutils literal notranslate"><span class="pre">Config.work_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.release_uri"><code class="docutils literal notranslate"><span class="pre">Config.release_uri</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.pool_size"><code class="docutils literal notranslate"><span class="pre">Config.pool_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.config.model.Config.log_level"><code class="docutils literal notranslate"><span class="pre">Config.log_level</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.config.cli">config.cli module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.cli.config_to_env"><code class="docutils literal notranslate"><span class="pre">config_to_env()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.cli.parse_cli"><code class="docutils literal notranslate"><span class="pre">parse_cli()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.config.env">config.env module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.env.env_to_config"><code class="docutils literal notranslate"><span class="pre">env_to_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.env.parse_env"><code class="docutils literal notranslate"><span class="pre">parse_env()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.config.yaml">config.yaml module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.yaml.parse_yaml"><code class="docutils literal notranslate"><span class="pre">parse_yaml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.config">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.config.load_config"><code class="docutils literal notranslate"><span class="pre">load_config()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.config</span></code> package contains the configuration models, parsers and utilities.</p>
+<section id="module-otter.config.model">
+<span id="config-model-module"></span><h2>config.model module<a class="headerlink" href="#module-otter.config.model" title="Link to this heading"></a></h2>
+<p>Models for the config.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="otter.config.model.LOG_LEVELS">
+<span class="sig-prename descclassname"><span class="pre">otter.config.model.</span></span><span class="sig-name descname"><span class="pre">LOG_LEVELS</span></span><a class="headerlink" href="#otter.config.model.LOG_LEVELS" title="Link to this definition"></a></dt>
+<dd><p>The log levels.</p>
+<p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code>[‘TRACE’, ‘DEBUG’, ‘INFO’, ‘SUCCESS’, ‘WARNING’, ‘ERROR’, ‘CRITICAL’]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.config.model.</span></span><span class="sig-name descname"><span class="pre">BaseConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="pre">_validate_uri</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="pre">_validate_pool_size</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'TRACE'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'SUCCESS'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/config/model.html#BaseConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.model.BaseConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Base config model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.runner_name">
+<span class="sig-name descname"><span class="pre">runner_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.runner_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.config_path">
+<span class="sig-name descname"><span class="pre">config_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.config_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.work_path">
+<span class="sig-name descname"><span class="pre">work_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.work_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.release_uri">
+<span class="sig-name descname"><span class="pre">release_uri</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="pre">_validate_uri</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.release_uri" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.pool_size">
+<span class="sig-name descname"><span class="pre">pool_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="pre">_validate_pool_size</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.pool_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.config.model.LOG_LEVELS" title="otter.config.model.LOG_LEVELS"><span class="pre">LOG_LEVELS</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.log_level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.BaseConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#otter.config.model.BaseConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.config.model.</span></span><span class="sig-name descname"><span class="pre">Defaultconfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'otter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PosixPath('config.yaml')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PosixPath('output')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'TRACE'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'SUCCESS'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'INFO'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/config/model.html#Defaultconfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.model.Defaultconfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Default config model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.runner_name">
+<span class="sig-name descname"><span class="pre">runner_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.config.model.Defaultconfig.runner_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.config_path">
+<span class="sig-name descname"><span class="pre">config_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></span><a class="headerlink" href="#otter.config.model.Defaultconfig.config_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.work_path">
+<span class="sig-name descname"><span class="pre">work_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></span><a class="headerlink" href="#otter.config.model.Defaultconfig.work_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.release_uri">
+<span class="sig-name descname"><span class="pre">release_uri</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.Defaultconfig.release_uri" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.pool_size">
+<span class="sig-name descname"><span class="pre">pool_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#otter.config.model.Defaultconfig.pool_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.config.model.LOG_LEVELS" title="otter.config.model.LOG_LEVELS"><span class="pre">LOG_LEVELS</span></a></span><a class="headerlink" href="#otter.config.model.Defaultconfig.log_level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Defaultconfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#otter.config.model.Defaultconfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.config.model.</span></span><span class="sig-name descname"><span class="pre">YamlConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="pre">_validate_uri</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="pre">_validate_pool_size</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'TRACE'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'SUCCESS'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/config/model.html#YamlConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.model.YamlConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>YAML config model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig.work_path">
+<span class="sig-name descname"><span class="pre">work_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.YamlConfig.work_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig.release_uri">
+<span class="sig-name descname"><span class="pre">release_uri</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="pre">_validate_uri</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.YamlConfig.release_uri" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig.pool_size">
+<span class="sig-name descname"><span class="pre">pool_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="pre">_validate_pool_size</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.YamlConfig.pool_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.config.model.LOG_LEVELS" title="otter.config.model.LOG_LEVELS"><span class="pre">LOG_LEVELS</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.YamlConfig.log_level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.config.model.YamlConfig.steps" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.YamlConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#otter.config.model.YamlConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.config.model.Config">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.config.model.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'otter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PosixPath('config.yaml')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PosixPath('output')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="pre">_validate_uri</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="pre">_validate_pool_size</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'TRACE'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'SUCCESS'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'INFO'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/config/model.html#Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.model.Config" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Config model.</p>
+<p>This model is used to define the config for the application.</p>
+<p>It is constructed by merging the config from the defaults, env vars, CLI, and
+YAML config file. The config is loaded in order of precedence:
+1. Command line arguments
+2. Environment variables
+3. YAML configuration file
+4. Default settings</p>
+<p>The model is frozen after validation to prevent further modification.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'frozen':</span> <span class="pre">True}</span></span><a class="headerlink" href="#otter.config.model.Config.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.runner_name">
+<span class="sig-name descname"><span class="pre">runner_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.config.model.Config.runner_name" title="Link to this definition"></a></dt>
+<dd><p>The name of the runner/application.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.config.model.Config.step" title="Link to this definition"></a></dt>
+<dd><p>The step to run. This is a required field.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.config.model.Config.steps" title="Link to this definition"></a></dt>
+<dd><p>The list of steps defined in the configuration file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.config_path">
+<span class="sig-name descname"><span class="pre">config_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></span><a class="headerlink" href="#otter.config.model.Config.config_path" title="Link to this definition"></a></dt>
+<dd><p>The path to the configuration file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.work_path">
+<span class="sig-name descname"><span class="pre">work_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></span><a class="headerlink" href="#otter.config.model.Config.work_path" title="Link to this definition"></a></dt>
+<dd><p>The local working path. This is where resources will be downloaded and
+the manifest and logs will be written to before upload to the GCS bucket.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.release_uri">
+<span class="sig-name descname"><span class="pre">release_uri</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="pre">_validate_uri</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.config.model.Config.release_uri" title="Link to this definition"></a></dt>
+<dd><p>The release URI. If present, this is where resources, logs and manifest
+will be uploaded to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.pool_size">
+<span class="sig-name descname"><span class="pre">pool_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AfterValidator</span><span class="p"><span class="pre">(</span></span><span class="pre">_validate_pool_size</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.config.model.Config.pool_size" title="Link to this definition"></a></dt>
+<dd><p>The maximum number of workers in the pool where tasks will run.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.config.model.Config.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.config.model.LOG_LEVELS" title="otter.config.model.LOG_LEVELS"><span class="pre">LOG_LEVELS</span></a></span><a class="headerlink" href="#otter.config.model.Config.log_level" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#otter.config.model.LOG_LEVELS" title="otter.config.model.LOG_LEVELS"><code class="xref py py-data docutils literal notranslate"><span class="pre">LOG_LEVELS</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.config.cli">
+<span id="config-cli-module"></span><h2>config.cli module<a class="headerlink" href="#module-otter.config.cli" title="Link to this heading"></a></h2>
+<p>CLI argument parser.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.config.cli.config_to_env">
+<span class="sig-prename descclassname"><span class="pre">otter.config.cli.</span></span><span class="sig-name descname"><span class="pre">config_to_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/otter/config/cli.html#config_to_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.cli.config_to_env" title="Link to this definition"></a></dt>
+<dd><p>Convert a config variable name to its env var.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.config.cli.parse_cli">
+<span class="sig-prename descclassname"><span class="pre">otter.config.cli.</span></span><span class="sig-name descname"><span class="pre">parse_cli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.config.model.BaseConfig" title="otter.config.model.BaseConfig"><span class="pre">BaseConfig</span></a></span></span><a class="reference internal" href="_modules/otter/config/cli.html#parse_cli"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.cli.parse_cli" title="Link to this definition"></a></dt>
+<dd><p>Parse the command line arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>runner_name</strong> (<em>str</em>) – The name of the runner.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The parsed command line arguments.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#otter.config.model.BaseConfig" title="otter.config.model.BaseConfig">BaseConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-otter.config.env">
+<span id="config-env-module"></span><h2>config.env module<a class="headerlink" href="#module-otter.config.env" title="Link to this heading"></a></h2>
+<p>Environment variable parser.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.config.env.env_to_config">
+<span class="sig-prename descclassname"><span class="pre">otter.config.env.</span></span><span class="sig-name descname"><span class="pre">env_to_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/otter/config/env.html#env_to_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.env.env_to_config" title="Link to this definition"></a></dt>
+<dd><p>Convert an env var to its config variable name.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.config.env.parse_env">
+<span class="sig-prename descclassname"><span class="pre">otter.config.env.</span></span><span class="sig-name descname"><span class="pre">parse_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.config.model.BaseConfig" title="otter.config.model.BaseConfig"><span class="pre">BaseConfig</span></a></span></span><a class="reference internal" href="_modules/otter/config/env.html#parse_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.env.parse_env" title="Link to this definition"></a></dt>
+<dd><p>Parses the environment variables and returns an BaseConfig object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>runner_name</strong> (<em>str</em>) – The name of the runner.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The parsed environment variables.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#otter.config.model.BaseConfig" title="otter.config.model.BaseConfig">BaseConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-otter.config.yaml">
+<span id="config-yaml-module"></span><h2>config.yaml module<a class="headerlink" href="#module-otter.config.yaml" title="Link to this heading"></a></h2>
+<p>YAML config parser.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.config.yaml.parse_yaml">
+<span class="sig-prename descclassname"><span class="pre">otter.config.yaml.</span></span><span class="sig-name descname"><span class="pre">parse_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/config/yaml.html#parse_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.yaml.parse_yaml" title="Link to this definition"></a></dt>
+<dd><p>Parse a yaml file.</p>
+<p>Loads a yaml file, parses its content, and returns it as a dictionary. There
+is a cache, so the file is only read once.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If the file cannot be read or the yaml content cannot be parsed,
+the program will log an error and exit.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The path to the yaml file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The parsed yaml content.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-otter.config">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.config" title="Link to this heading"></a></h2>
+<p>Configuration package.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.config.load_config">
+<span class="sig-prename descclassname"><span class="pre">otter.config.</span></span><span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runner_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span></span><a class="reference internal" href="_modules/otter/config.html#load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.config.load_config" title="Link to this definition"></a></dt>
+<dd><p>Load the config.</p>
+<p>See <a class="reference internal" href="#otter.config.model.Config" title="otter.config.model.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.config.model.Config</span></code></a> for the <code class="docutils literal notranslate"><span class="pre">Config</span></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>runner_name</strong> (<em>str</em>) – The name of the runner.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The config object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#otter.config.model.Config" title="otter.config.model.Config">Config</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Otter — Open Targets Task ExecutoR" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.core.html" class="btn btn-neutral float-right" title="Core" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

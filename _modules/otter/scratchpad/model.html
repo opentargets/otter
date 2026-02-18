@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.scratchpad.model &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchpad.html">otter.scratchpad</a></li>
+      <li class="breadcrumb-item active">otter.scratchpad.model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.scratchpad.model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Scratchpad module.</span>
+
+<span class="sd">This module defines the `Scratchpad` class, which is a centralized place to store</span>
+<span class="sd">key-value pairs in the configuration of the application. It provides utilities to</span>
+<span class="sd">perform template substition.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">string</span><span class="w"> </span><span class="kn">import</span> <span class="n">Template</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.util.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScratchpadError</span>
+
+
+<div class="viewcode-block" id="ScratchpadTemplate">
+<a class="viewcode-back" href="../../../otter.scratchpad.html#otter.scratchpad.model.ScratchpadTemplate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScratchpadTemplate</span><span class="p">(</span><span class="n">Template</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scratchpad Template class.</span>
+
+<span class="sd">    A subclass of `string.Template` that allows dots and spaces in placeholders.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">idpattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(?a:[_a-z][._a-z0-9\s]*[_a-z0-9])&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="Scratchpad">
+<a class="viewcode-back" href="../../../otter.scratchpad.html#otter.scratchpad.model.Scratchpad">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Scratchpad</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to store and replace placeholders in strings.</span>
+
+<span class="sd">    This class is used to store key-value pairs and replace placeholders in</span>
+<span class="sd">    strings with the corresponding values. The placeholders are defined in the</span>
+<span class="sd">    strings using the dollar sign followed by the placeholder name enclosed in</span>
+<span class="sd">    curly braces, e.g., ``${person.name}``. The placeholders can include dots to</span>
+<span class="sd">    represent nested dictionaries or objects.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; scratchpad = Scratchpad()</span>
+<span class="sd">        &gt;&gt;&gt; scratchpad.store(&#39;person.name&#39;, &#39;Alice&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; scratchpad.replace(&#39;Hello, ${person.name}!&#39;)</span>
+<span class="sd">        &#39;Hello, Alice!&#39;</span>
+
+<span class="sd">    The `Scratchpad` class is used to perform template substitution in a `Spec`,</span>
+<span class="sd">    right before the task is built.</span>
+
+<span class="sd">    .. important:: You can use internal scratchpads in tasks. For example, to have</span>
+<span class="sd">        private variables that are only replaced in one of the specs.</span>
+
+<span class="sd">        To be able to do this, however, you must set the</span>
+<span class="sd">        ``scratchpad_ignore_missing`` attribute to ``True`` in the task model.</span>
+<span class="sd">        This will allow the task to be built even if keys are missing from the</span>
+<span class="sd">        global scratchpad.</span>
+
+<span class="sd">        You are responsible, however, of ensuring that the keys are present in</span>
+<span class="sd">        the internal scratchpad. It is good practice to leave the internal</span>
+<span class="sd">        scratchpad set to not ignore, so that you can catch missing keys.</span>
+
+<span class="sd">        To set the `scratchpad_ignore_missing` attribute, you can add this to</span>
+<span class="sd">        the spec definition:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            def model_post_init(self, __context: Any) -&gt; None:</span>
+<span class="sd">                self.scratchpad_ignore_missing = True</span>
+
+<span class="sd">    .. seealso::  :py:meth:`otter.task.task_registry.TaskRegistry.build`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sentinel_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">sentinel_dict</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A dictionary to store the key-value pairs.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Scratchpad.store">
+<a class="viewcode-back" href="../../../otter.scratchpad.html#otter.scratchpad.model.Scratchpad.store">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Store a key-value pair in the scratchpad.</span>
+
+<span class="sd">        Both strings and lists of strings are accepted as values. It might be</span>
+<span class="sd">        useful to extend it to accept dicts as well.</span>
+
+<span class="sd">        :param key: The key to store.</span>
+<span class="sd">        :type key: str</span>
+<span class="sd">        :param value: The value to store.</span>
+<span class="sd">        :type value: str | list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="Scratchpad.merge">
+<a class="viewcode-back" href="../../../otter.scratchpad.html#otter.scratchpad.model.Scratchpad.merge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Scratchpad</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge the sentinels from another scratchpad.</span>
+
+<span class="sd">        :param other: The scratchpad to merge.</span>
+<span class="sd">        :type other: Scratchpad</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">added</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="p">:</span>
+                <span class="n">added</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;added </span><span class="si">{</span><span class="n">added</span><span class="si">}</span><span class="s1"> new entries to scratchpad&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_replace_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace placeholders in a string.</span>
+
+<span class="sd">        :param string: The string with placeholders to replace.</span>
+<span class="sd">        :type string: str</span>
+<span class="sd">        :return: The string with the placeholders replaced.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        :param ignore_missing: Whether to ignore missing keys in the scratchpad.</span>
+<span class="sd">            Defaults to ``False``.</span>
+<span class="sd">        :type ignore_missing: bool</span>
+<span class="sd">        :raises ScratchpadError: If ``self.ignore_missing`` is ``False`` and one</span>
+<span class="sd">            of the placeholder in the string does not have a corresponding key in</span>
+<span class="sd">            the scratchpad.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">replacer</span> <span class="o">=</span> <span class="n">ScratchpadTemplate</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ignore_missing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">replacer</span><span class="o">.</span><span class="n">safe_substitute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">replacer</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sentinel_dict</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;key </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1"> not found in scratchpad&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ScratchpadError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_replace_any</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace placeholders in a value.</span>
+
+<span class="sd">        :param v: The value with placeholders to replace.</span>
+<span class="sd">        :type v: Any</span>
+<span class="sd">        :return: The value with the placeholders replaced.</span>
+<span class="sd">        :rtype: Any</span>
+<span class="sd">        :param ignore_missing: Whether to ignore missing keys in the scratchpad.</span>
+<span class="sd">            Defaults to ``False``.</span>
+<span class="sd">        :type ignore_missing: bool</span>
+<span class="sd">        :raises ScratchpadError: If ``self.ignore_missing`` is ``False`` and one of</span>
+<span class="sd">            the placeholder in the value does not have a corresponding key in the</span>
+<span class="sd">            scratchpad.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">match</span> <span class="n">v</span><span class="p">:</span>
+            <span class="k">case</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">case</span> <span class="nb">dict</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_dict</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="n">ignore_missing</span><span class="p">)</span>
+            <span class="k">case</span> <span class="nb">list</span><span class="p">():</span>
+                <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_replace_any</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="n">ignore_missing</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+            <span class="k">case</span> <span class="n">Path</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_replace_str</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="n">ignore_missing</span><span class="p">))</span>
+            <span class="k">case</span> <span class="nb">str</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_str</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="n">ignore_missing</span><span class="p">)</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">v</span>
+
+<div class="viewcode-block" id="Scratchpad.replace_dict">
+<a class="viewcode-back" href="../../../otter.scratchpad.html#otter.scratchpad.model.Scratchpad.replace_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">replace_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace placeholders in a dictionary with the corresponding values.</span>
+
+<span class="sd">        :param d: The dictionary with placeholders to replace.</span>
+<span class="sd">        :type d: dict[str, Any]</span>
+<span class="sd">        :param ignore_missing: Whether to ignore missing keys in the scratchpad.</span>
+<span class="sd">            Defaults to ``False``.</span>
+<span class="sd">        :type ignore_missing: bool</span>
+<span class="sd">        :return: The dictionary with the placeholders replaced by their values.</span>
+<span class="sd">        :rtype: dict[str, Any]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">keys_to_ignore</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;task_type&#39;</span><span class="p">,</span> <span class="s1">&#39;scratchpad_ignore_missing&#39;</span><span class="p">}</span>
+
+        <span class="n">replaced_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_ignore</span><span class="p">:</span>
+                <span class="n">replaced_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">continue</span>
+            <span class="n">replaced_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_any</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="n">ignore_missing</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">replaced_dict</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

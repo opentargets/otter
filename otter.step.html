@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Storage" href="otter.storage.html" />
+    <link rel="prev" title="Scratchpad" href="otter.scratchpad.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Step</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step.model">model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.model.Step"><code class="docutils literal notranslate"><span class="pre">Step</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.name"><code class="docutils literal notranslate"><span class="pre">Step.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.specs"><code class="docutils literal notranslate"><span class="pre">Step.specs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.manifest"><code class="docutils literal notranslate"><span class="pre">Step.manifest</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.tasks"><code class="docutils literal notranslate"><span class="pre">Step.tasks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.start"><code class="docutils literal notranslate"><span class="pre">Step.start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.finish"><code class="docutils literal notranslate"><span class="pre">Step.finish()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.model.Step.upsert_task_manifest"><code class="docutils literal notranslate"><span class="pre">Step.upsert_task_manifest()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step.coordinator">coordinator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.coordinator.COORDINATOR_POLLING_INTERVAL"><code class="docutils literal notranslate"><span class="pre">COORDINATOR_POLLING_INTERVAL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.coordinator.Coordinator"><code class="docutils literal notranslate"><span class="pre">Coordinator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.coordinator.Coordinator.step"><code class="docutils literal notranslate"><span class="pre">Coordinator.step</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.coordinator.Coordinator.task_registry"><code class="docutils literal notranslate"><span class="pre">Coordinator.task_registry</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.coordinator.Coordinator.config"><code class="docutils literal notranslate"><span class="pre">Coordinator.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.coordinator.Coordinator.run"><code class="docutils literal notranslate"><span class="pre">Coordinator.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step.worker">worker module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.worker.WORKER_POLLING_INTERVAL"><code class="docutils literal notranslate"><span class="pre">WORKER_POLLING_INTERVAL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.worker.Worker"><code class="docutils literal notranslate"><span class="pre">Worker</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.worker.Worker.run"><code class="docutils literal notranslate"><span class="pre">Worker.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.step.worker.Worker.execute_task"><code class="docutils literal notranslate"><span class="pre">Worker.execute_task()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.step.worker.worker_process"><code class="docutils literal notranslate"><span class="pre">worker_process()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.step">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Step</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.step.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="step">
+<h1>Step<a class="headerlink" href="#step" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.step</span></code> package contains the step model and all the mechanics for the
+parallel execution of tasks.</p>
+<section id="module-otter.step.model">
+<span id="model-module"></span><h2>model module<a class="headerlink" href="#module-otter.step.model" title="Link to this heading"></a></h2>
+<p>Step model.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.step.model.Step">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.step.model.</span></span><span class="sig-name descname"><span class="pre">Step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/step/model.html#Step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.model.Step" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Step class.</p>
+<p>This class represents a step in the pipeline.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.model.Step.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#otter.step.model.Step.name" title="Link to this definition"></a></dt>
+<dd><p>The name of the step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.model.Step.specs">
+<span class="sig-name descname"><span class="pre">specs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.step.model.Step.specs" title="Link to this definition"></a></dt>
+<dd><p>The list of specs to be processed in this step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.model.Step.manifest">
+<span class="sig-name descname"><span class="pre">manifest</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="otter.manifest.html#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><span class="pre">StepManifest</span></a></span><a class="headerlink" href="#otter.step.model.Step.manifest" title="Link to this definition"></a></dt>
+<dd><p>The manifest for the step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.model.Step.tasks">
+<span class="sig-name descname"><span class="pre">tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.step.model.Step.tasks" title="Link to this definition"></a></dt>
+<dd><p>The dict of tasks that ran for this step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.model.Step.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/model.html#Step.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.model.Step.start" title="Link to this definition"></a></dt>
+<dd><p>Update a step that has started running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.model.Step.finish">
+<span class="sig-name descname"><span class="pre">finish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/model.html#Step.finish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.model.Step.finish" title="Link to this definition"></a></dt>
+<dd><p>Update a step that has finished running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.model.Step.upsert_task_manifest">
+<span class="sig-name descname"><span class="pre">upsert_task_manifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.task_reporter.TaskReporter" title="otter.task.task_reporter.TaskReporter"><span class="pre">TaskReporter</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/model.html#Step.upsert_task_manifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.model.Step.upsert_task_manifest" title="Link to this definition"></a></dt>
+<dd><p>Update the step manifest with new task manifests.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.step.coordinator">
+<span id="coordinator-module"></span><h2>coordinator module<a class="headerlink" href="#module-otter.step.coordinator" title="Link to this heading"></a></h2>
+<p>Coordinator is the class that manages the execution of a step.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="otter.step.coordinator.COORDINATOR_POLLING_INTERVAL">
+<span class="sig-prename descclassname"><span class="pre">otter.step.coordinator.</span></span><span class="sig-name descname"><span class="pre">COORDINATOR_POLLING_INTERVAL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#otter.step.coordinator.COORDINATOR_POLLING_INTERVAL" title="Link to this definition"></a></dt>
+<dd><p>Default polling interval for the coordinator loop, in seconds.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.step.coordinator.Coordinator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.step.coordinator.</span></span><span class="sig-name descname"><span class="pre">Coordinator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.step.model.Step" title="otter.step.model.Step"><span class="pre">Step</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_registry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.task_registry.TaskRegistry" title="otter.task.task_registry.TaskRegistry"><span class="pre">TaskRegistry</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/step/coordinator.html#Coordinator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.coordinator.Coordinator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Coordinates the execution of a step’s tasks.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.coordinator.Coordinator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><a class="headerlink" href="#otter.step.coordinator.Coordinator.step" title="Link to this definition"></a></dt>
+<dd><p>The <a class="reference internal" href="#otter.step.model.Step" title="otter.step.model.Step"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.step.model.Step</span></code></a> to run.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.coordinator.Coordinator.task_registry">
+<span class="sig-name descname"><span class="pre">task_registry</span></span><a class="headerlink" href="#otter.step.coordinator.Coordinator.task_registry" title="Link to this definition"></a></dt>
+<dd><p>The task registry to build tasks from specs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.step.coordinator.Coordinator.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#otter.step.coordinator.Coordinator.config" title="Link to this definition"></a></dt>
+<dd><p>The configuration object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.coordinator.Coordinator.run">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/coordinator.html#Coordinator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.coordinator.Coordinator.run" title="Link to this definition"></a></dt>
+<dd><p>Run the coordinator loop.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.step.worker">
+<span id="worker-module"></span><h2>worker module<a class="headerlink" href="#module-otter.step.worker" title="Link to this heading"></a></h2>
+<p>Worker process requests tasks from the coordinator and runs them.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="otter.step.worker.WORKER_POLLING_INTERVAL">
+<span class="sig-prename descclassname"><span class="pre">otter.step.worker.</span></span><span class="sig-name descname"><span class="pre">WORKER_POLLING_INTERVAL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#otter.step.worker.WORKER_POLLING_INTERVAL" title="Link to this definition"></a></dt>
+<dd><p>Default polling interval for the worker loop, in seconds.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.step.worker.Worker">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.step.worker.</span></span><span class="sig-name descname"><span class="pre">Worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">worker_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/step/worker.html#Worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.worker.Worker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Worker that executes tasks with a persistent event loop.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.worker.Worker.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Event</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/worker.html#Worker.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.worker.Worker.run" title="Link to this definition"></a></dt>
+<dd><p>Run the worker loop.</p>
+<p>Executes tasks from <code class="docutils literal notranslate"><span class="pre">task_queue</span></code>, and puts the results in <code class="docutils literal notranslate"><span class="pre">result_queue</span></code>.
+The worker will stop when <code class="docutils literal notranslate"><span class="pre">shutdown_event</span></code> is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task_queue</strong> (<em>Queue</em>) – Queue to get tasks from</p></li>
+<li><p><strong>result_queue</strong> (<em>Queue</em>) – Queue to put results in</p></li>
+<li><p><strong>shutdown_event</strong> (<em>Event</em>) – Event to signal shutdown</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.step.worker.Worker.execute_task">
+<span class="sig-name descname"><span class="pre">execute_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Event</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a></span></span><a class="reference internal" href="_modules/otter/step/worker.html#Worker.execute_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.worker.Worker.execute_task" title="Link to this definition"></a></dt>
+<dd><p>Execute a single task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><em>Task</em></a>) – Task to execute</p></li>
+<li><p><strong>abort_event</strong> (<em>Event</em>) – Event to signal abort</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The executed task</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task">Task</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.step.worker.worker_process">
+<span class="sig-prename descclassname"><span class="pre">otter.step.worker.</span></span><span class="sig-name descname"><span class="pre">worker_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">worker_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Event</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/step/worker.html#worker_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.step.worker.worker_process" title="Link to this definition"></a></dt>
+<dd><p>Worker process entry point.</p>
+<p>Creates a Worker instance and runs it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>worker_id</strong> (<em>int</em>) – Unique identifier for this worker</p></li>
+<li><p><strong>task_queue</strong> (<em>Queue</em>) – Queue to get tasks from</p></li>
+<li><p><strong>result_queue</strong> (<em>Queue</em>) – Queue to put results in</p></li>
+<li><p><strong>shutdown_event</strong> (<em>Event</em>) – Event to signal shutdown</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-otter.step">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.step" title="Link to this heading"></a></h2>
+<p>Step module.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.scratchpad.html" class="btn btn-neutral float-left" title="Scratchpad" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.storage.html" class="btn btn-neutral float-right" title="Storage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,228 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Otter — Open Targets Task ExecutoR &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="otter.config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="#" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Otter — Open Targets Task ExecutoR</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="otter-open-targets-task-executor">
+<h1>Otter — Open Targets Task ExecutoR<a class="headerlink" href="#otter-open-targets-task-executor" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Otter is a the task execution framework used in the Open Targets data Pipeline.</p>
+<p>It provides an easy to use API to implement generic tasks that are then used by
+describing the flow in a YAML configuration file.</p>
+<p>Take a look at a <a class="reference internal" href="#otter-example"><span class="std std-ref">Simple example</span></a>.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The hierarchy is as follows:</p>
+<p>A run of the Pipeline is composed of a series of Steps, and those are a bunch
+of Tasks.</p>
+<p>Otter is meant to be launched once per step, and it will execute the tasks in a
+given step. Orchestrating the execution of steps is outside of the scope of
+Otter.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<p>This is a list of what you get <em>for free</em> by using Otter:</p>
+<ul class="simple">
+<li><p><strong>Parallel execution</strong>: Tasks are run in parallel, and Otter will take care
+of the dependency planning.</p></li>
+<li><p><strong>Async</strong> supported: Tasks can be either sync or async.</p></li>
+<li><p><strong>Declarative configuration</strong>: Steps are described in a YAML file, as list of
+tasks with different specifications. The task themselves are implemented in
+Python enabling a lot of flexibility.</p></li>
+<li><p><strong>Logging</strong>: Otter uses the <a class="reference external" href="https://loguru.readthedocs.io/en/stable/">loguru library</a> for logging. It handles all the
+logging related the task flow, and also logs into the manifest (see next item).</p></li>
+<li><p><strong>Manifest</strong>: Otter manages a manifest file that describes a pipeline run. It
+is used to both for debugging and for tracking the provenance of the data. A
+series of simple JQ queries can be used to extract information from it (see
+<a class="reference internal" href="otter.manifest.html#otter-manifest-jq-queries"><span class="std std-ref">Useful JQ queries</span></a>).</p></li>
+<li><p><strong>Error management</strong>: Otter will stop the execution of the pipeline if a task
+fails, and will log the error in the manifest.</p></li>
+<li><p><strong>Scratchpad</strong>: A place to store variables that can be overwritten into the
+configuration file (something like a very simple templating engine), enabling
+easy parametrization of runs, and passing of data between tasks.</p></li>
+<li><p><strong>Utilities</strong>: Otter provides interfaces to use Google Cloud Storage and other
+remote storage services, and a bunch of utilities to help you write tasks.</p></li>
+</ul>
+<p>Of course, “for free” means there is not an extreme degree of flexibility. Some
+of these are limited in scope. The aim is ease of use and simplicity. You can jump
+down to read more about the <a class="reference internal" href="#otter-philosophy"><span class="std std-ref">philosophy behind Otter</span></a>.</p>
+</section>
+<section id="the-model">
+<h2>The model<a class="headerlink" href="#the-model" title="Link to this heading"></a></h2>
+<p>The main elements used when writing an application using Otter are:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="otter.core.html#otter.core.Runner" title="otter.core.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.core.Runner</span></code></a> — Handles the application lifecycle.</p></li>
+<li><p><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.Spec</span></code></a> — Holds the task specification.</p></li>
+<li><p><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.Task</span></code></a> — A Task itself.</p></li>
+<li><p><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.TaskContext</span></code></a> — Holds the context of a task.</p></li>
+<li><p><a class="reference internal" href="otter.scratchpad.html#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.scratchpad.model.Scratchpad</span></code></a> — A place to store variables to overwrite in the config file.</p></li>
+<li><p><a class="reference internal" href="otter.util.html#module-otter.util" title="otter.util"><code class="xref py py-mod docutils literal notranslate"><span class="pre">otter.util</span></code></a> — A bunch of utilities to help you write tasks.</p></li>
+<li><p><a class="reference internal" href="otter.storage.html#module-otter.storage" title="otter.storage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">otter.storage</span></code></a> — Remote storage interfaces to use Google Cloud Storage and similar services.</p></li>
+</ul>
+</section>
+<section id="simple-example">
+<span id="otter-example"></span><h2>Simple example<a class="headerlink" href="#simple-example" title="Link to this heading"></a></h2>
+<p>Here is an example of a configuration file for a really simple pipeline:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">---</span>
+<span class="nt">work_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./work</span>
+<span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+<span class="nt">scratchpad</span><span class="p">:</span>
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">my_step</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello_world task one</span>
+<span class="w">      </span><span class="nt">who</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">World</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello_world task two</span>
+<span class="w">      </span><span class="nt">requires</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello_world task one</span>
+<span class="w">      </span><span class="nt">who</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Universe</span>
+</pre></div>
+</div>
+<p>It defines a <code class="docutils literal notranslate"><span class="pre">my_step</span></code> step that has two tasks, out of which the second one will
+only run once the first has finished. A simple application that runs this step:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Runner</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="n">runner</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">()</span>
+   <span class="n">runner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+   <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>  <span class="c1"># or any other way you want to handle the event loop</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<div class="line-block">
+<div class="line">Some other examples:</div>
+<div class="line"><a class="reference external" href="_modules/otter/tasks/hello_world.html">HelloWorld</a> — Example Task.</div>
+</div>
+</div>
+</section>
+<section id="philosophy">
+<span id="otter-philosophy"></span><h2>Philosophy<a class="headerlink" href="#philosophy" title="Link to this heading"></a></h2>
+<p>One of the reasons for implementing another task execution framework instead of
+using something like Celery is, we wanted have a very basic set of features
+baked into all tasks (traceability, logging, error management, etc). Although
+most of those are already there in many frameworks, we would not be using them
+to their full extent, effectively increasing the complexity of the system
+unnecessarily.</p>
+<p>Using something like Apache Airflow alone to handle the pipeline was another
+option. But then we would be completely unable to execute any part of it outside
+of the enourmous Airflow ecosystem, which —although amazingly powerful— is also
+unwieldy.</p>
+<p>Otter provides us with a way to wrap steps in an executable, independent unit
+that can be run in any environment, and that can be orchestrated by any other
+system (even a simple bash <code class="docutils literal notranslate"><span class="pre">for</span></code> loop). It also encapsulates many tools and
+interfaces that are common to all tasks, making it easier to write and maintain
+them.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.config.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

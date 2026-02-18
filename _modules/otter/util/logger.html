@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.util.logger &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.util.logger</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.util.logger</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Configures the logger for the application.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">atexit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">queue</span><span class="w"> </span><span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">loguru</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="n">_runner_name</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;otter&#39;</span><span class="p">]</span>
+<span class="n">_early_logs</span><span class="p">:</span> <span class="n">MessageQueue</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
+
+
+<div class="viewcode-block" id="get_exception_info">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.get_exception_info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_exception_info</span><span class="p">(</span><span class="n">record_exception</span><span class="p">:</span> <span class="n">loguru</span><span class="o">.</span><span class="n">RecordException</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get fields from the exception record.</span>
+
+<span class="sd">    This function extracts the name, function and line number from an exception.</span>
+<span class="sd">    It will also return the exception type and message.</span>
+
+<span class="sd">    It will go back in the stack to the first frame originated inside the app,</span>
+<span class="sd">    that way it will make sure the error is meaningful in the logs. If we don&#39;t</span>
+<span class="sd">    do this, the error will be logged as raising from the in the report decorator,</span>
+<span class="sd">    which is not very useful.</span>
+
+<span class="sd">    :param record_exception: The exception record to extract the information from.</span>
+<span class="sd">    :type record_exception: loguru.RecordException | None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{name}</span><span class="s1">&#39;</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{function}</span><span class="s1">&#39;</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{line}</span><span class="s1">&#39;</span>
+    <span class="n">exc_type</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">exc_msg</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">record_exception</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exc_type</span> <span class="o">=</span> <span class="n">record_exception</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">record_exception</span><span class="o">.</span><span class="n">type</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">exc_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">record_exception</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">record_exception</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="n">record_exception</span><span class="o">.</span><span class="n">traceback</span>
+
+        <span class="k">if</span> <span class="n">tb</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_msg</span>
+
+        <span class="c1"># go back in the stack to the first frame originated inside the app</span>
+        <span class="k">while</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span><span class="p">:</span>
+            <span class="n">next_name</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_globals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;__name__&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">next_name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">next_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span> <span class="k">for</span> <span class="n">rn</span> <span class="ow">in</span> <span class="n">_runner_name</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">next_name</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_next</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">tb</span><span class="o">.</span><span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tb</span><span class="o">.</span><span class="n">tb_lineno</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_msg</span></div>
+
+
+
+<div class="viewcode-block" id="get_format_log">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.get_format_log">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_format_log</span><span class="p">(</span><span class="n">include_task</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create the log format function.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_process_role</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">p_role</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;OTTER_PROCESS_ROLE&#39;</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">)</span>
+        <span class="n">p_role_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">p_role</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;lm&#39;</span> <span class="k">if</span> <span class="n">p_role_str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;W&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;g&#39;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;&lt;b&gt;&lt;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s1">&gt;</span><span class="si">{</span><span class="n">p_role_str</span><span class="si">}</span><span class="s1">&lt;/</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s1">&gt;&lt;/b&gt;&#39;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_log</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="n">loguru</span><span class="o">.</span><span class="n">Record</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_msg</span> <span class="o">=</span> <span class="n">get_exception_info</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;exception&#39;</span><span class="p">))</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="s1">&#39;&lt;y&gt;</span><span class="si">{extra[task]}</span><span class="s1">&lt;/&gt;::&#39;</span> <span class="k">if</span> <span class="n">include_task</span> <span class="ow">and</span> <span class="n">record</span><span class="p">[</span><span class="s1">&#39;extra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">trail</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="n">include_task</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">p_role</span> <span class="o">=</span> <span class="n">_get_process_role</span><span class="p">()</span>
+
+        <span class="c1"># if there is an exception, add it to the log message</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{message}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">exc_type</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">exc_type</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">exc_msg</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="n">trail</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="si">{exception}</span><span class="s1">&#39;</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s1">&#39;&lt;g&gt;{time:YYYY-MM-DD HH:mm:ss.SSS}&lt;/&gt; | &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;&lt;m&gt;</span><span class="si">{</span><span class="n">p_role</span><span class="si">}</span><span class="s1">&lt;/&gt; | &#39;</span>
+            <span class="s1">&#39;&lt;lvl&gt;</span><span class="si">{level: &lt;8}</span><span class="s1">&lt;/&gt; | &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;&lt;c&gt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&lt;/&gt;:&lt;c&gt;</span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s1">&lt;/&gt;:&lt;c&gt;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s1">&lt;/&gt;&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39; - &lt;lvl&gt;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s1">&lt;/&gt;&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">trail</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">format_log</span></div>
+
+
+
+<div class="viewcode-block" id="task_logging">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.task_logging">[docs]</a>
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">task_logging</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager that appends log messages to the task&#39;s manifest.</span>
+
+<span class="sd">    We check if there is already a stdout logger, and if not, we add one. This</span>
+<span class="sd">    is added to make sure spawned processes also log to stdout. We&#39;ve seen that</span>
+<span class="sd">    sometimes the logger configuration is not inherited by child processes for</span>
+<span class="sd">    some unknown reason. Probably related to:</span>
+
+<span class="sd">    https://github.com/Delgan/loguru/issues/912</span>
+
+<span class="sd">    :param task: The task to log messages to.</span>
+<span class="sd">    :type task: Task</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">logger</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>  <span class="c1"># ty:ignore[unresolved-attribute]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="s1">&#39;_sink&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">_sink</span><span class="p">,</span> <span class="s1">&#39;_stream&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">h</span><span class="o">.</span><span class="n">_sink</span><span class="o">.</span><span class="n">_stream</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;&lt;stdout&gt;&#39;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;found stdout logger&#39;</span><span class="p">)</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sink</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;TRACE&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">get_format_log</span><span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;added missing stdout logger&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">logger</span><span class="o">.</span><span class="n">contextualize</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+        <span class="n">sink_task</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">message</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">sink</span><span class="o">=</span><span class="n">sink_task</span><span class="p">,</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">record</span><span class="p">[</span><span class="s1">&#39;extra&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="n">get_format_log</span><span class="p">(</span><span class="n">include_task</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">level</span><span class="o">=</span><span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_level</span> <span class="ow">or</span> <span class="s1">&#39;TRACE&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">yield</span></div>
+
+
+
+<div class="viewcode-block" id="MessageQueue">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.MessageQueue">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MessageQueue</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A queue for log messages.</span>
+
+<span class="sd">    This class is used to hold log messages until the logger is configured.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">[</span><span class="n">loguru</span><span class="o">.</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MessageQueue.put">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.MessageQueue.put">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="n">loguru</span><span class="o">.</span><span class="n">Message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Put a message in the queue.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MessageQueue.flush">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.MessageQueue.flush">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump the log messages to stdout.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;TRACE&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">get_format_log</span><span class="p">())</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">patcher</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="n">loguru</span><span class="o">.</span><span class="n">Record</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># noqa: B023</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">patcher</span><span class="p">)</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="init_logger_early">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.init_logger_early">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_logger_early</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize early logging.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_early_logs</span>  <span class="c1"># noqa: PLW0603</span>
+    <span class="n">_early_logs</span> <span class="o">=</span> <span class="n">MessageQueue</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sink</span><span class="o">=</span><span class="n">_early_logs</span><span class="o">.</span><span class="n">put</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;TRACE&#39;</span><span class="p">)</span>
+    <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">_early_logs</span><span class="o">.</span><span class="n">flush</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;early logger configured&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="init_logger">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.logger.init_logger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_logger</span><span class="p">(</span><span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the logger.</span>
+
+<span class="sd">    Once the logger is set up, dumps the log messages held in the queue.</span>
+
+<span class="sd">    :param log_level: The log level to use.</span>
+<span class="sd">    :type log_level: str</span>
+<span class="sd">    :param app_name: The name of the Otter application, defaults to `otter`.</span>
+<span class="sd">    :type app_name: str | None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">app_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">global</span> <span class="n">_runner_name</span>  <span class="c1"># noqa: PLW0602</span>
+        <span class="n">_runner_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">app_name</span><span class="p">)</span>
+
+    <span class="n">_early_logs</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sink</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">get_format_log</span><span class="p">())</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;logger configured, level </span><span class="si">{</span><span class="n">log_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

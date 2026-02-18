@@ -1,0 +1,455 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manifest &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scratchpad" href="otter.scratchpad.html" />
+    <link rel="prev" title="Core" href="otter.core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Manifest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#useful-jq-queries">Useful JQ queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.manifest.model">manifest.model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.manifest.model.Result"><code class="docutils literal notranslate"><span class="pre">Result</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Result.PENDING"><code class="docutils literal notranslate"><span class="pre">Result.PENDING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Result.SUCCESS"><code class="docutils literal notranslate"><span class="pre">Result.SUCCESS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Result.FAILURE"><code class="docutils literal notranslate"><span class="pre">Result.FAILURE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Result.ABORTED"><code class="docutils literal notranslate"><span class="pre">Result.ABORTED</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.manifest.model.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Artifact.source"><code class="docutils literal notranslate"><span class="pre">Artifact.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Artifact.destination"><code class="docutils literal notranslate"><span class="pre">Artifact.destination</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Artifact.model_config"><code class="docutils literal notranslate"><span class="pre">Artifact.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.manifest.model.TaskManifest"><code class="docutils literal notranslate"><span class="pre">TaskManifest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.name"><code class="docutils literal notranslate"><span class="pre">TaskManifest.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.result"><code class="docutils literal notranslate"><span class="pre">TaskManifest.result</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.started_run_at"><code class="docutils literal notranslate"><span class="pre">TaskManifest.started_run_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.finished_run_at"><code class="docutils literal notranslate"><span class="pre">TaskManifest.finished_run_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.started_validation_at"><code class="docutils literal notranslate"><span class="pre">TaskManifest.started_validation_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.finished_validation_at"><code class="docutils literal notranslate"><span class="pre">TaskManifest.finished_validation_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.log"><code class="docutils literal notranslate"><span class="pre">TaskManifest.log</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.artifacts"><code class="docutils literal notranslate"><span class="pre">TaskManifest.artifacts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.run_elapsed"><code class="docutils literal notranslate"><span class="pre">TaskManifest.run_elapsed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.validation_elapsed"><code class="docutils literal notranslate"><span class="pre">TaskManifest.validation_elapsed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.elapsed"><code class="docutils literal notranslate"><span class="pre">TaskManifest.elapsed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.TaskManifest.model_config"><code class="docutils literal notranslate"><span class="pre">TaskManifest.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.manifest.model.StepManifest"><code class="docutils literal notranslate"><span class="pre">StepManifest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.name"><code class="docutils literal notranslate"><span class="pre">StepManifest.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.result"><code class="docutils literal notranslate"><span class="pre">StepManifest.result</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.started_run_at"><code class="docutils literal notranslate"><span class="pre">StepManifest.started_run_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.finished_run_at"><code class="docutils literal notranslate"><span class="pre">StepManifest.finished_run_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.log"><code class="docutils literal notranslate"><span class="pre">StepManifest.log</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.tasks"><code class="docutils literal notranslate"><span class="pre">StepManifest.tasks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.artifacts"><code class="docutils literal notranslate"><span class="pre">StepManifest.artifacts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.elapsed"><code class="docutils literal notranslate"><span class="pre">StepManifest.elapsed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.StepManifest.model_config"><code class="docutils literal notranslate"><span class="pre">StepManifest.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.manifest.model.RootManifest"><code class="docutils literal notranslate"><span class="pre">RootManifest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.RootManifest.result"><code class="docutils literal notranslate"><span class="pre">RootManifest.result</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.RootManifest.started_at"><code class="docutils literal notranslate"><span class="pre">RootManifest.started_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.RootManifest.modified_at"><code class="docutils literal notranslate"><span class="pre">RootManifest.modified_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.RootManifest.log"><code class="docutils literal notranslate"><span class="pre">RootManifest.log</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.RootManifest.steps"><code class="docutils literal notranslate"><span class="pre">RootManifest.steps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.RootManifest.model_config"><code class="docutils literal notranslate"><span class="pre">RootManifest.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.manifest.model.Manifest"><code class="docutils literal notranslate"><span class="pre">Manifest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.manifest.model.Manifest.update"><code class="docutils literal notranslate"><span class="pre">Manifest.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.manifest">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Manifest</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.manifest.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="manifest">
+<h1>Manifest<a class="headerlink" href="#manifest" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.manifest</span></code> package contains the manifest models and utilities. The
+manifest file is a way to provide tracking inforamtion on a run of otter.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Refer to the <a class="reference external" href="https://blog.opentargets.org/provenance-metadata/">Manifest Specification</a>
+for more information, although the schema has changed slightly since the blog
+post.</p>
+</div>
+<section id="useful-jq-queries">
+<span id="otter-manifest-jq-queries"></span><h2>Useful JQ queries<a class="headerlink" href="#useful-jq-queries" title="Link to this heading"></a></h2>
+<p>TODO</p>
+</section>
+<section id="module-otter.manifest.model">
+<span id="manifest-model-module"></span><h2>manifest.model module<a class="headerlink" href="#module-otter.manifest.model" title="Link to this heading"></a></h2>
+<p>Manifest data models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.manifest.model.Result">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.manifest.model.</span></span><span class="sig-name descname"><span class="pre">Result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/manifest/model.html#Result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.Result" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></p>
+<p>Result enumeration.</p>
+<dl class="simple">
+<dt>The result of a <cite>Task</cite>, <cite>Step</cite> or the whole set of steps. Used in the manifest</dt><dd><p>to track the status of the run.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#otter.manifest.model.TaskManifest" title="otter.manifest.model.TaskManifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskManifest</span></code></a>, <a class="reference internal" href="#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">StepManifest</span></code></a> and:class:<cite>RootManifest</cite>.</p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Result.PENDING">
+<span class="sig-name descname"><span class="pre">PENDING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pending'</span></span><a class="headerlink" href="#otter.manifest.model.Result.PENDING" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Result.SUCCESS">
+<span class="sig-name descname"><span class="pre">SUCCESS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'success'</span></span><a class="headerlink" href="#otter.manifest.model.Result.SUCCESS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Result.FAILURE">
+<span class="sig-name descname"><span class="pre">FAILURE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'failure'</span></span><a class="headerlink" href="#otter.manifest.model.Result.FAILURE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Result.ABORTED">
+<span class="sig-name descname"><span class="pre">ABORTED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'aborted'</span></span><a class="headerlink" href="#otter.manifest.model.Result.ABORTED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.manifest.model.Artifact">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.manifest.model.</span></span><span class="sig-name descname"><span class="pre">Artifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/manifest/model.html#Artifact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.Artifact" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Artifact model.</p>
+<p>An <code class="docutils literal notranslate"><span class="pre">Artifact</span></code> is the resulting product of a task. Tasks can produce none,
+one or more artifacts. It is not necesarily a file, it can be a folder or a
+database.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Artifact</span></code> class can be subclassed to add additional fields that better
+describe things.</p>
+<p>Artifacts must have a source and a destination, which can be used to track
+them through the flow of the pipeline.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Artifact.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.Artifact.source" title="Link to this definition"></a></dt>
+<dd><p>The sources of the resource.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Artifact.destination">
+<span class="sig-name descname"><span class="pre">destination</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.Artifact.destination" title="Link to this definition"></a></dt>
+<dd><p>The destinations of the resource.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.Artifact.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#otter.manifest.model.Artifact.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.manifest.model.</span></span><span class="sig-name descname"><span class="pre">TaskManifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.manifest.model.Result" title="otter.manifest.model.Result"><span class="pre">Result</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Result.PENDING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_run_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finished_run_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_validation_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finished_validation_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.manifest.model.Artifact" title="otter.manifest.model.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/manifest/model.html#TaskManifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.TaskManifest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Model representing a task in a step of the manifest.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.result">
+<span class="sig-name descname"><span class="pre">result</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.manifest.model.Result" title="otter.manifest.model.Result"><span class="pre">Result</span></a></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.result" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.started_run_at">
+<span class="sig-name descname"><span class="pre">started_run_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.started_run_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.finished_run_at">
+<span class="sig-name descname"><span class="pre">finished_run_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.finished_run_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.started_validation_at">
+<span class="sig-name descname"><span class="pre">started_validation_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.started_validation_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.finished_validation_at">
+<span class="sig-name descname"><span class="pre">finished_validation_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.finished_validation_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.log" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.artifacts">
+<span class="sig-name descname"><span class="pre">artifacts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.manifest.model.Artifact" title="otter.manifest.model.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.artifacts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.run_elapsed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run_elapsed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.run_elapsed" title="Link to this definition"></a></dt>
+<dd><p>Calculate the elapsed time for the run.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.validation_elapsed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validation_elapsed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.validation_elapsed" title="Link to this definition"></a></dt>
+<dd><p>Calculate the elapsed time for the validation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.elapsed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">elapsed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.elapsed" title="Link to this definition"></a></dt>
+<dd><p>Calculate the elapsed time.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.TaskManifest.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.manifest.model.TaskManifest.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.manifest.model.</span></span><span class="sig-name descname"><span class="pre">StepManifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.manifest.model.Result" title="otter.manifest.model.Result"><span class="pre">Result</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Result.PENDING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_run_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finished_run_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.manifest.model.TaskManifest" title="otter.manifest.model.TaskManifest"><span class="pre">TaskManifest</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.manifest.model.Artifact" title="otter.manifest.model.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/manifest/model.html#StepManifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.StepManifest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Model representing a step in the manifest.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.result">
+<span class="sig-name descname"><span class="pre">result</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.manifest.model.Result" title="otter.manifest.model.Result"><span class="pre">Result</span></a></span><a class="headerlink" href="#otter.manifest.model.StepManifest.result" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.started_run_at">
+<span class="sig-name descname"><span class="pre">started_run_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.started_run_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.finished_run_at">
+<span class="sig-name descname"><span class="pre">finished_run_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.finished_run_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.log" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.tasks">
+<span class="sig-name descname"><span class="pre">tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.manifest.model.TaskManifest" title="otter.manifest.model.TaskManifest"><span class="pre">TaskManifest</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.tasks" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.artifacts">
+<span class="sig-name descname"><span class="pre">artifacts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.manifest.model.Artifact" title="otter.manifest.model.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.artifacts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.elapsed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">elapsed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.elapsed" title="Link to this definition"></a></dt>
+<dd><p>Calculate the elapsed time.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.StepManifest.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#otter.manifest.model.StepManifest.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.manifest.model.</span></span><span class="sig-name descname"><span class="pre">RootManifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.manifest.model.Result" title="otter.manifest.model.Result"><span class="pre">Result</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Result.PENDING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">datetime.datetime(2026,</span> <span class="pre">2,</span> <span class="pre">18,</span> <span class="pre">13,</span> <span class="pre">42,</span> <span class="pre">24,</span> <span class="pre">173408,</span> <span class="pre">tzinfo=datetime.timezone.utc)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">datetime.datetime(2026,</span> <span class="pre">2,</span> <span class="pre">18,</span> <span class="pre">13,</span> <span class="pre">42,</span> <span class="pre">24,</span> <span class="pre">173414,</span> <span class="pre">tzinfo=datetime.timezone.utc)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><span class="pre">StepManifest</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/manifest/model.html#RootManifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.RootManifest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Model representing the root of the manifest.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest.result">
+<span class="sig-name descname"><span class="pre">result</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.manifest.model.Result" title="otter.manifest.model.Result"><span class="pre">Result</span></a></span><a class="headerlink" href="#otter.manifest.model.RootManifest.result" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest.started_at">
+<span class="sig-name descname"><span class="pre">started_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></span><a class="headerlink" href="#otter.manifest.model.RootManifest.started_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest.modified_at">
+<span class="sig-name descname"><span class="pre">modified_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></span><a class="headerlink" href="#otter.manifest.model.RootManifest.modified_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.RootManifest.log" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><span class="pre">StepManifest</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.manifest.model.RootManifest.steps" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.manifest.model.RootManifest.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#otter.manifest.model.RootManifest.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.manifest.model.Manifest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.manifest.model.</span></span><span class="sig-name descname"><span class="pre">Manifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/manifest/model.html#Manifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.Manifest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manifest class that handles operations.</p>
+<p>This class wraps a RootManifest and provides atomic read-modify-write
+operations with optimistic locking for concurrent access.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.manifest.model.Manifest.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_manifest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><span class="pre">StepManifest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/manifest/model.html#Manifest.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.manifest.model.Manifest.update" title="Link to this definition"></a></dt>
+<dd><p>Update manifest with the given step and save it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>step_manifest</strong> (<a class="reference internal" href="#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><em>StepManifest</em></a>) – The <a class="reference internal" href="#otter.manifest.model.StepManifest" title="otter.manifest.model.StepManifest"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.manifest.model.StepManifest</span></code></a> to
+update in the manifest.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="otter.util.html#otter.util.errors.ManifestError" title="otter.util.errors.ManifestError"><strong>ManifestError</strong></a> – If an error occurs during the update</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.manifest">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.manifest" title="Link to this heading"></a></h2>
+<p>Manifest module.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.core.html" class="btn btn-neutral float-left" title="Core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.scratchpad.html" class="btn btn-neutral float-right" title="Scratchpad" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

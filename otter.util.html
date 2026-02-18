@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utilities &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Validators" href="otter.validators.html" />
+    <link rel="prev" title="Built-in tasks" href="otter.tasks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.util.errors">util.errors module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.log_pydantic"><code class="docutils literal notranslate"><span class="pre">log_pydantic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.OtterError"><code class="docutils literal notranslate"><span class="pre">OtterError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.StepInvalidError"><code class="docutils literal notranslate"><span class="pre">StepInvalidError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.StepFailedError"><code class="docutils literal notranslate"><span class="pre">StepFailedError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.TaskRunError"><code class="docutils literal notranslate"><span class="pre">TaskRunError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.TaskAbortedError"><code class="docutils literal notranslate"><span class="pre">TaskAbortedError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.TaskValidationError"><code class="docutils literal notranslate"><span class="pre">TaskValidationError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.DownloadError"><code class="docutils literal notranslate"><span class="pre">DownloadError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.UploadError"><code class="docutils literal notranslate"><span class="pre">UploadError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.CopyError"><code class="docutils literal notranslate"><span class="pre">CopyError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.NotFoundError"><code class="docutils literal notranslate"><span class="pre">NotFoundError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.PreconditionFailedError"><code class="docutils literal notranslate"><span class="pre">PreconditionFailedError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.ScratchpadError"><code class="docutils literal notranslate"><span class="pre">ScratchpadError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.StorageError"><code class="docutils literal notranslate"><span class="pre">StorageError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.ManifestError"><code class="docutils literal notranslate"><span class="pre">ManifestError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.errors.FSError"><code class="docutils literal notranslate"><span class="pre">FSError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.util.fs">util.fs module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.fs.check_dir"><code class="docutils literal notranslate"><span class="pre">check_dir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.fs.check_source"><code class="docutils literal notranslate"><span class="pre">check_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.fs.check_destination"><code class="docutils literal notranslate"><span class="pre">check_destination()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.util.logger">util.logger module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.logger.get_exception_info"><code class="docutils literal notranslate"><span class="pre">get_exception_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.logger.get_format_log"><code class="docutils literal notranslate"><span class="pre">get_format_log()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.logger.task_logging"><code class="docutils literal notranslate"><span class="pre">task_logging()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.logger.MessageQueue"><code class="docutils literal notranslate"><span class="pre">MessageQueue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.util.logger.MessageQueue.put"><code class="docutils literal notranslate"><span class="pre">MessageQueue.put()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.util.logger.MessageQueue.flush"><code class="docutils literal notranslate"><span class="pre">MessageQueue.flush()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.logger.init_logger_early"><code class="docutils literal notranslate"><span class="pre">init_logger_early()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.util.logger.init_logger"><code class="docutils literal notranslate"><span class="pre">init_logger()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.util">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Utilities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.util.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="utilities">
+<h1>Utilities<a class="headerlink" href="#utilities" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.util</span></code> package contains utility modules for Otter, incluing errors
+used throughout the application.</p>
+<section id="module-otter.util.errors">
+<span id="util-errors-module"></span><h2>util.errors module<a class="headerlink" href="#module-otter.util.errors" title="Link to this heading"></a></h2>
+<p>Custom exceptions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.errors.log_pydantic">
+<span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">log_pydantic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ValidationError</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/otter/util/errors.html#log_pydantic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.log_pydantic" title="Link to this definition"></a></dt>
+<dd><p>Log a pydantic validation error correctly.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.OtterError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">OtterError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#OtterError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.OtterError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Base class for all application-specific exceptions.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.StepInvalidError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">StepInvalidError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#StepInvalidError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.StepInvalidError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a step is invalid somehow.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.StepFailedError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">StepFailedError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#StepFailedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.StepFailedError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a step fails somehow.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.TaskRunError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">TaskRunError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#TaskRunError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.TaskRunError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a task fails to run.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.TaskAbortedError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">TaskAbortedError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#TaskAbortedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.TaskAbortedError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a task is aborted.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.TaskValidationError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">TaskValidationError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#TaskValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.TaskValidationError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a task fails validation.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.DownloadError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">DownloadError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#DownloadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.DownloadError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when an error occurs during a download.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.UploadError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">UploadError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#UploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.UploadError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when an error occurs during an upload.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.CopyError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">CopyError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#CopyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.CopyError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when an error occurs during a copy operation.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.NotFoundError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">NotFoundError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/util/errors.html#NotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.NotFoundError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when something is not found.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.PreconditionFailedError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">PreconditionFailedError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#PreconditionFailedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.PreconditionFailedError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a precondition fails.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.ScratchpadError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">ScratchpadError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#ScratchpadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.ScratchpadError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when a key is not found in the scratchpad.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.StorageError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">StorageError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#StorageError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.StorageError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when an error occurs in a storage class.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.ManifestError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">ManifestError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#ManifestError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.ManifestError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when an error occurs in the manifest management.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="otter.util.errors.FSError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.errors.</span></span><span class="sig-name descname"><span class="pre">FSError</span></span><a class="reference internal" href="_modules/otter/util/errors.html#FSError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.errors.FSError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.util.errors.OtterError" title="otter.util.errors.OtterError"><code class="xref py py-class docutils literal notranslate"><span class="pre">OtterError</span></code></a></p>
+<p>Raise when an error occurs in the filesystem operations.</p>
+</dd></dl>
+
+</section>
+<section id="module-otter.util.fs">
+<span id="util-fs-module"></span><h2>util.fs module<a class="headerlink" href="#module-otter.util.fs" title="Link to this heading"></a></h2>
+<p>Local file system utilities.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.fs.check_dir">
+<span class="sig-prename descclassname"><span class="pre">otter.util.fs.</span></span><span class="sig-name descname"><span class="pre">check_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/fs.html#check_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.fs.check_dir" title="Link to this definition"></a></dt>
+<dd><p>Check working conditions for a directory.</p>
+<p>The function will make sure that the directory exists and is writable. If it
+does not exist, the function will attempt to create it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em><em> | </em><em>str</em>) – The directory to check.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#otter.util.errors.FSError" title="otter.util.errors.FSError"><strong>FSError</strong></a> – If the path exists but is not a directory or is not writable;
+or if the directory does not exist and cannot be created.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.fs.check_source">
+<span class="sig-prename descclassname"><span class="pre">otter.util.fs.</span></span><span class="sig-name descname"><span class="pre">check_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/fs.html#check_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.fs.check_source" title="Link to this definition"></a></dt>
+<dd><p>Check working conditions for a file.</p>
+<p>The function will make sure that the file exists and is readable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em><em> | </em><em>str</em>) – The path to check. Must be a file.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#otter.util.errors.FSError" title="otter.util.errors.FSError"><strong>FSError</strong></a> – If the path is not a file, does not exist, or is not readable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.fs.check_destination">
+<span class="sig-prename descclassname"><span class="pre">otter.util.fs.</span></span><span class="sig-name descname"><span class="pre">check_destination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/fs.html#check_destination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.fs.check_destination" title="Link to this definition"></a></dt>
+<dd><p>Check working conditions for a destination path.</p>
+<p>The function will make sure that the file does not exist and that the parent
+directory exists and is writable. If the parent directory does not exist, the
+function will attempt to create it.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">delete</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the function will delete the file if it already
+exists.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function can potentially delete files!</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em><em> | </em><em>str</em>) – The path to check. Must be a file.</p></li>
+<li><p><strong>delete</strong> (<em>bool</em>) – Whether to delete the file if it already exists.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#otter.util.errors.FSError" title="otter.util.errors.FSError"><strong>FSError</strong></a> – If the parent directory checks fail, or if the file exists
+and <code class="docutils literal notranslate"><span class="pre">delete</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-otter.util.logger">
+<span id="util-logger-module"></span><h2>util.logger module<a class="headerlink" href="#module-otter.util.logger" title="Link to this heading"></a></h2>
+<p>Configures the logger for the application.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.logger.get_exception_info">
+<span class="sig-prename descclassname"><span class="pre">otter.util.logger.</span></span><span class="sig-name descname"><span class="pre">get_exception_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record_exception</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">loguru.RecordException</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#get_exception_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.get_exception_info" title="Link to this definition"></a></dt>
+<dd><p>Get fields from the exception record.</p>
+<p>This function extracts the name, function and line number from an exception.
+It will also return the exception type and message.</p>
+<p>It will go back in the stack to the first frame originated inside the app,
+that way it will make sure the error is meaningful in the logs. If we don’t
+do this, the error will be logged as raising from the in the report decorator,
+which is not very useful.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>record_exception</strong> (<em>loguru.RecordException</em><em> | </em><em>None</em>) – The exception record to extract the information from.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.logger.get_format_log">
+<span class="sig-prename descclassname"><span class="pre">otter.util.logger.</span></span><span class="sig-name descname"><span class="pre">get_format_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#get_format_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.get_format_log" title="Link to this definition"></a></dt>
+<dd><p>Create the log format function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.logger.task_logging">
+<span class="sig-prename descclassname"><span class="pre">otter.util.logger.</span></span><span class="sig-name descname"><span class="pre">task_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#task_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.task_logging" title="Link to this definition"></a></dt>
+<dd><p>Context manager that appends log messages to the task’s manifest.</p>
+<p>We check if there is already a stdout logger, and if not, we add one. This
+is added to make sure spawned processes also log to stdout. We’ve seen that
+sometimes the logger configuration is not inherited by child processes for
+some unknown reason. Probably related to:</p>
+<p><a class="reference external" href="https://github.com/Delgan/loguru/issues/912">https://github.com/Delgan/loguru/issues/912</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task</strong> (<a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><em>Task</em></a>) – The task to log messages to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.util.logger.MessageQueue">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.util.logger.</span></span><span class="sig-name descname"><span class="pre">MessageQueue</span></span><a class="reference internal" href="_modules/otter/util/logger.html#MessageQueue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.MessageQueue" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A queue for log messages.</p>
+<p>This class is used to hold log messages until the logger is configured.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.util.logger.MessageQueue.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">loguru.Message</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#MessageQueue.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.MessageQueue.put" title="Link to this definition"></a></dt>
+<dd><p>Put a message in the queue.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.util.logger.MessageQueue.flush">
+<span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#MessageQueue.flush"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.MessageQueue.flush" title="Link to this definition"></a></dt>
+<dd><p>Dump the log messages to stdout.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.logger.init_logger_early">
+<span class="sig-prename descclassname"><span class="pre">otter.util.logger.</span></span><span class="sig-name descname"><span class="pre">init_logger_early</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#init_logger_early"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.init_logger_early" title="Link to this definition"></a></dt>
+<dd><p>Initialize early logging.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.util.logger.init_logger">
+<span class="sig-prename descclassname"><span class="pre">otter.util.logger.</span></span><span class="sig-name descname"><span class="pre">init_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'INFO'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/util/logger.html#init_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.util.logger.init_logger" title="Link to this definition"></a></dt>
+<dd><p>Initialize the logger.</p>
+<p>Once the logger is set up, dumps the log messages held in the queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_level</strong> (<em>str</em>) – The log level to use.</p></li>
+<li><p><strong>app_name</strong> (<em>str</em><em> | </em><em>None</em>) – The name of the Otter application, defaults to <cite>otter</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-otter.util">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.util" title="Link to this heading"></a></h2>
+<p>Utility functions and classes.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.tasks.html" class="btn btn-neutral float-left" title="Built-in tasks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.validators.html" class="btn btn-neutral float-right" title="Validators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

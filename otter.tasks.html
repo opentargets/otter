@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Built-in tasks &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities" href="otter.util.html" />
+    <link rel="prev" title="Task" href="otter.task.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Built-in tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks.hello_world">tasks.hello_world module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorldSpec"><code class="docutils literal notranslate"><span class="pre">HelloWorldSpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorldSpec.who"><code class="docutils literal notranslate"><span class="pre">HelloWorldSpec.who</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorldSpec.model_config"><code class="docutils literal notranslate"><span class="pre">HelloWorldSpec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorld"><code class="docutils literal notranslate"><span class="pre">HelloWorld</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorld.spec"><code class="docutils literal notranslate"><span class="pre">HelloWorld.spec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorld.run"><code class="docutils literal notranslate"><span class="pre">HelloWorld.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorld.validate"><code class="docutils literal notranslate"><span class="pre">HelloWorld.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks.copy">tasks.copy module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.copy.CopySpec"><code class="docutils literal notranslate"><span class="pre">CopySpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.copy.CopySpec.source"><code class="docutils literal notranslate"><span class="pre">CopySpec.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.copy.CopySpec.destination"><code class="docutils literal notranslate"><span class="pre">CopySpec.destination</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.copy.CopySpec.model_config"><code class="docutils literal notranslate"><span class="pre">CopySpec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.copy.Copy"><code class="docutils literal notranslate"><span class="pre">Copy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.copy.Copy.spec"><code class="docutils literal notranslate"><span class="pre">Copy.spec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.copy.Copy.validate"><code class="docutils literal notranslate"><span class="pre">Copy.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks.download">tasks.download module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.download.DownloadSpec"><code class="docutils literal notranslate"><span class="pre">DownloadSpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.download.DownloadSpec.source"><code class="docutils literal notranslate"><span class="pre">DownloadSpec.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.download.DownloadSpec.model_config"><code class="docutils literal notranslate"><span class="pre">DownloadSpec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.download.Download"><code class="docutils literal notranslate"><span class="pre">Download</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.download.Download.spec"><code class="docutils literal notranslate"><span class="pre">Download.spec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.download.Download.validate"><code class="docutils literal notranslate"><span class="pre">Download.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks.explode">tasks.explode module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec"><code class="docutils literal notranslate"><span class="pre">ExplodeSpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec.do"><code class="docutils literal notranslate"><span class="pre">ExplodeSpec.do</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec.foreach"><code class="docutils literal notranslate"><span class="pre">ExplodeSpec.foreach</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec.each_placeholder"><code class="docutils literal notranslate"><span class="pre">ExplodeSpec.each_placeholder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec.model_config"><code class="docutils literal notranslate"><span class="pre">ExplodeSpec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.explode.Explode"><code class="docutils literal notranslate"><span class="pre">Explode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode.Explode.spec"><code class="docutils literal notranslate"><span class="pre">Explode.spec</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks.explode_glob">tasks.explode_glob module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlobSpec"><code class="docutils literal notranslate"><span class="pre">ExplodeGlobSpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlobSpec.glob"><code class="docutils literal notranslate"><span class="pre">ExplodeGlobSpec.glob</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlobSpec.do"><code class="docutils literal notranslate"><span class="pre">ExplodeGlobSpec.do</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlobSpec.model_config"><code class="docutils literal notranslate"><span class="pre">ExplodeGlobSpec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlob"><code class="docutils literal notranslate"><span class="pre">ExplodeGlob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlob.spec"><code class="docutils literal notranslate"><span class="pre">ExplodeGlob.spec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlob.scratchpad"><code class="docutils literal notranslate"><span class="pre">ExplodeGlob.scratchpad</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks.find_latest">tasks.find_latest module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.find_latest.FindLatestSpec"><code class="docutils literal notranslate"><span class="pre">FindLatestSpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.find_latest.FindLatestSpec.source"><code class="docutils literal notranslate"><span class="pre">FindLatestSpec.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.find_latest.FindLatestSpec.scratchpad_key"><code class="docutils literal notranslate"><span class="pre">FindLatestSpec.scratchpad_key</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.find_latest.FindLatestSpec.model_config"><code class="docutils literal notranslate"><span class="pre">FindLatestSpec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.tasks.find_latest.FindLatest"><code class="docutils literal notranslate"><span class="pre">FindLatest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.tasks.find_latest.FindLatest.spec"><code class="docutils literal notranslate"><span class="pre">FindLatest.spec</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.tasks">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Built-in tasks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.tasks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="built-in-tasks">
+<h1>Built-in tasks<a class="headerlink" href="#built-in-tasks" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.tasks</span></code> package contains the built-in task types.</p>
+<section id="module-otter.tasks.hello_world">
+<span id="tasks-hello-world-module"></span><h2>tasks.hello_world module<a class="headerlink" href="#module-otter.tasks.hello_world" title="Link to this heading"></a></h2>
+<p>Simple hello world example.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorldSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.hello_world.</span></span><span class="sig-name descname"><span class="pre">HelloWorldSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">who</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'world'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/hello_world.html#HelloWorldSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.hello_world.HelloWorldSpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code></a></p>
+<p>Configuration fields for the hello_world task.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorldSpec.who">
+<span class="sig-name descname"><span class="pre">who</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.tasks.hello_world.HelloWorldSpec.who" title="Link to this definition"></a></dt>
+<dd><p>The person to greet.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorldSpec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.tasks.hello_world.HelloWorldSpec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorld">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.hello_world.</span></span><span class="sig-name descname"><span class="pre">HelloWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.tasks.hello_world.HelloWorldSpec" title="otter.tasks.hello_world.HelloWorldSpec"><span class="pre">HelloWorldSpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/hello_world.html#HelloWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.hello_world.HelloWorld" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Simple hello world example.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorld.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.tasks.hello_world.HelloWorldSpec" title="otter.tasks.hello_world.HelloWorldSpec"><span class="pre">HelloWorldSpec</span></a></span><a class="headerlink" href="#otter.tasks.hello_world.HelloWorld.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorld.run">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/otter/tasks/hello_world.html#HelloWorld.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.hello_world.HelloWorld.run" title="Link to this definition"></a></dt>
+<dd><p>Say hello, then create an artifact about it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.tasks.hello_world.HelloWorld.validate">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/otter/tasks/hello_world.html#HelloWorld.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.hello_world.HelloWorld.validate" title="Link to this definition"></a></dt>
+<dd><p>Dummy validation step.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.tasks.copy">
+<span id="tasks-copy-module"></span><h2>tasks.copy module<a class="headerlink" href="#module-otter.tasks.copy" title="Link to this heading"></a></h2>
+<p>Copy a file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.copy.CopySpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.copy.</span></span><span class="sig-name descname"><span class="pre">CopySpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/copy.html#CopySpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.copy.CopySpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code></a></p>
+<p>Configuration fields for the copy task.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.copy.CopySpec.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.tasks.copy.CopySpec.source" title="Link to this definition"></a></dt>
+<dd><p>The source URI of the file to copy. Must be absolute.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.copy.CopySpec.destination">
+<span class="sig-name descname"><span class="pre">destination</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.tasks.copy.CopySpec.destination" title="Link to this definition"></a></dt>
+<dd><p>The destination for the file, relative to the release root.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.copy.CopySpec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.tasks.copy.CopySpec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.copy.Copy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.copy.</span></span><span class="sig-name descname"><span class="pre">Copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.tasks.copy.CopySpec" title="otter.tasks.copy.CopySpec"><span class="pre">CopySpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/copy.html#Copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.copy.Copy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Copy a file.</p>
+<p>Copies a file from an external source to a destination inside the release. If
+no <cite>release_uri</cite> is provided in the configuration, the file will be downloaded
+to the local <cite>work_path</cite>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><cite>source</cite> must be absolute. This task is intended for external resources.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><cite>destination</cite> will be prepended with either <a class="reference internal" href="otter.config.html#otter.config.model.Config.release_uri" title="otter.config.model.Config.release_uri"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.config.model.Config.release_uri</span></code></a>
+or <a class="reference internal" href="otter.config.html#otter.config.model.Config.work_path" title="otter.config.model.Config.work_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.config.model.Config.work_path</span></code></a> config fields.</p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.copy.Copy.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.tasks.copy.CopySpec" title="otter.tasks.copy.CopySpec"><span class="pre">CopySpec</span></a></span><a class="headerlink" href="#otter.tasks.copy.Copy.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.tasks.copy.Copy.validate">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/otter/tasks/copy.html#Copy.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.copy.Copy.validate" title="Link to this definition"></a></dt>
+<dd><p>Check that the copied file exists and has a valid size.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.tasks.download">
+<span id="tasks-download-module"></span><h2>tasks.download module<a class="headerlink" href="#module-otter.tasks.download" title="Link to this heading"></a></h2>
+<p>Download a file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.download.DownloadSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.download.</span></span><span class="sig-name descname"><span class="pre">DownloadSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/download.html#DownloadSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.download.DownloadSpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code></a></p>
+<p>Configuration fields for the download task.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.download.DownloadSpec.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.tasks.download.DownloadSpec.source" title="Link to this definition"></a></dt>
+<dd><p>The source location, relative to the release, of the file to download.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.download.DownloadSpec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.tasks.download.DownloadSpec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.download.Download">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.download.</span></span><span class="sig-name descname"><span class="pre">Download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.tasks.download.DownloadSpec" title="otter.tasks.download.DownloadSpec"><span class="pre">DownloadSpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/download.html#Download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.download.Download" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Download a file.</p>
+<p>Downloads a file from <code class="docutils literal notranslate"><span class="pre">source</span></code> to a local destination. The source <strong>must</strong>
+be relative to the release root. This should be used after a <code class="docutils literal notranslate"><span class="pre">copy</span></code> task
+has put that artifact into the release, as modifying an external resource
+would break reproducibility.</p>
+<p>The destination will be the same as the source, but relative to the local
+<code class="docutils literal notranslate"><span class="pre">work_path</span></code>.</p>
+<p>This task should only be used when a later task needs an artifact to exist
+locally for some reason. In most cases, downloading files should be avoided.
+Instead:</p>
+<ul class="simple">
+<li><p>For copying artifacts into a release, use the <code class="docutils literal notranslate"><span class="pre">copy</span></code> task.</p></li>
+<li><dl class="simple">
+<dt>For transforming data, whenever possible, open files already copied and work</dt><dd><p>with them directly.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This task will not generate an artifact, as the downloaded file will
+stay local only. It is a responsibility of subsequent tasks to put the
+file in the release and generate the corresponding artifact. This is easy
+because the relative part of the path once downloaded will be the same as
+the one in the release.</p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.download.Download.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.tasks.download.DownloadSpec" title="otter.tasks.download.DownloadSpec"><span class="pre">DownloadSpec</span></a></span><a class="headerlink" href="#otter.tasks.download.Download.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.tasks.download.Download.validate">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/otter/tasks/download.html#Download.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.download.Download.validate" title="Link to this definition"></a></dt>
+<dd><p>Check that the downloaded file exists and has a valid size.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.tasks.explode">
+<span id="tasks-explode-module"></span><h2>tasks.explode module<a class="headerlink" href="#module-otter.tasks.explode" title="Link to this heading"></a></h2>
+<p>Generate more tasks based on a list.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.explode.ExplodeSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.explode.</span></span><span class="sig-name descname"><span class="pre">ExplodeSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foreach</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">each_placeholder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'each'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/explode.html#ExplodeSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.explode.ExplodeSpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code></a></p>
+<p>Configuration fields for the explode task.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode.ExplodeSpec.do">
+<span class="sig-name descname"><span class="pre">do</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.tasks.explode.ExplodeSpec.do" title="Link to this definition"></a></dt>
+<dd><p>The tasks to explode. Each task in the list will be duplicated for each
+iteration of the foreach list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode.ExplodeSpec.foreach">
+<span class="sig-name descname"><span class="pre">foreach</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.tasks.explode.ExplodeSpec.foreach" title="Link to this definition"></a></dt>
+<dd><p>The list of values to iterate over.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode.ExplodeSpec.each_placeholder">
+<span class="sig-name descname"><span class="pre">each_placeholder</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.tasks.explode.ExplodeSpec.each_placeholder" title="Link to this definition"></a></dt>
+<dd><p>The placeholder string to use for the current iteration value.
+The value of this field, e.g. <cite>each</cite>, will be replaced by each of the
+entries in the <cite>foreach</cite> list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode.ExplodeSpec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.tasks.explode.ExplodeSpec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.explode.Explode">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.explode.</span></span><span class="sig-name descname"><span class="pre">Explode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec" title="otter.tasks.explode.ExplodeSpec"><span class="pre">ExplodeSpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/explode.html#Explode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.explode.Explode" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Generate more tasks based on a list.</p>
+<p>This task will duplicate the specs in the <cite>do</cite> list for each entry in the
+<cite>foreach</cite> list.</p>
+<p>Inside of the specs in the <cite>do</cite> list, the string <cite>each_placeholder</cite> can be
+used as as a sentinel to refer to the current iteration value.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <cite>${each_placeholder}</cite> placeholder <strong>MUST</strong> be present in the
+<a class="reference internal" href="otter.task.html#otter.task.model.Spec.name" title="otter.task.model.Spec.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.task.model.Spec.name</span></code></a> of the new specs that are defined
+inside <code class="docutils literal notranslate"><span class="pre">do</span></code>, as otherwise all of them will have the same name, and name
+must be unique.</p>
+<p>If you do a nested explode, the inner explode will have spec names that
+are identical to it’s sibling specs spawned during the outer explode.
+Since the spec names need to be unique, you should also include the outer
+explode’s placeholder in the inner explode’s spec names to avoid conlicts.
+For example, if you have an outer explode with <cite>each_placeholder: outer</cite>
+and an inner explode with <cite>each_placeholder: inner</cite>, you might name a spec
+in the inner explode <cite>name: process ${outer} and ${inner} data</cite> to ensure
+uniqueness.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">explode species</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">foreach</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">homo_sapiens</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mus_musculus</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">drosophila_melanogaster</span>
+<span class="w">    </span><span class="nt">each_placeholder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explode_each</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">copy ${explode_each} genes</span>
+<span class="w">          </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://example.com/genes/${explode_each}/file.tsv</span>
+<span class="w">          </span><span class="nt">destination</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">genes-${explode_each}.tsv</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">copy ${explode_each} proteins</span>
+<span class="w">          </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://example.com/proteins/${explode_each}/file.tsv</span>
+<span class="w">          </span><span class="nt">destination</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">proteins-${explode_each}.tsv</span>
+</pre></div>
+</div>
+<p>Keep in mind this replacement of <cite>explode_each</cite> will only be done in strings,
+not lists or sub-objects.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode.Explode.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.tasks.explode.ExplodeSpec" title="otter.tasks.explode.ExplodeSpec"><span class="pre">ExplodeSpec</span></a></span><a class="headerlink" href="#otter.tasks.explode.Explode.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.tasks.explode_glob">
+<span id="tasks-explode-glob-module"></span><h2>tasks.explode_glob module<a class="headerlink" href="#module-otter.tasks.explode_glob" title="Link to this heading"></a></h2>
+<p>Generate more tasks based on a glob.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlobSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.explode_glob.</span></span><span class="sig-name descname"><span class="pre">ExplodeGlobSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/explode_glob.html#ExplodeGlobSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlobSpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code></a></p>
+<p>Configuration fields for the explode task.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlobSpec.glob">
+<span class="sig-name descname"><span class="pre">glob</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlobSpec.glob" title="Link to this definition"></a></dt>
+<dd><p>The glob expression.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlobSpec.do">
+<span class="sig-name descname"><span class="pre">do</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlobSpec.do" title="Link to this definition"></a></dt>
+<dd><p>The tasks to explode. Each task in the list will be duplicated for each
+iteration of the foreach list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlobSpec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlobSpec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlob">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.explode_glob.</span></span><span class="sig-name descname"><span class="pre">ExplodeGlob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlobSpec" title="otter.tasks.explode_glob.ExplodeGlobSpec"><span class="pre">ExplodeGlobSpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/explode_glob.html#ExplodeGlob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlob" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Generate more tasks based on a glob.</p>
+<p>This task will duplicate the specs in the <code class="docutils literal notranslate"><span class="pre">do</span></code> list for each entry in a list
+coming from a glob expression.</p>
+<p>The task will add the following keys to a local scratchpad:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">match_prefix</span></code>: the path up to the glob pattern and relative to</dt><dd><p><a class="reference internal" href="otter.config.html#otter.config.model.Config.release_uri" title="otter.config.model.Config.release_uri"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.config.model.Config.release_uri</span></code></a> or
+<a class="reference internal" href="otter.config.html#otter.config.model.Config.work_path" title="otter.config.model.Config.work_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.config.model.Config.work_path</span></code></a> if the source is a relative
+location.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">match_path</span></code>: the part of the path that the glob matched <strong>without</strong> the         file name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">match_stem</span></code>: the file name of the matched file <strong>without</strong> the extension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">match_ext</span></code>: the file extensions of the matched file, <strong>without</strong> the dot.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uri</span></code>: ${match_prefix}/${match_path}/${match_stem}.${match_ext}</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uuid</span></code>: an UUID4, in case it is needed to generate unique names.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>${uri} will be either an absolute URL or a path relative to either
+<a class="reference internal" href="otter.config.html#otter.config.model.Config.release_uri" title="otter.config.model.Config.release_uri"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.config.model.Config.release_uri</span></code></a> or
+<a class="reference internal" href="otter.config.html#otter.config.model.Config.work_path" title="otter.config.model.Config.work_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otter.config.model.Config.work_path</span></code></a> depending on whether the
+source itself is absolute or relative.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Forming a path with <code class="docutils literal notranslate"><span class="pre">${match_prefix}/${match_path}${match_stem}</span></code>
+when <code class="docutils literal notranslate"><span class="pre">match_path</span></code> is empty would cause double slashes to be introduced.
+These are automatically removed. GCS paths like <code class="docutils literal notranslate"><span class="pre">gs://bucket/////file</span></code>
+are not supported by this task.</p>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explode_glob items</span>
+<span class="w">  </span><span class="nt">glob</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;gs://release-25/input/items/**/*.json&#39;</span>
+<span class="w">  </span><span class="nt">do</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transform ${match_stem} into parquet</span>
+<span class="w">      </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${match_path}/${match_stem}.${match_ext}</span>
+<span class="w">      </span><span class="nt">destination</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">intermediate/${match_path}/${math_stem}.parquet</span>
+</pre></div>
+</div>
+<p>for a bucket containing two files:</p>
+<div class="line-block">
+<div class="line">gs://release-25/input/items/furniture/chair.json</div>
+<div class="line">gs://release-25/input/items/furniture/table.json</div>
+</div>
+<p>And <cite>release_uri</cite> set to <code class="docutils literal notranslate"><span class="pre">gs://release-25</span></code></p>
+<p>the values will be:</p>
+<table class="custom docutils align-default" id="id1">
+<caption><span class="caption-text">Scratchpad values for the first task</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">match_prefix</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">input/items/</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">match_path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">furniture</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">match_stem</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chair</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">match_ext</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">json</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">uri</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">input/items/furniture/chair.json</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">uuid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;uuid&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>the first task will be duplicated twice, with the following specs:</p>
+<blockquote>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transform chair into parquet</span>
+<span class="w">  </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">input/items/furniture/chair.json</span>
+<span class="w">  </span><span class="nt">destination</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">intermediate/furniture/chair.parquet</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transform table into parquet</span>
+<span class="w">  </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">input/items/furniture/table.json</span>
+<span class="w">  </span><span class="nt">destination</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">intermediate/furniture/table.parquet</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlob.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.tasks.explode_glob.ExplodeGlobSpec" title="otter.tasks.explode_glob.ExplodeGlobSpec"><span class="pre">ExplodeGlobSpec</span></a></span><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlob.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.explode_glob.ExplodeGlob.scratchpad">
+<span class="sig-name descname"><span class="pre">scratchpad</span></span><a class="headerlink" href="#otter.tasks.explode_glob.ExplodeGlob.scratchpad" title="Link to this definition"></a></dt>
+<dd><p>Internal scratchpad used to replace values in subtask specs.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.tasks.find_latest">
+<span id="tasks-find-latest-module"></span><h2>tasks.find_latest module<a class="headerlink" href="#module-otter.tasks.find_latest" title="Link to this heading"></a></h2>
+<p>Find the last-modified file among those in a prefix URI.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.find_latest.FindLatestSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.find_latest.</span></span><span class="sig-name descname"><span class="pre">FindLatestSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/find_latest.html#FindLatestSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.find_latest.FindLatestSpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code></a></p>
+<p>Configuration fields for the find_latest task.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.find_latest.FindLatestSpec.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.tasks.find_latest.FindLatestSpec.source" title="Link to this definition"></a></dt>
+<dd><p>The prefix from where the file with the latest modification date will be
+found. It can include glob patterns.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.find_latest.FindLatestSpec.scratchpad_key">
+<span class="sig-name descname"><span class="pre">scratchpad_key</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.tasks.find_latest.FindLatestSpec.scratchpad_key" title="Link to this definition"></a></dt>
+<dd><p>The scratchpad key where the path of the latest file will be stored.
+Defaults to the task name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.find_latest.FindLatestSpec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.tasks.find_latest.FindLatestSpec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.tasks.find_latest.FindLatest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.tasks.find_latest.</span></span><span class="sig-name descname"><span class="pre">FindLatest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.tasks.find_latest.FindLatestSpec" title="otter.tasks.find_latest.FindLatestSpec"><span class="pre">FindLatestSpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.task.html#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/tasks/find_latest.html#FindLatest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.tasks.find_latest.FindLatest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="otter.task.html#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a></p>
+<p>Find the last-modified file among those in a prefix URI.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.tasks.find_latest.FindLatest.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.tasks.find_latest.FindLatestSpec" title="otter.tasks.find_latest.FindLatestSpec"><span class="pre">FindLatestSpec</span></a></span><a class="headerlink" href="#otter.tasks.find_latest.FindLatest.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.tasks">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.tasks" title="Link to this heading"></a></h2>
+<p>Builtin tasks.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.task.html" class="btn btn-neutral float-left" title="Task" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.util.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.core &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Main module.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.manifest.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Manifest</span><span class="p">,</span> <span class="n">Result</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.scratchpad</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_scratchpad</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.step.coordinator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Coordinator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.step.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Step</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_specs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.task_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskRegistry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.util.fs</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.util.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_logger</span><span class="p">,</span> <span class="n">init_logger_early</span>
+
+
+<div class="viewcode-block" id="Runner">
+<a class="viewcode-back" href="../../otter.core.html#otter.core.Runner">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Runner</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main class.</span>
+
+<span class="sd">    This class is the main entry point for Otter.</span>
+
+<span class="sd">    Upon instantiation, it will load the configuration, the scratchpad, and the</span>
+<span class="sd">    specs. It will initialize the logger, create a task registry and register the</span>
+<span class="sd">    built-in tasks.</span>
+
+<span class="sd">    .. warning:: The instantiation will raise `SystemExit` and end the program if</span>
+<span class="sd">        any of the listed actions fail.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the runner.</span>
+
+<span class="sd">        This will identify the application using Otter. Usually an application</span>
+<span class="sd">        will have a single runner.</span>
+
+<span class="sd">        The is used as the prefix in environment variables and will also be</span>
+<span class="sd">        prepended to step names in the manifest. That way, multiple applications</span>
+<span class="sd">        can report steps with the same name without colliding.</span>
+
+<span class="sd">        The name should beetween 2 and 32 characters and only contain lowercase</span>
+<span class="sd">        letters, numbers and the underscore character.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">init_logger_early</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">init_logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;otter v</span><span class="si">{</span><span class="n">version</span><span class="p">(</span><span class="s2">&quot;opentargets-otter&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> starting!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span> <span class="o">=</span> <span class="n">load_scratchpad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">config_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specs</span> <span class="o">=</span> <span class="n">load_specs</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">config_path</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span> <span class="o">=</span> <span class="n">TaskRegistry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;otter.tasks&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Runner.start">
+<a class="viewcode-back" href="../../otter.core.html#otter.core.Runner.start">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a run.</span>
+
+<span class="sd">        This method is used to start a run. It will check if the work path exists,</span>
+<span class="sd">        and is writable, and create it if it doesn&#39;t.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">work_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Runner.register_tasks">
+<a class="viewcode-back" href="../../otter.core.html#otter.core.Runner.register_tasks">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register tasks.</span>
+
+<span class="sd">        This method is used to register task classes. Otter implements a set of</span>
+<span class="sd">        built-in tasks, but applications will likely want to define their own.</span>
+<span class="sd">        This method allows users to register these by passing a package name.</span>
+<span class="sd">        Usually, Otter applications will have a ``tasks`` package that contains</span>
+<span class="sd">        the task classes in separate modules.</span>
+
+<span class="sd">        The package must be importable and the modules must contain a class with</span>
+<span class="sd">        the same name as the module in camel case, which must subclass</span>
+<span class="sd">        :py:class:`otter.task.model.Task`.</span>
+
+<span class="sd">        .. warning:: This method will raise `SystemExit` and end the program if</span>
+<span class="sd">            the package cannot be imported or the modules are missing required</span>
+<span class="sd">            classes.</span>
+
+<span class="sd">        :param task_package: The package containing the tasks.</span>
+<span class="sd">        :type task_package: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">task_package</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Runner.run">
+<a class="viewcode-back" href="../../otter.core.html#otter.core.Runner.run">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Step</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the step.</span>
+
+<span class="sd">        :return: The final step object after the run.</span>
+<span class="sd">        :rtype: Step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">Manifest</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
+            <span class="n">specs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">coordinator</span> <span class="o">=</span> <span class="n">Coordinator</span><span class="p">(</span>
+            <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span>
+            <span class="n">task_registry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="n">coordinator</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+        <span class="n">manifest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">manifest</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">result</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Result</span><span class="o">.</span><span class="n">PENDING</span><span class="p">,</span> <span class="n">Result</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;step </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> failed&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">step</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../otter.core.html#otter.core.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main function.</span>
+
+<span class="sd">    This main function runs a simple otter program for development and testing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;otter&#39;</span><span class="p">)</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">())</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

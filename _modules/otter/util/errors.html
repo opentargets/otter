@@ -1,0 +1,244 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.util.errors &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.util.errors</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.util.errors</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Custom exceptions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+
+
+<div class="viewcode-block" id="log_pydantic">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.log_pydantic">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">log_pydantic</span><span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="n">ValidationError</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log a pydantic validation error correctly.&quot;&quot;&quot;</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s1">&#39;. &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">err</span><span class="p">[</span><span class="s2">&quot;loc&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">err</span><span class="p">[</span><span class="s2">&quot;msg&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">err</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="OtterError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.OtterError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OtterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for all application-specific exceptions.&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># Step-related errors</span>
+<div class="viewcode-block" id="StepInvalidError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.StepInvalidError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StepInvalidError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a step is invalid somehow.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="StepFailedError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.StepFailedError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StepFailedError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a step fails somehow.&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># Task-related errors</span>
+<div class="viewcode-block" id="TaskRunError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.TaskRunError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskRunError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a task fails to run.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="TaskAbortedError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.TaskAbortedError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskAbortedError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a task is aborted.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s1">&#39;another task failed, task aborted&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TaskValidationError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.TaskValidationError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskValidationError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a task fails validation.&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># Other errors</span>
+<div class="viewcode-block" id="DownloadError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.DownloadError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DownloadError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when an error occurs during a download.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="UploadError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.UploadError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UploadError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when an error occurs during an upload.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="CopyError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.CopyError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CopyError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when an error occurs during a copy operation.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="NotFoundError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.NotFoundError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NotFoundError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when something is not found.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">thing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">thing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">thing</span> <span class="o">=</span> <span class="s1">&#39;item&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1"> not found&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="PreconditionFailedError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.PreconditionFailedError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PreconditionFailedError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a precondition fails.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ScratchpadError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.ScratchpadError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScratchpadError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when a key is not found in the scratchpad.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="StorageError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.StorageError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StorageError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when an error occurs in a storage class.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ManifestError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.ManifestError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ManifestError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when an error occurs in the manifest management.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="FSError">
+<a class="viewcode-back" href="../../../otter.util.html#otter.util.errors.FSError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FSError</span><span class="p">(</span><span class="n">OtterError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise when an error occurs in the filesystem operations.&quot;&quot;&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

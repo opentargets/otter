@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scratchpad &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Step" href="otter.step.html" />
+    <link rel="prev" title="Manifest" href="otter.manifest.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Scratchpad</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.scratchpad.model">scratchpad.model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.scratchpad.model.ScratchpadTemplate"><code class="docutils literal notranslate"><span class="pre">ScratchpadTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.scratchpad.model.ScratchpadTemplate.idpattern"><code class="docutils literal notranslate"><span class="pre">ScratchpadTemplate.idpattern</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad"><code class="docutils literal notranslate"><span class="pre">Scratchpad</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad.sentinel_dict"><code class="docutils literal notranslate"><span class="pre">Scratchpad.sentinel_dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad.store"><code class="docutils literal notranslate"><span class="pre">Scratchpad.store()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad.merge"><code class="docutils literal notranslate"><span class="pre">Scratchpad.merge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad.replace_dict"><code class="docutils literal notranslate"><span class="pre">Scratchpad.replace_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.scratchpad">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.scratchpad.load_scratchpad"><code class="docutils literal notranslate"><span class="pre">load_scratchpad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Scratchpad</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.scratchpad.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="scratchpad">
+<h1>Scratchpad<a class="headerlink" href="#scratchpad" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.scratchpad</span></code> package contains the scratchpad models and utilities. The
+<cite>Scratchpad</cite> stores variables to be replaced in the Otter configuration files.</p>
+<section id="module-otter.scratchpad.model">
+<span id="scratchpad-model-module"></span><h2>scratchpad.model module<a class="headerlink" href="#module-otter.scratchpad.model" title="Link to this heading"></a></h2>
+<p>Scratchpad module.</p>
+<p>This module defines the <cite>Scratchpad</cite> class, which is a centralized place to store
+key-value pairs in the configuration of the application. It provides utilities to
+perform template substition.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.scratchpad.model.ScratchpadTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.scratchpad.model.</span></span><span class="sig-name descname"><span class="pre">ScratchpadTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/scratchpad/model.html#ScratchpadTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.scratchpad.model.ScratchpadTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></p>
+<p>Scratchpad Template class.</p>
+<p>A subclass of <cite>string.Template</cite> that allows dots and spaces in placeholders.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.scratchpad.model.ScratchpadTemplate.idpattern">
+<span class="sig-name descname"><span class="pre">idpattern</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'(?a:[_a-z][._a-z0-9\\s]*[_a-z0-9])'</span></span><a class="headerlink" href="#otter.scratchpad.model.ScratchpadTemplate.idpattern" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.scratchpad.model.Scratchpad">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.scratchpad.model.</span></span><span class="sig-name descname"><span class="pre">Scratchpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentinel_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/scratchpad/model.html#Scratchpad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.scratchpad.model.Scratchpad" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to store and replace placeholders in strings.</p>
+<p>This class is used to store key-value pairs and replace placeholders in
+strings with the corresponding values. The placeholders are defined in the
+strings using the dollar sign followed by the placeholder name enclosed in
+curly braces, e.g., <code class="docutils literal notranslate"><span class="pre">${person.name}</span></code>. The placeholders can include dots to
+represent nested dictionaries or objects.</p>
+<dl>
+<dt>Example:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scratchpad</span> <span class="o">=</span> <span class="n">Scratchpad</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scratchpad</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="s1">&#39;person.name&#39;</span><span class="p">,</span> <span class="s1">&#39;Alice&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scratchpad</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Hello, $</span><span class="si">{person.name}</span><span class="s1">!&#39;</span><span class="p">)</span>
+<span class="go">&#39;Hello, Alice!&#39;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The <cite>Scratchpad</cite> class is used to perform template substitution in a <cite>Spec</cite>,
+right before the task is built.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>You can use internal scratchpads in tasks. For example, to have
+private variables that are only replaced in one of the specs.</p>
+<p>To be able to do this, however, you must set the
+<code class="docutils literal notranslate"><span class="pre">scratchpad_ignore_missing</span></code> attribute to <code class="docutils literal notranslate"><span class="pre">True</span></code> in the task model.
+This will allow the task to be built even if keys are missing from the
+global scratchpad.</p>
+<p>You are responsible, however, of ensuring that the keys are present in
+the internal scratchpad. It is good practice to leave the internal
+scratchpad set to not ignore, so that you can catch missing keys.</p>
+<p>To set the <cite>scratchpad_ignore_missing</cite> attribute, you can add this to
+the spec definition:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">model_post_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__context</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad_ignore_missing</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="otter.task.html#otter.task.task_registry.TaskRegistry.build" title="otter.task.task_registry.TaskRegistry.build"><code class="xref py py-meth docutils literal notranslate"><span class="pre">otter.task.task_registry.TaskRegistry.build()</span></code></a></p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.scratchpad.model.Scratchpad.sentinel_dict">
+<span class="sig-name descname"><span class="pre">sentinel_dict</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.scratchpad.model.Scratchpad.sentinel_dict" title="Link to this definition"></a></dt>
+<dd><p>A dictionary to store the key-value pairs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.scratchpad.model.Scratchpad.store">
+<span class="sig-name descname"><span class="pre">store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/scratchpad/model.html#Scratchpad.store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.scratchpad.model.Scratchpad.store" title="Link to this definition"></a></dt>
+<dd><p>Store a key-value pair in the scratchpad.</p>
+<p>Both strings and lists of strings are accepted as values. It might be
+useful to extend it to accept dicts as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – The key to store.</p></li>
+<li><p><strong>value</strong> (<em>str</em><em> | </em><em>list</em><em>[</em><em>str</em><em>]</em>) – The value to store.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.scratchpad.model.Scratchpad.merge">
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><span class="pre">Scratchpad</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/scratchpad/model.html#Scratchpad.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.scratchpad.model.Scratchpad.merge" title="Link to this definition"></a></dt>
+<dd><p>Merge the sentinels from another scratchpad.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><em>Scratchpad</em></a>) – The scratchpad to merge.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.scratchpad.model.Scratchpad.replace_dict">
+<span class="sig-name descname"><span class="pre">replace_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/scratchpad/model.html#Scratchpad.replace_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.scratchpad.model.Scratchpad.replace_dict" title="Link to this definition"></a></dt>
+<dd><p>Replace placeholders in a dictionary with the corresponding values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The dictionary with placeholders to replace.</p></li>
+<li><p><strong>ignore_missing</strong> (<em>bool</em>) – Whether to ignore missing keys in the scratchpad.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The dictionary with the placeholders replaced by their values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.scratchpad">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.scratchpad" title="Link to this heading"></a></h2>
+<p>Scratchpad package.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.scratchpad.load_scratchpad">
+<span class="sig-prename descclassname"><span class="pre">otter.scratchpad.</span></span><span class="sig-name descname"><span class="pre">load_scratchpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><span class="pre">Scratchpad</span></a></span></span><a class="reference internal" href="_modules/otter/scratchpad.html#load_scratchpad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.scratchpad.load_scratchpad" title="Link to this definition"></a></dt>
+<dd><p>Load the scratchpad.</p>
+<p>See <a class="reference internal" href="#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.scratchpad.model.Scratchpad</span></code></a> for the scratchpad object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_path</strong> (<em>Path</em>) – The path to the config file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The scratchpad object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad">Scratchpad</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.manifest.html" class="btn btn-neutral float-left" title="Manifest" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.step.html" class="btn btn-neutral float-right" title="Step" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

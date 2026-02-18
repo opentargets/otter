@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.tasks.explode &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.tasks.explode</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.tasks.explode</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generate more tasks based on a list.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Self</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.scratchpad.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scratchpad</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Spec</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">TaskContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.task_reporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">report</span>
+
+
+<div class="viewcode-block" id="ExplodeSpec">
+<a class="viewcode-back" href="../../../otter.tasks.html#otter.tasks.explode.ExplodeSpec">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExplodeSpec</span><span class="p">(</span><span class="n">Spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration fields for the explode task.&quot;&quot;&quot;</span>
+
+    <span class="n">do</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Spec</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The tasks to explode. Each task in the list will be duplicated for each</span>
+<span class="sd">        iteration of the foreach list.&quot;&quot;&quot;</span>
+    <span class="n">foreach</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The list of values to iterate over.&quot;&quot;&quot;</span>
+    <span class="n">each_placeholder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;each&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The placeholder string to use for the current iteration value.</span>
+<span class="sd">        The value of this field, e.g. `each`, will be replaced by each of the</span>
+<span class="sd">        entries in the `foreach` list.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">model_post_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__context</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># allows keys to be missing from the global scratchpad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad_ignore_missing</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="Explode">
+<a class="viewcode-back" href="../../../otter.tasks.html#otter.tasks.explode.Explode">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Explode</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate more tasks based on a list.</span>
+
+<span class="sd">    This task will duplicate the specs in the `do` list for each entry in the</span>
+<span class="sd">    `foreach` list.</span>
+
+<span class="sd">    Inside of the specs in the `do` list, the string `each_placeholder` can be</span>
+<span class="sd">    used as as a sentinel to refer to the current iteration value.</span>
+
+<span class="sd">    .. warning:: The `${each_placeholder}` placeholder **MUST** be present in the</span>
+<span class="sd">        :py:obj:`otter.task.model.Spec.name` of the new specs that are defined</span>
+<span class="sd">        inside ``do``, as otherwise all of them will have the same name, and name</span>
+<span class="sd">        must be unique.</span>
+
+<span class="sd">        If you do a nested explode, the inner explode will have spec names that</span>
+<span class="sd">        are identical to it&#39;s sibling specs spawned during the outer explode.</span>
+<span class="sd">        Since the spec names need to be unique, you should also include the outer</span>
+<span class="sd">        explode&#39;s placeholder in the inner explode&#39;s spec names to avoid conlicts.</span>
+<span class="sd">        For example, if you have an outer explode with `each_placeholder: outer`</span>
+<span class="sd">        and an inner explode with `each_placeholder: inner`, you might name a spec</span>
+<span class="sd">        in the inner explode `name: process ${outer} and ${inner} data` to ensure</span>
+<span class="sd">        uniqueness.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">        steps:</span>
+<span class="sd">            - explode species:</span>
+<span class="sd">            foreach:</span>
+<span class="sd">                - homo_sapiens</span>
+<span class="sd">                - mus_musculus</span>
+<span class="sd">                - drosophila_melanogaster</span>
+<span class="sd">            each_placeholder: explode_each</span>
+<span class="sd">            do:</span>
+<span class="sd">                - name: copy ${explode_each} genes</span>
+<span class="sd">                  source: https://example.com/genes/${explode_each}/file.tsv</span>
+<span class="sd">                  destination: genes-${explode_each}.tsv</span>
+<span class="sd">                - name: copy ${explode_each} proteins</span>
+<span class="sd">                  source: https://example.com/proteins/${explode_each}/file.tsv</span>
+<span class="sd">                  destination: proteins-${explode_each}.tsv</span>
+
+
+<span class="sd">    Keep in mind this replacement of `explode_each` will only be done in strings,</span>
+<span class="sd">    not lists or sub-objects.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">ExplodeSpec</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">TaskContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">:</span> <span class="n">ExplodeSpec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span> <span class="o">=</span> <span class="n">Scratchpad</span><span class="p">({})</span>
+
+    <span class="nd">@report</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;exploding </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s1"> into </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">foreach</span><span class="p">)</span><span class="si">}</span><span class="s1"> sets of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">do</span><span class="p">)</span><span class="si">}</span><span class="s1"> tasks&#39;</span><span class="p">)</span>
+        <span class="n">new_tasks</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">foreach</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">do_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">do</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">each_placeholder</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">replaced_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span><span class="o">.</span><span class="n">replace_dict</span><span class="p">(</span><span class="n">do_spec</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+                <span class="n">subtask_spec</span> <span class="o">=</span> <span class="n">do_spec</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">replaced_model</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subtask_spec</span><span class="p">)</span>
+                <span class="n">new_tasks</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;exploded into </span><span class="si">{</span><span class="n">new_tasks</span><span class="si">}</span><span class="s1"> new tasks&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

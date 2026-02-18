@@ -1,0 +1,179 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Validators" href="otter.validators.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#version-26-0-0">Version 26.0.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#improvements">Improvements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bugfixes">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#internal-changes">Internal Changes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Changelog</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/CHANGES.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<section id="version-26-0-0">
+<h2>Version 26.0.0<a class="headerlink" href="#version-26-0-0" title="Link to this heading"></a></h2>
+<p><em>Released on February 18, 2026</em></p>
+<section id="improvements">
+<h3>Improvements<a class="headerlink" href="#improvements" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Asynchronous task execution</strong>: Otter now supports both synchronous and asynchronous
+tasks, with improved run logic and better coordination by using pull-style workers and
+a more robust process pool management system (<a class="reference external" href="https://github.com/opentargets/otter/commit/086911a">&#64;086911a</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/b5d7dea">&#64;b5d7dea</a>,
+<a class="reference external" href="https://github.com/opentargets/otter/commit/2c8f37e">&#64;2c8f37e</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/f0e697e">&#64;f0e697e</a>)</p></li>
+<li><p><strong>Improved storage handling</strong>: File operations are now handled through “StorageHandle”
+and “AsyncStorageHandle” classes which provide a consistent interface for local and
+cloud storage. (<a class="reference external" href="https://github.com/opentargets/otter/commit/aa6da20">&#64;aa6da20</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/7e84c40">&#64;7e84c40</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/dc2e4d2">&#64;dc2e4d2</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/0c37f92">&#64;0c37f92</a>,
+<a class="reference external" href="https://github.com/opentargets/otter/commit/6e62d59">&#64;6e62d59</a>)</p></li>
+<li><p><strong>New copy_many task for batch operations</strong>: A new builtin task enables efficient copying
+of multiple files at once. This task is better suited for copying a large amount (100+) of
+relatively small (tens of MB) files. It avoids spawning a new process and a new client for
+each file. It supports passing a list of sources, a path to a file with a list of sources,
+or a glob (when copying from backends that can handle those, like cloud services).
+(<a class="reference external" href="https://github.com/opentargets/otter/commit/db0a2b9">&#64;db0a2b9</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/917e91f">&#64;917e91f</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/21a707e">&#64;21a707e</a>)</p></li>
+</ul>
+</section>
+<section id="bugfixes">
+<h3>Bugfixes<a class="headerlink" href="#bugfixes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Do not fail validation when file size cannot be determined (<a class="reference external" href="https://github.com/opentargets/otter/commit/8a3164f">&#64;8a3164f</a>)</p></li>
+<li><p>Fix <code class="docutils literal notranslate"><span class="pre">find_latest</span></code> task functionality (<a class="reference external" href="https://github.com/opentargets/otter/commit/b5d774d">&#64;b5d774d</a>)</p></li>
+<li><p>Fix Google Cloud Storage glob pattern handling (<a class="reference external" href="https://github.com/opentargets/otter/commit/5de3d9d">&#64;5de3d9d</a>)</p></li>
+<li><p>Fix scratchpad and add comprehensive tests (<a class="reference external" href="https://github.com/opentargets/otter/commit/1b26ee2">&#64;1b26ee2</a>)</p></li>
+<li><p>Ensure mtime changes are properly tracked (<a class="reference external" href="https://github.com/opentargets/otter/commit/991bb9e">&#64;991bb9e</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/71ee4d8">&#64;71ee4d8</a>)</p></li>
+<li><p>Fix help not showing defaults (<a class="reference external" href="https://github.com/opentargets/otter/commit/4c8e07f">&#64;4c8e07f</a>)</p></li>
+</ul>
+</section>
+<section id="internal-changes">
+<h3>Internal Changes<a class="headerlink" href="#internal-changes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Switch to IOBase for improved I/O handling (<a class="reference external" href="https://github.com/opentargets/otter/commit/8b344f3">&#64;8b344f3</a>)</p></li>
+<li><p>Refactor builtin tasks for improved maintainability (<a class="reference external" href="https://github.com/opentargets/otter/commit/eb9701b">&#64;eb9701b</a>)</p></li>
+<li><p>Refactor manifest handling (<a class="reference external" href="https://github.com/opentargets/otter/commit/58a4a9e">&#64;58a4a9e</a>)</p></li>
+<li><p>Make async and improve run logic (<a class="reference external" href="https://github.com/opentargets/otter/commit/086911a">&#64;086911a</a>)</p></li>
+<li><p>Improved storage handling (<a class="reference external" href="https://github.com/opentargets/otter/commit/bf5e167">&#64;bf5e167</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/4dfd507">&#64;4dfd507</a>)</p></li>
+<li><p>Remove gsheets special case and clean logs (<a class="reference external" href="https://github.com/opentargets/otter/commit/522e899">&#64;522e899</a>)</p></li>
+<li><p>Logger rename for clarity (<a class="reference external" href="https://github.com/opentargets/otter/commit/3fa8456">&#64;3fa8456</a>)</p></li>
+<li><p>Update dependencies and fix linting and tests (<a class="reference external" href="https://github.com/opentargets/otter/commit/3792e29">&#64;3792e29</a>)</p></li>
+<li><p>Ensure process pool is larger than one (<a class="reference external" href="https://github.com/opentargets/otter/commit/f4a9be2">&#64;f4a9be2</a>)</p></li>
+<li><p>Update dependencies (<a class="reference external" href="https://github.com/opentargets/otter/commit/50456a5">&#64;50456a5</a>)</p></li>
+<li><p>Simplify download method (<a class="reference external" href="https://github.com/opentargets/otter/commit/87318af">&#64;87318af</a>)</p></li>
+<li><p>Switch to ty type system with type checking improvements (<a class="reference external" href="https://github.com/opentargets/otter/commit/3d29142">&#64;3d29142</a>, <a class="reference external" href="https://github.com/opentargets/otter/commit/4262c9c">&#64;4262c9c</a>)</p></li>
+<li><p>Update documentation (<a class="reference external" href="https://github.com/opentargets/otter/commit/843d36e">&#64;843d36e</a>)</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.validators.html" class="btn btn-neutral float-left" title="Validators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.tasks.download &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.tasks.download</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.tasks.download</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Download a file.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.storage.synchronous.handle</span><span class="w"> </span><span class="kn">import</span> <span class="n">StorageHandle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Spec</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">TaskContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.task_reporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">report</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.validators</span><span class="w"> </span><span class="kn">import</span> <span class="n">file</span>
+
+
+<div class="viewcode-block" id="DownloadSpec">
+<a class="viewcode-back" href="../../../otter.tasks.html#otter.tasks.download.DownloadSpec">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DownloadSpec</span><span class="p">(</span><span class="n">Spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration fields for the download task.&quot;&quot;&quot;</span>
+
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The source location, relative to the release, of the file to download.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Download">
+<a class="viewcode-back" href="../../../otter.tasks.html#otter.tasks.download.Download">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Download</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download a file.</span>
+
+<span class="sd">    Downloads a file from ``source`` to a local destination. The source **must**</span>
+<span class="sd">    be relative to the release root. This should be used after a ``copy`` task</span>
+<span class="sd">    has put that artifact into the release, as modifying an external resource</span>
+<span class="sd">    would break reproducibility.</span>
+
+<span class="sd">    The destination will be the same as the source, but relative to the local</span>
+<span class="sd">    ``work_path``.</span>
+
+<span class="sd">    This task should only be used when a later task needs an artifact to exist</span>
+<span class="sd">    locally for some reason. In most cases, downloading files should be avoided.</span>
+<span class="sd">    Instead:</span>
+
+<span class="sd">    * For copying artifacts into a release, use the ``copy`` task.</span>
+<span class="sd">    * For transforming data, whenever possible, open files already copied and work</span>
+<span class="sd">        with them directly.</span>
+
+<span class="sd">    .. note:: This task will not generate an artifact, as the downloaded file will</span>
+<span class="sd">        stay local only. It is a responsibility of subsequent tasks to put the</span>
+<span class="sd">        file in the release and generate the corresponding artifact. This is easy</span>
+<span class="sd">        because the relative part of the path once downloaded will be the same as</span>
+<span class="sd">        the one in the release.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">DownloadSpec</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">TaskContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">:</span> <span class="n">DownloadSpec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">work_path</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="nd">@report</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="n">StorageHandle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;source must be relative to the release root&#39;</span><span class="p">)</span>
+        <span class="n">dst</span> <span class="o">=</span> <span class="n">StorageHandle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">force_local</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">src</span><span class="o">.</span><span class="n">copy_to</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Download.validate">
+<a class="viewcode-back" href="../../../otter.tasks.html#otter.tasks.download.Download.validate">[docs]</a>
+    <span class="nd">@report</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that the downloaded file exists and has a valid size.&quot;&quot;&quot;</span>
+        <span class="c1"># remember: self.spec.source is relative, so destination is work_dir/{source}</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span><span class="p">),</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">force_local</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">file</span><span class="o">.</span><span class="n">size</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>  <span class="c1"># same as above</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">force_local</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

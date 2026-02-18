@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.step.coordinator &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.step.coordinator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.step.coordinator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Coordinator is the class that manages the execution of a step.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Manager</span><span class="p">,</span> <span class="n">Process</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Event</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.manifest.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Result</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.step.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Step</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.step.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">worker_process</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.util.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">StepFailedError</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Queue</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.config.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Spec</span><span class="p">,</span> <span class="n">Task</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.task_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskRegistry</span>
+
+<span class="n">COORDINATOR_POLLING_INTERVAL</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="sd">&quot;&quot;&quot;Default polling interval for the coordinator loop, in seconds.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Coordinator">
+<a class="viewcode-back" href="../../../otter.step.html#otter.step.coordinator.Coordinator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Coordinator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Coordinates the execution of a step&#39;s tasks.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">step</span><span class="p">:</span> <span class="n">Step</span><span class="p">,</span>
+        <span class="n">task_registry</span><span class="p">:</span> <span class="n">TaskRegistry</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="n">step</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The :py:class:`otter.step.model.Step` to run.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span> <span class="o">=</span> <span class="n">task_registry</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The task registry to build tasks from specs.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The configuration object.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_manager</span> <span class="o">=</span> <span class="n">Manager</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spec_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">specs</span><span class="p">)</span>  <span class="c1"># total number of specs to be processed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_specs</span><span class="p">:</span> <span class="n">deque</span><span class="p">[</span><span class="n">Spec</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">specs</span><span class="p">)</span>  <span class="c1"># specs yet to be built into tasks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">[</span><span class="n">Task</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manager</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>  <span class="c1"># queue of ready tasks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">[</span><span class="n">Task</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manager</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>  <span class="c1"># queue of done task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_subtasks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># used to complete tasks that are waiting for subtasks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_event</span><span class="p">:</span> <span class="n">Event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manager</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Process</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_spec_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">Spec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine if a spec is ready to build a task with.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;checking if spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is ready&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">task_name</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">requires</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;checking spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: task </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s1"> is not built yet&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;checking spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: task </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s1"> is </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">!=</span> <span class="n">State</span><span class="o">.</span><span class="n">DONE</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;checking spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: spec not ready, waiting on task </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is ready&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_ready_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Spec</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find all specs ready to be built into tasks.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;scanning </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_remaining_specs</span><span class="p">)</span><span class="si">}</span><span class="s1"> new specs&#39;</span><span class="p">)</span>
+        <span class="n">ready</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">new_remaining_specs</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_specs</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_specs</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_spec_ready</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+                <span class="n">ready</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_remaining_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_specs</span> <span class="o">=</span> <span class="n">new_remaining_specs</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span><span class="si">}</span><span class="s1"> ready specs&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ready</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_spec_into_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">Spec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a spec into a task, adds it to tasks dict and returns it.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;building task for spec </span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;duplicate task: </span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="k">return</span> <span class="n">t</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;error building task for spec </span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_enqueue_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Task</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enqueue a task to be run.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;enqueuing task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_task_queue</span><span class="o">.</span><span class="n">put_nowait</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_step_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine if the step is complete.&quot;&quot;&quot;</span>
+        <span class="n">spec_count_and_task_count_match</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec_count</span>
+        <span class="n">all_tasks_done</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">State</span><span class="o">.</span><span class="n">DONE</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;step complete check: &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;spec_count=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec_count</span><span class="si">}</span><span class="s1">, &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;task_count=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span><span class="si">}</span><span class="s1">, &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;all_tasks_done=</span><span class="si">{</span><span class="n">all_tasks_done</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">spec_count_and_task_count_match</span> <span class="ow">and</span> <span class="n">all_tasks_done</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_task_results</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Task</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all done tasks from the task queue.&quot;&quot;&quot;</span>
+        <span class="n">done_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">done_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">())</span>
+            <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">done_tasks</span><span class="p">)</span><span class="si">}</span><span class="s1"> done tasks&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">done_tasks</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_new_specs_from_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add new specs generated by a task to the remaining specs.&quot;&quot;&quot;</span>
+        <span class="n">new_specs</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">specs</span>
+        <span class="k">if</span> <span class="n">new_specs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_specs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_specs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec_count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_specs</span><span class="p">)</span>
+            <span class="c1"># track parent task for each new spec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_task_subtasks</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">new_specs</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> generated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">new_specs</span><span class="p">)</span><span class="si">}</span><span class="s1"> new specs&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_sentinels_to_global_scratchpad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add any sentinels from the task context to the global scratchpad.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_registry</span><span class="o">.</span><span class="n">scratchpad</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">scratchpad</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_done_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process done tasks.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_task_results</span><span class="p">():</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_next_state</span><span class="p">()</span>
+            <span class="c1"># add new specs if task just finished running</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">State</span><span class="o">.</span><span class="n">PENDING_VALIDATION</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> completed running, adding new specs from it&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_new_specs_from_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_sentinels_to_global_scratchpad</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_enqueue_tasks</span><span class="p">([</span><span class="n">task</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">State</span><span class="o">.</span><span class="n">DONE</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">upsert_task_manifest</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">result</span> <span class="o">==</span> <span class="n">Result</span><span class="o">.</span><span class="n">FAILURE</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">StepFailedError</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_ready_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process all ready specs, building them into tasks and enqueueing them.&quot;&quot;&quot;</span>
+        <span class="n">ready_specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ready_specs</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">ready_specs</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_spec_into_task</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_enqueue_tasks</span><span class="p">([</span><span class="n">task</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_task_finished_waiting_for_subtasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">subtask_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if a task waiting for subtasks can be marked as done.&quot;&quot;&quot;</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">task</span> <span class="ow">or</span> <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">!=</span> <span class="n">State</span><span class="o">.</span><span class="n">WAITING_FOR_SUBTASKS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">subtask_name</span> <span class="ow">in</span> <span class="n">subtask_names</span><span class="p">:</span>
+            <span class="n">subtask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">subtask_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">subtask</span> <span class="ow">or</span> <span class="n">subtask</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">!=</span> <span class="n">State</span><span class="o">.</span><span class="n">DONE</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_complete_tasks_waiting_for_subtasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Complete tasks that were waiting if all their subtasks are done.&quot;&quot;&quot;</span>
+        <span class="n">completed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">subtask_names</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_subtasks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_task_finished_waiting_for_subtasks</span><span class="p">(</span><span class="n">task_name</span><span class="p">,</span> <span class="n">subtask_names</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;completing task </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s1"> waiting for subtasks&#39;</span><span class="p">)</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+                    <span class="n">task</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_next_state</span><span class="p">()</span>
+                <span class="n">completed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_name</span><span class="p">)</span>
+        <span class="c1"># remove completed tasks from tracking</span>
+        <span class="k">for</span> <span class="n">task_name</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_task_subtasks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">task_name</span><span class="p">)</span>
+        <span class="c1"># recursively check parents</span>
+        <span class="k">if</span> <span class="n">completed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_complete_tasks_waiting_for_subtasks</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start worker processes.&quot;&quot;&quot;</span>
+        <span class="n">num_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pool_size</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;starting </span><span class="si">{</span><span class="n">num_workers</span><span class="si">}</span><span class="s1"> worker processes&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">worker_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">):</span>
+            <span class="n">worker</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">worker_process</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+                    <span class="n">worker_id</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_task_queue</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_result_queue</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_event</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;started worker </span><span class="si">{</span><span class="n">worker_id</span><span class="si">}</span><span class="s1"> (pid=</span><span class="si">{</span><span class="n">worker</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_stop_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stop all worker processes.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;stopping worker processes&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="p">:</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">worker</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;terminating worker </span><span class="si">{</span><span class="n">worker</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">worker</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Coordinator.run">
+<a class="viewcode-back" href="../../../otter.step.html#otter.step.coordinator.Coordinator.run">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the coordinator loop.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;starting coordinator for step: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_start_workers</span><span class="p">()</span>
+
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_step_complete</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process_done_tasks</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_complete_tasks_waiting_for_subtasks</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process_ready_specs</span><span class="p">()</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">COORDINATOR_POLLING_INTERVAL</span><span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stop_workers</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_manager</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">finish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;step </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> completed&#39;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

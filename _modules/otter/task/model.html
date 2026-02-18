@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.task.model &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../task.html">otter.task</a></li>
+      <li class="breadcrumb-item active">otter.task.model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.task.model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Models for tasks.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Awaitable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Event</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span><span class="p">,</span> <span class="n">final</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">field_validator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.config.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.scratchpad.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scratchpad</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.task_reporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskReporter</span><span class="p">,</span> <span class="n">report</span>
+
+
+<div class="viewcode-block" id="Spec">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Spec">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Spec</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s1">&#39;allow&#39;</span><span class="p">,</span> <span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Task Spec model.</span>
+
+<span class="sd">    A `Spec` describes the properties and types for the config of a :py:class:`Task`.</span>
+<span class="sd">    `Specs` are generated from the config file in :py:meth:`otter.task.load_specs`.</span>
+
+<span class="sd">    This is the base on which task `Specs` are built. Specific `Tasks` extend this</span>
+<span class="sd">    class to add custom attributes.</span>
+
+<span class="sd">    The first word in :py:attr:`name` determines the :py:attr:`task_type`. This is</span>
+<span class="sd">    used to identify the :py:class:`Task` in the :py:class:`otter.task.TaskRegistry`</span>
+<span class="sd">    and in the config file.</span>
+
+<span class="sd">    For example, for a ``DoSomething`` class defining a `Task`, the `task_type`</span>
+<span class="sd">    will be ``do_something``, and in the configuration file, it could be used</span>
+<span class="sd">    inside a `Step` like this:</span>
+
+<span class="sd">    .. code-block:: yaml</span>
+
+<span class="sd">        steps:</span>
+<span class="sd">            - do_something to create an example resource:</span>
+<span class="sd">                some_field: some_value</span>
+<span class="sd">                another_field: another_value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_name_has_description</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;incorrect name </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">: must be task_type followed by a description&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The name of the task. It is used to identify the task in the manifest and</span>
+<span class="sd">        in the configuration file.&quot;&quot;&quot;</span>
+    <span class="n">requires</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A list of tasks that this one depends on. The task will only run when all</span>
+<span class="sd">        the prerequisites are completed.&quot;&quot;&quot;</span>
+    <span class="n">scratchpad_ignore_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether to ignore missing sentinels from the scratchpad when building the</span>
+<span class="sd">        task. This is useful for tasks that use their own placeholders and internal</span>
+<span class="sd">        scratchpads when running, e.g.: explode task.</span>
+
+<span class="sd">        Defaults to ``False``.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The task type, used to identify it in the task registry.</span>
+
+<span class="sd">        Determined by the first word in the task name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@task_type</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="State">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.State">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">State</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enumeration of possible states for a :py:class:`otter.task.model.Task`.&quot;&quot;&quot;</span>
+
+    <span class="n">PENDING_RUN</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">RUNNING</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">PENDING_VALIDATION</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">VALIDATING</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">WAITING_FOR_SUBTASKS</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">DONE</span> <span class="o">=</span> <span class="mi">5</span></div>
+
+
+
+<span class="n">READY_STATES</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="o">.</span><span class="n">PENDING_RUN</span><span class="p">,</span> <span class="n">State</span><span class="o">.</span><span class="n">PENDING_VALIDATION</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;States on which a task can be considered as ready to be sent to a worker.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="TaskContext">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.TaskContext">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskContext</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Task context.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
+        <span class="n">scratchpad</span><span class="p">:</span> <span class="n">Scratchpad</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">PENDING_RUN</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The state of the task. See :class:`otter.task.model.State`.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">abort</span><span class="p">:</span> <span class="n">Event</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An event that will trigger if another task fails. The `abort` event</span>
+<span class="sd">            is assigned to the `task context` when the task is sent to run.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span> <span class="n">Config</span> <span class="o">=</span> <span class="n">config</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The configuration object. See :class:`otter.config.model.Config`.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span><span class="p">:</span> <span class="n">Scratchpad</span> <span class="o">=</span> <span class="n">scratchpad</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The scratchpad object. See :class:`otter.scratchpad.model.Scratchpad`.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Spec</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of new specs to be added to the step.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TaskContext.add_specs">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.TaskContext.add_specs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specs</span><span class="p">:</span> <span class="n">Spec</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Spec</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add specs to the context.</span>
+
+<span class="sd">        The coordinator will take these new specs, build tasks from them and add</span>
+<span class="sd">        them to the step&#39;s queue.</span>
+
+<span class="sd">        This enables tasks to dynamically generate new tasks.</span>
+
+<span class="sd">        .. warning:: Adding requirements to these specs can cause cycles in the</span>
+<span class="sd">            graph. This can only be checked at runtime, and can cause long running</span>
+<span class="sd">            steps to fail halfway through.</span>
+
+<span class="sd">        :param specs: The list of specs to add.</span>
+<span class="sd">        :type specs: Sequence[Spec]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="n">Spec</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Task">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Task</span><span class="p">(</span><span class="n">TaskReporter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for tasks.</span>
+
+<span class="sd">    ``Task`` is the main building block for a ``Step``. They are the main unit of work</span>
+<span class="sd">    in Otter.</span>
+
+<span class="sd">    The config for a ``Task`` is contained in a :py:class:`otter.task.model.Spec`</span>
+<span class="sd">    object.</span>
+
+<span class="sd">    A ``Task`` can optionally have a list of :py:class:`otter.manifest.model.Artifact`,</span>
+<span class="sd">    which will contain metadata related to its input input and output and will be</span>
+<span class="sd">    added to the step manifest.</span>
+
+<span class="sd">    Tasks subclass :py:class:`otter.task.model.TaskReporter` to provide automatic</span>
+<span class="sd">    logging, tracking and error handling.</span>
+
+<span class="sd">    | To implement a new ``Task``:</span>
+<span class="sd">    | 1. Create a new class that extends ``Spec`` with the required config fields.</span>
+<span class="sd">    | 2. Create a subclass of ``Task`` and implement the :py:meth:`run` method.</span>
+<span class="sd">         Optionally, implement the :py:meth:`validate` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">Spec</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">TaskContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;initialized task </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Task.has_validation">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task.has_validation">[docs]</a>
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_validation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine if the task has validation.</span>
+
+<span class="sd">        :return: True if the task has validation, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;validate&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Task</span><span class="o">.</span><span class="n">validate</span></div>
+
+
+<div class="viewcode-block" id="Task.has_subtasks">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task.has_subtasks">[docs]</a>
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_subtasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine if the task has generated subtasks.</span>
+
+<span class="sd">        :return: True if the task has generated subtasks, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">specs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="Task.get_execution_method">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task.get_execution_method">[docs]</a>
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_execution_method</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Self</span><span class="p">]</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">Self</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the method to execute based on the task state.</span>
+
+<span class="sd">        :return: The method to execute.</span>
+<span class="sd">        :rtype: Callable[..., Self] | Callable[..., Awaitable[Self]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+            <span class="k">case</span> <span class="n">State</span><span class="o">.</span><span class="n">RUNNING</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span>
+            <span class="k">case</span> <span class="n">State</span><span class="o">.</span><span class="n">VALIDATING</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;task </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> has invalid state </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Task.get_next_state">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task.get_next_state">[docs]</a>
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_next_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the next state.</span>
+
+<span class="sd">        Returns the immediately next state, except in these cases:</span>
+<span class="sd">            - If the current state is ``RUNNING`` and the task does not implement</span>
+<span class="sd">              validation, check for subtasks. If there are subtasks, return</span>
+<span class="sd">              ``WAITING_FOR_SUBTASKS``, else return ``DONE``.</span>
+<span class="sd">            - If the current state is ``VALIDATING``, check for subtasks. If there</span>
+<span class="sd">              are subtasks, return ``WAITING_FOR_SUBTASKS``, else return ``DONE``.</span>
+
+<span class="sd">        :return: The next state.</span>
+<span class="sd">        :rtype: State</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="ow">is</span> <span class="n">State</span><span class="o">.</span><span class="n">RUNNING</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_validation</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;task </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> does not implement validation&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_subtasks</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="n">State</span><span class="o">.</span><span class="n">WAITING_FOR_SUBTASKS</span>
+                <span class="k">return</span> <span class="n">State</span><span class="o">.</span><span class="n">DONE</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span> <span class="ow">is</span> <span class="n">State</span><span class="o">.</span><span class="n">VALIDATING</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_subtasks</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">State</span><span class="o">.</span><span class="n">WAITING_FOR_SUBTASKS</span>
+            <span class="k">return</span> <span class="n">State</span><span class="o">.</span><span class="n">DONE</span>
+
+        <span class="k">return</span> <span class="n">State</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Task.run">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task.run">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="nd">@report</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the task.</span>
+
+<span class="sd">        This method contains the actual work of a ``Task``. Tasks must implement</span>
+<span class="sd">        ``run``.</span>
+
+<span class="sd">        Optionally, a list of :class:`otter.manifest.models.Artifact` object can</span>
+<span class="sd">        be assigned to ``self.artifacts`` in the body of the method. These will</span>
+<span class="sd">        be added to the step manifest.</span>
+
+<span class="sd">        Optionally, an ``abort`` event can be watched to stop the task if another</span>
+<span class="sd">        fails. This is useful for long running work that can be stopped midway</span>
+<span class="sd">        once the run is deemed to be a failure.</span>
+
+<span class="sd">        :return: The ``Task`` instance itself must be returned.</span>
+<span class="sd">        :rtype: Self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Task.validate">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.model.Task.validate">[docs]</a>
+    <span class="nd">@report</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the task result.</span>
+
+<span class="sd">        This method should be implemented if the task requires validation. If not</span>
+<span class="sd">        implemented, the task will always be considered valid.</span>
+
+<span class="sd">        The validate method should call validators from the :py:mod:`otter.validators`</span>
+<span class="sd">        module to perform validation. The validators must always return ``None``</span>
+<span class="sd">        and raise :py:class:`otter.util.errors.TaskValidationError` if the validation</span>
+<span class="sd">        fails.</span>
+
+<span class="sd">        .. seealso:: :py:mod:`otter.validators` for some built-in validators that</span>
+<span class="sd">            can be used as examples to implement your own.</span>
+
+<span class="sd">        :return: The ``Task`` instance itself must be returned.</span>
+<span class="sd">        :rtype: Self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

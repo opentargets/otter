@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.task.task_registry &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../task.html">otter.task</a></li>
+      <li class="breadcrumb-item active">otter.task.task_registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.task.task_registry</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Registry of task classes, used to build tasks from their spec.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">errno</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pkgutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">resources</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Spec</span><span class="p">,</span> <span class="n">TaskContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.util.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_pydantic</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.config.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.scratchpad.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scratchpad</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otter.task.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
+
+<span class="n">BUILTIN_TASKS_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">&#39;tasks&#39;</span>
+<span class="n">BUILTIN_TASKS_MODULE</span> <span class="o">=</span> <span class="s1">&#39;otter.tasks&#39;</span>
+
+
+<div class="viewcode-block" id="TaskRegistry">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.task_registry.TaskRegistry">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskRegistry</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Task types are registered here.</span>
+
+<span class="sd">    The registry is where a `Task` will be build from when the `Step` is run. It</span>
+<span class="sd">    contains the mapping of a `task_type` to its `Task` and `TaskSpec`.</span>
+
+<span class="sd">    .. note:: The :py:class:`otter.scratchpad.model.Scratchpad` placeholders are</span>
+<span class="sd">        replaced into the `Spec` here, right before the `Task` is built.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span> <span class="n">scratchpad</span><span class="p">:</span> <span class="n">Scratchpad</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span> <span class="o">=</span> <span class="n">scratchpad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">Task</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">Spec</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="TaskRegistry.register">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.task_registry.TaskRegistry.register">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register tasks in a package into the registry.</span>
+
+<span class="sd">        :param package_name: The name of the package to register tasks from.</span>
+<span class="sd">        :type package_name: str</span>
+<span class="sd">        :raises SystemExit: If the package is not found, modules are missing the</span>
+<span class="sd">            expected class, or the class is not found in the module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># determine list of files in the package</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="n">package_name</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;package </span><span class="si">{</span><span class="n">package_name</span><span class="si">}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">module_name</span><span class="p">,</span> <span class="n">ispkg</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">([</span><span class="n">files</span><span class="p">],</span> <span class="n">package_name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ispkg</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">task_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+            <span class="n">task_type</span> <span class="o">=</span> <span class="n">module_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">task_class_name</span> <span class="o">=</span> <span class="n">task_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">task_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">task_module</span><span class="p">,</span> <span class="n">task_class_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;module </span><span class="si">{</span><span class="n">task_module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> does not contain a class </span><span class="si">{</span><span class="n">task_class_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">)</span>
+
+            <span class="n">task_spec_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">task_module</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">task_class_name</span><span class="si">}</span><span class="s1">Spec&#39;</span><span class="p">,</span> <span class="n">Spec</span><span class="p">)</span>
+
+            <span class="c1"># report if a previous task is being overridden</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task_type</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;task type </span><span class="si">{</span><span class="n">task_module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> will override </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="c1"># register the task</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="p">[</span><span class="n">task_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">[</span><span class="n">task_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_spec_class</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;registered task type </span><span class="si">{</span><span class="n">task_type</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TaskRegistry.build">
+<a class="viewcode-back" href="../../../otter.task.html#otter.task.task_registry.TaskRegistry.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">Spec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Task</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a Task.</span>
+
+<span class="sd">        Template replacement is performed here, right before initializing the Task.</span>
+
+<span class="sd">        :param spec: The spec to build the Task from.</span>
+<span class="sd">        :type spec: Spec</span>
+
+<span class="sd">        :raises SystemExit: If the task type is invalid or the spec is invalid.</span>
+<span class="sd">        :return: The built Task.</span>
+<span class="sd">        :rtype: Task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task_type</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">task_type</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">task_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tasks</span><span class="p">[</span><span class="n">task_type</span><span class="p">]</span>
+            <span class="n">spec_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">[</span><span class="n">task_type</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;invalid task type: </span><span class="si">{</span><span class="n">task_type</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">EINVAL</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">spec_class</span><span class="p">(</span><span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+            <span class="n">replaced_spec</span> <span class="o">=</span> <span class="n">spec_class</span><span class="p">(</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span><span class="o">.</span><span class="n">replace_dict</span><span class="p">(</span>
+                    <span class="n">spec</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+                    <span class="n">ignore_missing</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">scratchpad_ignore_missing</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;invalid spec for task </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">log_pydantic</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">EINVAL</span><span class="p">)</span>
+
+        <span class="c1"># create task and attach manifest</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">TaskContext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratchpad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">task_class</span><span class="p">(</span><span class="n">replaced_spec</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

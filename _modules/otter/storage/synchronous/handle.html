@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>otter.storage.synchronous.handle &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/style.css?v=4086cbf2" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="../../../../index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.storage.html">Storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.task.html">Task</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">otter.storage.synchronous.handle</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for otter.storage.synchronous.handle</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Storage Handle class.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">loguru</span><span class="w"> </span><span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.config.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.storage.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Revision</span><span class="p">,</span> <span class="n">StatResult</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.storage.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">storage_registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otter.storage.synchronous.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Storage</span>
+
+
+<div class="viewcode-block" id="StorageHandle">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StorageHandle</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Storage handle class.</span>
+
+<span class="sd">    A high-level interface to operate with storage resources (folders or prefixes,</span>
+<span class="sd">    files and globs) in tasks. It abstracts the underlying storage and provides a</span>
+<span class="sd">    unified API.</span>
+
+<span class="sd">    The ``StorageHandle`` uses the internal method ``_resolve`` in its initialization</span>
+<span class="sd">    to resolve the absolute location of the resource.</span>
+
+<span class="sd">    The resolution chain is:</span>
+
+<span class="sd">    1. If the location is absolute (remote url or uri), use it as is.</span>
+<span class="sd">    2. If ``force_local`` is False and there is a ``remote_uri``, prepend it.</span>
+<span class="sd">    3. Otherwise prepend ``work_path``.</span>
+
+<span class="sd">    When a new cloud storage interface is written, it must be registered in the</span>
+<span class="sd">    ``storage_registry`` dictionary to be usable by the StorageHandle class. The</span>
+<span class="sd">    key is the protocol prefix (e.g., &#39;gs&#39; for Google Storage).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Config</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">force_local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">location</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">work_path</span><span class="p">)):</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">work_path</span><span class="p">))</span> <span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span> <span class="n">Config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">force_local</span> <span class="o">=</span> <span class="n">force_local</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">:</span> <span class="n">Storage</span> <span class="o">=</span> <span class="n">storage_registry</span><span class="o">.</span><span class="n">get_storage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">location</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">location</span>
+
+        <span class="k">if</span> <span class="s1">&#39;://&#39;</span> <span class="ow">in</span> <span class="n">location</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;location </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s1"> is absolute, using as is&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">location</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;config must be provided for relative locations&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_local</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">release_uri</span><span class="p">:</span>
+            <span class="n">resolved</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">release_uri</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;location </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s1"> resolved to remote </span><span class="si">{</span><span class="n">resolved</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">resolved</span>
+
+        <span class="n">resolved</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">work_path</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;location </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s1"> resolved to local </span><span class="si">{</span><span class="n">resolved</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resolved</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">storage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Storage</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the storage backend for this handle.</span>
+
+<span class="sd">        :return: The storage backend instance.</span>
+<span class="sd">        :rtype: Storage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">absolute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the absolute location of this storage handle.</span>
+
+<span class="sd">        :return: The absolute location.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_absolute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the location is absolute.</span>
+
+<span class="sd">        :return: ``True`` if the location is absolute, ``False`` otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span>
+
+<div class="viewcode-block" id="StorageHandle.stat">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.stat">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get metadata for this resource.</span>
+
+<span class="sd">        :return: A :class:`StatResult` object containing the resource metadata.</span>
+<span class="sd">        :rtype: :class:`StatResult`</span>
+<span class="sd">        :raises NotFoundError: If the resource does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.glob">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.glob">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">glob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List resources matching a glob under this storage handle&#39;s location.</span>
+
+<span class="sd">        :param pattern: The pattern to match files against.</span>
+<span class="sd">        :type pattern: str</span>
+<span class="sd">        :return: A list of absolute locations for the matched resources.</span>
+<span class="sd">        :rtype: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.open">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.open">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IOBase</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open this resource as a file-like object.</span>
+
+<span class="sd">        :param mode: The file mode. Defaults to &#39;r&#39; for reading.</span>
+<span class="sd">        :type mode: str</span>
+<span class="sd">        :return: A file-like object for this resource.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.read">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.read">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">Revision</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the contents of this resource.</span>
+
+<span class="sd">        :return: The file contents as bytes.</span>
+<span class="sd">        :rtype: bytes</span>
+<span class="sd">        :raises NotFoundError: If the resource does not exist.</span>
+<span class="sd">        :raises TimeoutError: If the read operation times out.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.read_text">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.read_text">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Revision</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the contents of this resource as text.</span>
+
+<span class="sd">        :param encoding: The text encoding. Defaults to &#39;utf-8&#39;.</span>
+<span class="sd">        :type encoding: str</span>
+<span class="sd">        :return: The file contents as a string.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        :raises NotFoundError: If the resource does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.write">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.write">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">expected_revision</span><span class="p">:</span> <span class="n">Revision</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Revision</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write data to this resource.</span>
+
+<span class="sd">        Optionally, an expected revision can be provided to fail the write if</span>
+<span class="sd">        the current revision does not match.</span>
+
+<span class="sd">        :param data: The data to write.</span>
+<span class="sd">        :type data: bytes</span>
+<span class="sd">        :return: The revision of the written resource.</span>
+<span class="sd">        :rtype: Revision</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.write_text">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.write_text">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_text</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">expected_revision</span><span class="p">:</span> <span class="n">Revision</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Revision</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write text to this resource.</span>
+
+<span class="sd">        Optionally, an expected revision can be provided to fail the write if</span>
+<span class="sd">        the current revision does not match.</span>
+
+<span class="sd">        :param data: The text to write.</span>
+<span class="sd">        :type data: str</span>
+<span class="sd">        :param encoding: The text encoding. Defaults to &#39;utf-8&#39;.</span>
+<span class="sd">        :type encoding: str</span>
+<span class="sd">        :return: The revision of the written resource.</span>
+<span class="sd">        :rtype: Revision</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StorageHandle.copy_to">
+<a class="viewcode-back" href="../../../../otter.storage.html#otter.storage.synchronous.handle.StorageHandle.copy_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">:</span> <span class="n">StorageHandle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Revision</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy this resource to the destination handle.</span>
+
+<span class="sd">        If both source and destination are in the same storage backend, it</span>
+<span class="sd">        attempts to use the backend&#39;s native copy method (``copy_within``) for</span>
+<span class="sd">        efficiency. Otherwise, it reads from source and writes to destination.</span>
+
+<span class="sd">        :param dest: The destination storage handle.</span>
+<span class="sd">        :type dest: StorageHandle</span>
+<span class="sd">        :return: The revision of the copied resource at the destination.</span>
+<span class="sd">        :rtype: Revision</span>
+<span class="sd">        :raises NotFoundError: If the source does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># try optimized copy_within if same storage type</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">dest</span><span class="o">.</span><span class="n">storage</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;attempting optimized copy_within: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">dest</span><span class="o">.</span><span class="n">_resolved</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">copy_within</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolved</span><span class="p">,</span> <span class="n">dest</span><span class="o">.</span><span class="n">_resolved</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;copy_within not implemented, falling back to read/write&#39;</span><span class="p">)</span>
+
+        <span class="c1"># fallback to read and write</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">dest</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

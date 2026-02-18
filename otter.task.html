@@ -1,0 +1,625 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task &mdash; Otter  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
+      <link rel="stylesheet" type="text/css" href="_static/style.css?v=4086cbf2" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Built-in tasks" href="otter.tasks.html" />
+    <link rel="prev" title="Storage" href="otter.storage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+  <a href="index.html" class="icon icon-home">
+    Otter
+  </a>
+    <div class="version">
+      26.0.0
+    </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="otter.config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.manifest.html">Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.scratchpad.html">Scratchpad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.step.html">Step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.storage.html">Storage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Task</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.task.model">task.model module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.model.Spec"><code class="docutils literal notranslate"><span class="pre">Spec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Spec.name"><code class="docutils literal notranslate"><span class="pre">Spec.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Spec.requires"><code class="docutils literal notranslate"><span class="pre">Spec.requires</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Spec.scratchpad_ignore_missing"><code class="docutils literal notranslate"><span class="pre">Spec.scratchpad_ignore_missing</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Spec.task_type"><code class="docutils literal notranslate"><span class="pre">Spec.task_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Spec.model_config"><code class="docutils literal notranslate"><span class="pre">Spec.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.model.State"><code class="docutils literal notranslate"><span class="pre">State</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.State.PENDING_RUN"><code class="docutils literal notranslate"><span class="pre">State.PENDING_RUN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.State.RUNNING"><code class="docutils literal notranslate"><span class="pre">State.RUNNING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.State.PENDING_VALIDATION"><code class="docutils literal notranslate"><span class="pre">State.PENDING_VALIDATION</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.State.VALIDATING"><code class="docutils literal notranslate"><span class="pre">State.VALIDATING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.State.WAITING_FOR_SUBTASKS"><code class="docutils literal notranslate"><span class="pre">State.WAITING_FOR_SUBTASKS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.State.DONE"><code class="docutils literal notranslate"><span class="pre">State.DONE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.model.READY_STATES"><code class="docutils literal notranslate"><span class="pre">READY_STATES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.model.TaskContext"><code class="docutils literal notranslate"><span class="pre">TaskContext</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.TaskContext.state"><code class="docutils literal notranslate"><span class="pre">TaskContext.state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.TaskContext.abort"><code class="docutils literal notranslate"><span class="pre">TaskContext.abort</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.TaskContext.config"><code class="docutils literal notranslate"><span class="pre">TaskContext.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.TaskContext.scratchpad"><code class="docutils literal notranslate"><span class="pre">TaskContext.scratchpad</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.TaskContext.specs"><code class="docutils literal notranslate"><span class="pre">TaskContext.specs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.TaskContext.add_specs"><code class="docutils literal notranslate"><span class="pre">TaskContext.add_specs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.model.Task"><code class="docutils literal notranslate"><span class="pre">Task</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Task.has_validation"><code class="docutils literal notranslate"><span class="pre">Task.has_validation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Task.has_subtasks"><code class="docutils literal notranslate"><span class="pre">Task.has_subtasks()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Task.get_execution_method"><code class="docutils literal notranslate"><span class="pre">Task.get_execution_method()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Task.get_next_state"><code class="docutils literal notranslate"><span class="pre">Task.get_next_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Task.run"><code class="docutils literal notranslate"><span class="pre">Task.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.model.Task.validate"><code class="docutils literal notranslate"><span class="pre">Task.validate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.task.task_registry">task.task_registry module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.task_registry.TaskRegistry"><code class="docutils literal notranslate"><span class="pre">TaskRegistry</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_registry.TaskRegistry.register"><code class="docutils literal notranslate"><span class="pre">TaskRegistry.register()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_registry.TaskRegistry.build"><code class="docutils literal notranslate"><span class="pre">TaskRegistry.build()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.task.task_reporter">task.task_reporter module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter"><code class="docutils literal notranslate"><span class="pre">TaskReporter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.artifacts"><code class="docutils literal notranslate"><span class="pre">TaskReporter.artifacts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.start_run"><code class="docutils literal notranslate"><span class="pre">TaskReporter.start_run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.finish_run"><code class="docutils literal notranslate"><span class="pre">TaskReporter.finish_run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.start_validation"><code class="docutils literal notranslate"><span class="pre">TaskReporter.start_validation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.finish_validation"><code class="docutils literal notranslate"><span class="pre">TaskReporter.finish_validation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.abort"><code class="docutils literal notranslate"><span class="pre">TaskReporter.abort()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#otter.task.task_reporter.TaskReporter.fail"><code class="docutils literal notranslate"><span class="pre">TaskReporter.fail()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.task_reporter.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-otter.task">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#otter.task.load_specs"><code class="docutils literal notranslate"><span class="pre">load_specs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="otter.tasks.html">Built-in tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.util.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="otter.validators.html">Validators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CHANGES.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Otter</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Task</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/otter.task.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="task">
+<h1>Task<a class="headerlink" href="#task" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">otter.task</span></code> package contains the classes that are used to define the tasks,
+their specs, the task state, task registry, its context and the task reporter, in
+charge of maintaining the task part of the manifest.</p>
+<section id="module-otter.task.model">
+<span id="task-model-module"></span><h2>task.model module<a class="headerlink" href="#module-otter.task.model" title="Link to this heading"></a></h2>
+<p>Models for tasks.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.task.model.Spec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.task.model.</span></span><span class="sig-name descname"><span class="pre">Spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad_ignore_missing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/task/model.html#Spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Spec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Task Spec model.</p>
+<p>A <cite>Spec</cite> describes the properties and types for the config of a <a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a>.
+<cite>Specs</cite> are generated from the config file in <a class="reference internal" href="#otter.task.load_specs" title="otter.task.load_specs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">otter.task.load_specs()</span></code></a>.</p>
+<p>This is the base on which task <cite>Specs</cite> are built. Specific <cite>Tasks</cite> extend this
+class to add custom attributes.</p>
+<p>The first word in <a class="reference internal" href="#otter.task.model.Spec.name" title="otter.task.model.Spec.name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> determines the <a class="reference internal" href="#otter.task.model.Spec.task_type" title="otter.task.model.Spec.task_type"><code class="xref py py-attr docutils literal notranslate"><span class="pre">task_type</span></code></a>. This is
+used to identify the <a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></a> in the <code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.TaskRegistry</span></code>
+and in the config file.</p>
+<p>For example, for a <code class="docutils literal notranslate"><span class="pre">DoSomething</span></code> class defining a <cite>Task</cite>, the <cite>task_type</cite>
+will be <code class="docutils literal notranslate"><span class="pre">do_something</span></code>, and in the configuration file, it could be used
+inside a <cite>Step</cite> like this:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">do_something to create an example resource</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">some_field</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">some_value</span>
+<span class="w">        </span><span class="nt">another_field</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">another_value</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.Spec.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.task.model.Spec.name" title="Link to this definition"></a></dt>
+<dd><p>The name of the task. It is used to identify the task in the manifest and
+in the configuration file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.Spec.requires">
+<span class="sig-name descname"><span class="pre">requires</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.task.model.Spec.requires" title="Link to this definition"></a></dt>
+<dd><p>A list of tasks that this one depends on. The task will only run when all
+the prerequisites are completed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.Spec.scratchpad_ignore_missing">
+<span class="sig-name descname"><span class="pre">scratchpad_ignore_missing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#otter.task.model.Spec.scratchpad_ignore_missing" title="Link to this definition"></a></dt>
+<dd><p>Whether to ignore missing sentinels from the scratchpad when building the
+task. This is useful for tasks that use their own placeholders and internal
+scratchpads when running, e.g.: explode task.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="otter.task.model.Spec.task_type">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">task_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#otter.task.model.Spec.task_type" title="Link to this definition"></a></dt>
+<dd><p>The task type, used to identify it in the task registry.</p>
+<p>Determined by the first word in the task name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.Spec.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#otter.task.model.Spec.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.task.model.State">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.task.model.</span></span><span class="sig-name descname"><span class="pre">State</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/task/model.html#State"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.State" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Enumeration of possible states for a <a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.Task</span></code></a>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.State.PENDING_RUN">
+<span class="sig-name descname"><span class="pre">PENDING_RUN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#otter.task.model.State.PENDING_RUN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.State.RUNNING">
+<span class="sig-name descname"><span class="pre">RUNNING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#otter.task.model.State.RUNNING" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.State.PENDING_VALIDATION">
+<span class="sig-name descname"><span class="pre">PENDING_VALIDATION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#otter.task.model.State.PENDING_VALIDATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.State.VALIDATING">
+<span class="sig-name descname"><span class="pre">VALIDATING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#otter.task.model.State.VALIDATING" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.State.WAITING_FOR_SUBTASKS">
+<span class="sig-name descname"><span class="pre">WAITING_FOR_SUBTASKS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#otter.task.model.State.WAITING_FOR_SUBTASKS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.State.DONE">
+<span class="sig-name descname"><span class="pre">DONE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#otter.task.model.State.DONE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="otter.task.model.READY_STATES">
+<span class="sig-prename descclassname"><span class="pre">otter.task.model.</span></span><span class="sig-name descname"><span class="pre">READY_STATES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[State.PENDING_RUN,</span> <span class="pre">State.PENDING_VALIDATION]</span></span><a class="headerlink" href="#otter.task.model.READY_STATES" title="Link to this definition"></a></dt>
+<dd><p>States on which a task can be considered as ready to be sent to a worker.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.task.model.</span></span><span class="sig-name descname"><span class="pre">TaskContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.scratchpad.html#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><span class="pre">Scratchpad</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/task/model.html#TaskContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.TaskContext" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Task context.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext.state">
+<span class="sig-name descname"><span class="pre">state</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#otter.task.model.State" title="otter.task.model.State"><span class="pre">State</span></a></span><a class="headerlink" href="#otter.task.model.TaskContext.state" title="Link to this definition"></a></dt>
+<dd><p>The state of the task. See <a class="reference internal" href="#otter.task.model.State" title="otter.task.model.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.State</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext.abort">
+<span class="sig-name descname"><span class="pre">abort</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Event</span></span><a class="headerlink" href="#otter.task.model.TaskContext.abort" title="Link to this definition"></a></dt>
+<dd><p>An event that will trigger if another task fails. The <cite>abort</cite> event
+is assigned to the <cite>task context</cite> when the task is sent to run.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span><a class="headerlink" href="#otter.task.model.TaskContext.config" title="Link to this definition"></a></dt>
+<dd><p>The configuration object. See <a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.config.model.Config</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext.scratchpad">
+<span class="sig-name descname"><span class="pre">scratchpad</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="otter.scratchpad.html#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><span class="pre">Scratchpad</span></a></span><a class="headerlink" href="#otter.task.model.TaskContext.scratchpad" title="Link to this definition"></a></dt>
+<dd><p>The scratchpad object. See <a class="reference internal" href="otter.scratchpad.html#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.scratchpad.model.Scratchpad</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext.specs">
+<span class="sig-name descname"><span class="pre">specs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#otter.task.model.TaskContext.specs" title="Link to this definition"></a></dt>
+<dd><p>The list of new specs to be added to the step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.TaskContext.add_specs">
+<span class="sig-name descname"><span class="pre">add_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/model.html#TaskContext.add_specs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.TaskContext.add_specs" title="Link to this definition"></a></dt>
+<dd><p>Add specs to the context.</p>
+<p>The coordinator will take these new specs, build tasks from them and add
+them to the step’s queue.</p>
+<p>This enables tasks to dynamically generate new tasks.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Adding requirements to these specs can cause cycles in the
+graph. This can only be checked at runtime, and can cause long running
+steps to fail halfway through.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>specs</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><em>Spec</em></a><em>]</em>) – The list of specs to add.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.task.model.Task">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.task.model.</span></span><span class="sig-name descname"><span class="pre">Task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.task.model.TaskContext" title="otter.task.model.TaskContext"><span class="pre">TaskContext</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/task/model.html#Task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#otter.task.task_reporter.TaskReporter" title="otter.task.task_reporter.TaskReporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskReporter</span></code></a></p>
+<p>Base class for tasks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Task</span></code> is the main building block for a <code class="docutils literal notranslate"><span class="pre">Step</span></code>. They are the main unit of work
+in Otter.</p>
+<p>The config for a <code class="docutils literal notranslate"><span class="pre">Task</span></code> is contained in a <a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.Spec</span></code></a>
+object.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">Task</span></code> can optionally have a list of <a class="reference internal" href="otter.manifest.html#otter.manifest.model.Artifact" title="otter.manifest.model.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.manifest.model.Artifact</span></code></a>,
+which will contain metadata related to its input input and output and will be
+added to the step manifest.</p>
+<p>Tasks subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.TaskReporter</span></code> to provide automatic
+logging, tracking and error handling.</p>
+<div class="line-block">
+<div class="line">To implement a new <code class="docutils literal notranslate"><span class="pre">Task</span></code>:</div>
+<div class="line">1. Create a new class that extends <code class="docutils literal notranslate"><span class="pre">Spec</span></code> with the required config fields.</div>
+<div class="line">2. Create a subclass of <code class="docutils literal notranslate"><span class="pre">Task</span></code> and implement the <a class="reference internal" href="#otter.task.model.Task.run" title="otter.task.model.Task.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> method.
+Optionally, implement the <a class="reference internal" href="#otter.task.model.Task.validate" title="otter.task.model.Task.validate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">validate()</span></code></a> method.</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.Task.has_validation">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_validation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/otter/task/model.html#Task.has_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task.has_validation" title="Link to this definition"></a></dt>
+<dd><p>Determine if the task has validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the task has validation, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.Task.has_subtasks">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_subtasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/otter/task/model.html#Task.has_subtasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task.has_subtasks" title="Link to this definition"></a></dt>
+<dd><p>Determine if the task has generated subtasks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the task has generated subtasks, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.Task.get_execution_method">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_execution_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Self</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Awaitable</span><span class="p"><span class="pre">[</span></span><span class="pre">Self</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/task/model.html#Task.get_execution_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task.get_execution_method" title="Link to this definition"></a></dt>
+<dd><p>Get the method to execute based on the task state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The method to execute.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Callable[…, Self] | Callable[…, Awaitable[Self]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.Task.get_next_state">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_next_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.task.model.State" title="otter.task.model.State"><span class="pre">State</span></a></span></span><a class="reference internal" href="_modules/otter/task/model.html#Task.get_next_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task.get_next_state" title="Link to this definition"></a></dt>
+<dd><p>Get the next state.</p>
+<dl class="simple">
+<dt>Returns the immediately next state, except in these cases:</dt><dd><ul class="simple">
+<li><p>If the current state is <code class="docutils literal notranslate"><span class="pre">RUNNING</span></code> and the task does not implement
+validation, check for subtasks. If there are subtasks, return
+<code class="docutils literal notranslate"><span class="pre">WAITING_FOR_SUBTASKS</span></code>, else return <code class="docutils literal notranslate"><span class="pre">DONE</span></code>.</p></li>
+<li><p>If the current state is <code class="docutils literal notranslate"><span class="pre">VALIDATING</span></code>, check for subtasks. If there
+are subtasks, return <code class="docutils literal notranslate"><span class="pre">WAITING_FOR_SUBTASKS</span></code>, else return <code class="docutils literal notranslate"><span class="pre">DONE</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The next state.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#otter.task.model.State" title="otter.task.model.State">State</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.Task.run">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/otter/task/model.html#Task.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task.run" title="Link to this definition"></a></dt>
+<dd><p>Run the task.</p>
+<p>This method contains the actual work of a <code class="docutils literal notranslate"><span class="pre">Task</span></code>. Tasks must implement
+<code class="docutils literal notranslate"><span class="pre">run</span></code>.</p>
+<p>Optionally, a list of <code class="xref py py-class docutils literal notranslate"><span class="pre">otter.manifest.models.Artifact</span></code> object can
+be assigned to <code class="docutils literal notranslate"><span class="pre">self.artifacts</span></code> in the body of the method. These will
+be added to the step manifest.</p>
+<p>Optionally, an <code class="docutils literal notranslate"><span class="pre">abort</span></code> event can be watched to stop the task if another
+fails. This is useful for long running work that can be stopped midway
+once the run is deemed to be a failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The <code class="docutils literal notranslate"><span class="pre">Task</span></code> instance itself must be returned.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.model.Task.validate">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/otter/task/model.html#Task.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.model.Task.validate" title="Link to this definition"></a></dt>
+<dd><p>Validate the task result.</p>
+<p>This method should be implemented if the task requires validation. If not
+implemented, the task will always be considered valid.</p>
+<p>The validate method should call validators from the <a class="reference internal" href="otter.validators.html#module-otter.validators" title="otter.validators"><code class="xref py py-mod docutils literal notranslate"><span class="pre">otter.validators</span></code></a>
+module to perform validation. The validators must always return <code class="docutils literal notranslate"><span class="pre">None</span></code>
+and raise <a class="reference internal" href="otter.util.html#otter.util.errors.TaskValidationError" title="otter.util.errors.TaskValidationError"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.util.errors.TaskValidationError</span></code></a> if the validation
+fails.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="otter.validators.html#module-otter.validators" title="otter.validators"><code class="xref py py-mod docutils literal notranslate"><span class="pre">otter.validators</span></code></a> for some built-in validators that
+can be used as examples to implement your own.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The <code class="docutils literal notranslate"><span class="pre">Task</span></code> instance itself must be returned.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.task.task_registry">
+<span id="task-task-registry-module"></span><h2>task.task_registry module<a class="headerlink" href="#module-otter.task.task_registry" title="Link to this heading"></a></h2>
+<p>Registry of task classes, used to build tasks from their spec.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.task.task_registry.TaskRegistry">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.task.task_registry.</span></span><span class="sig-name descname"><span class="pre">TaskRegistry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.config.html#otter.config.model.Config" title="otter.config.model.Config"><span class="pre">Config</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scratchpad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otter.scratchpad.html#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><span class="pre">Scratchpad</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/task/task_registry.html#TaskRegistry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_registry.TaskRegistry" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Task types are registered here.</p>
+<p>The registry is where a <cite>Task</cite> will be build from when the <cite>Step</cite> is run. It
+contains the mapping of a <cite>task_type</cite> to its <cite>Task</cite> and <cite>TaskSpec</cite>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="otter.scratchpad.html#otter.scratchpad.model.Scratchpad" title="otter.scratchpad.model.Scratchpad"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.scratchpad.model.Scratchpad</span></code></a> placeholders are
+replaced into the <cite>Spec</cite> here, right before the <cite>Task</cite> is built.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_registry.TaskRegistry.register">
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_registry.html#TaskRegistry.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_registry.TaskRegistry.register" title="Link to this definition"></a></dt>
+<dd><p>Register tasks in a package into the registry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>package_name</strong> (<em>str</em>) – The name of the package to register tasks from.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>SystemExit</strong> – If the package is not found, modules are missing the
+expected class, or the class is not found in the module.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_registry.TaskRegistry.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a></span></span><a class="reference internal" href="_modules/otter/task/task_registry.html#TaskRegistry.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_registry.TaskRegistry.build" title="Link to this definition"></a></dt>
+<dd><p>Build a Task.</p>
+<p>Template replacement is performed here, right before initializing the Task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spec</strong> (<a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><em>Spec</em></a>) – The spec to build the Task from.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>SystemExit</strong> – If the task type is invalid or the spec is invalid.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The built Task.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task">Task</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-otter.task.task_reporter">
+<span id="task-task-reporter-module"></span><h2>task.task_reporter module<a class="headerlink" href="#module-otter.task.task_reporter" title="Link to this heading"></a></h2>
+<p>TaskReporter class and report decorator for logging and updating tasks in the manifest.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">otter.task.task_reporter.</span></span><span class="sig-name descname"><span class="pre">TaskReporter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for logging and updating tasks in the manifest.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.artifacts">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">artifacts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="otter.manifest.html#otter.manifest.model.Artifact" title="otter.manifest.model.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.artifacts" title="Link to this definition"></a></dt>
+<dd><p>Return the <cite>Artifacts</cite> associated with the <cite>Task</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.start_run">
+<span class="sig-name descname"><span class="pre">start_run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter.start_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.start_run" title="Link to this definition"></a></dt>
+<dd><p>Update a task that has started running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.finish_run">
+<span class="sig-name descname"><span class="pre">finish_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter.finish_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.finish_run" title="Link to this definition"></a></dt>
+<dd><p>Update a task that has finished running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.start_validation">
+<span class="sig-name descname"><span class="pre">start_validation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter.start_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.start_validation" title="Link to this definition"></a></dt>
+<dd><p>Update a task that has started validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.finish_validation">
+<span class="sig-name descname"><span class="pre">finish_validation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter.finish_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.finish_validation" title="Link to this definition"></a></dt>
+<dd><p>Update a task that has finished validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.abort">
+<span class="sig-name descname"><span class="pre">abort</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter.abort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.abort" title="Link to this definition"></a></dt>
+<dd><p>Update a task that has been aborted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otter.task.task_reporter.TaskReporter.fail">
+<span class="sig-name descname"><span class="pre">fail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Exception</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">where</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#TaskReporter.fail"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.TaskReporter.fail" title="Link to this definition"></a></dt>
+<dd><p>Update a task that has failed running or validation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.task.task_reporter.report">
+<span class="sig-prename descclassname"><span class="pre">otter.task.task_reporter.</span></span><span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Awaitable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Awaitable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.task.model.Task" title="otter.task.model.Task"><span class="pre">Task</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/task/task_reporter.html#report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.task_reporter.report" title="Link to this definition"></a></dt>
+<dd><p>Decorator for logging and updating tasks in the manifest.</p>
+</dd></dl>
+
+</section>
+<section id="module-otter.task">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-otter.task" title="Link to this heading"></a></h2>
+<p>Task module.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="otter.task.load_specs">
+<span class="sig-prename descclassname"><span class="pre">otter.task.</span></span><span class="sig-name descname"><span class="pre">load_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><span class="pre">Spec</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/otter/task.html#load_specs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otter.task.load_specs" title="Link to this definition"></a></dt>
+<dd><p>Load <cite>Specs</cite> for a <cite>Step</cite>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">otter.task.model.Spec</span></code></a>, <a class="reference internal" href="otter.step.html#otter.step.model.Step" title="otter.step.model.Step"><code class="xref py py-func docutils literal notranslate"><span class="pre">otter.step.model.Step()</span></code></a></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The task specs.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[<a class="reference internal" href="#otter.task.model.Spec" title="otter.task.model.Spec">Spec</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="otter.storage.html" class="btn btn-neutral float-left" title="Storage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="otter.tasks.html" class="btn btn-neutral float-right" title="Built-in tasks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Open Targets Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
