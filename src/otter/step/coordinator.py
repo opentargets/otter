@@ -91,6 +91,7 @@ class Coordinator:
             if self.step.tasks.get(s.name):
                 raise TaskDuplicateError(s.name)
             self.step.tasks[s.name] = t
+            self.step.upsert_task_manifest(t)
             return t
         except Exception as e:
             logger.error(f'error building task for spec {s.name}: {e}')
