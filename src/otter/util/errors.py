@@ -23,6 +23,20 @@ class StepFailedError(OtterError):
 
 
 # Task-related errors
+class TaskDuplicateError(OtterError):
+    """Raise when a duplicate task is detected."""
+
+    def __init__(self, task_name: str) -> None:
+        super().__init__(f'duplicate task: {task_name}')
+
+
+class TaskBuildError(OtterError):
+    """Raise when a task fails to build."""
+
+    def __init__(self, spec_name: str) -> None:
+        super().__init__(f'failed to build task for spec: {spec_name}')
+
+
 class TaskRunError(OtterError):
     """Raise when a task fails to run."""
 
