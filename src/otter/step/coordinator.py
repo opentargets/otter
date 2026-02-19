@@ -15,7 +15,7 @@ from otter.manifest.model import Result
 from otter.step.model import Step
 from otter.step.worker import worker_process
 from otter.task.model import State
-from otter.util.errors import StepFailedError
+from otter.util.errors import StepFailedError, TaskBuildError, TaskDuplicateError, TaskRunError, TaskValidationError
 
 if TYPE_CHECKING:
     from multiprocessing import Queue
@@ -89,12 +89,12 @@ class Coordinator:
         try:
             t = self.task_registry.build(s)
             if self.step.tasks.get(s.name):
-                raise ValueError(f'duplicate task: {s.name}')
+                raise TaskDuplicateError(s.name)
             self.step.tasks[s.name] = t
             return t
         except Exception as e:
             logger.error(f'error building task for spec {s.name}: {e}')
-            raise
+            raise TaskBuildError(s.name)
 
     def _enqueue_tasks(self, tasks: list[Task]) -> None:
         """Enqueue a task to be run."""
@@ -142,18 +142,27 @@ class Coordinator:
     def _process_done_tasks(self) -> None:
         """Process done tasks."""
         for task in self._get_task_results():
+            # if the task failed, update step manifest and raise to stop run
+            if task.manifest.result == Result.FAILURE:
+                self.step.upsert_task_manifest(task)
+                if task.context.state == State.RUNNING:
+                    raise TaskRunError(task.manifest.failure_reason)
+                if task.context.state == State.VALIDATING:
+                    raise TaskValidationError(task.manifest.failure_reason)
+                else:
+                    raise StepFailedError(f'task {task.spec.name} failed: {task.manifest.failure_reason}')
             task.context.state = task.get_next_state()
-            # add new specs if task just finished running
+            # if the task just finished running, add any new specs it generated and enqueue it for validation
             if task.context.state == State.PENDING_VALIDATION:
                 logger.trace(f'task {task.spec.name} completed running, adding new specs from it')
                 self._add_new_specs_from_task(task)
                 self._add_sentinels_to_global_scratchpad(task)
                 self._enqueue_tasks([task])
+            # if the task just finished validating, update the manifest
             if task.context.state == State.DONE:
                 self.step.upsert_task_manifest(task)
+            # update the tasks dict with the updated task coming from the worker
             self.step.tasks[task.spec.name] = task
-            if task.manifest.result == Result.FAILURE:
-                raise StepFailedError
 
     def _process_ready_specs(self) -> None:
         """Process all ready specs, building them into tasks and enqueueing them."""
