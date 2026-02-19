@@ -10,7 +10,7 @@ from otter.manifest.model import Result
 from otter.step.coordinator import Coordinator
 from otter.step.model import Step
 from otter.task.model import Spec, State, TaskContext
-from otter.util.errors import StepFailedError
+from otter.util.errors import StepFailedError, TaskDuplicateError, TaskRunError
 from test.mocks import SyncMockTask, fake_config
 
 
@@ -121,7 +121,7 @@ class TestBuildSpecIntoTask:
         spec = Spec(name='test_task duplicate_task')
         coordinator.step.tasks[spec.name] = SyncMockTask(spec, mock_context)
 
-        with pytest.raises(ValueError, match='duplicate task'):
+        with pytest.raises(TaskDuplicateError):
             coordinator._build_spec_into_task(spec)
 
 
@@ -273,7 +273,7 @@ class TestProcessDoneTasks:
         coordinator._result_queue.put(task)
 
         with patch.object(task, 'get_next_state', return_value=State.DONE):
-            with pytest.raises(StepFailedError):
+            with pytest.raises(TaskRunError):
                 coordinator._process_done_tasks()
 
 
@@ -514,8 +514,7 @@ class TestRun:
     ):
         with patch.object(coordinator, '_process_done_tasks', side_effect=StepFailedError('test error')):
             with patch.object(coordinator, '_start_workers'):
-                with patch.object(coordinator, '_stop_workers') as mock_stop:
-                    with pytest.raises(StepFailedError):
-                        await coordinator.run()
+                with patch.object(coordinator, '_kill_workers') as mock_kill:
+                    await coordinator.run()
 
-        mock_stop.assert_called_once()
+        mock_kill.assert_called_once()
