@@ -67,6 +67,7 @@ class TaskManifest(BaseModel, extra='allow'):
     finished_validation_at: datetime | None = None
     log: list[str] = []
     artifacts: list[Artifact] = []
+    failure_reason: str | None = None
 
     @computed_field
     @property
@@ -100,6 +101,7 @@ class StepManifest(BaseModel):
     log: list[str] = []
     tasks: list[TaskManifest] = []
     artifacts: list[Artifact] = []
+    failure_reason: str | None = None
 
     @computed_field
     @property
