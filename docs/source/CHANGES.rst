@@ -2,6 +2,34 @@ Changelog
 =========
 
 
+Version 26.0.1
+--------------
+
+*Released on February 19, 2026*
+
+Improvements
+^^^^^^^^^^^^
+
+- **Improved manifest handling**: Add tasks to the manifest when they are built, add
+  ``failure_reason`` field, and improve step finish info (:commit:`715cbe3`,
+  :commit:`f867f8e`, :commit:`7e51c95`)
+- **Improved errors**: Error messages are now more descriptive and actionable
+  (:commit:`584846e`)
+- **Step run always returns now**: Instead of exiting with a code 1 on error,
+  :py:meth:`otter.step.coordinator.Coordinator.run` always finishes and will return a
+  :py:class:`otter.step.model.Step` object with the final state of the step, so
+  applications can handle errors as they see fit instead (:commit:`1368108`)
+
+Bugfixes
+^^^^^^^^
+
+- **Coordinator now stops immediately on error**: Previously a failing task would not
+  halt the run; now the coordinator kills all workers on any error (:commit:`1639da3`,
+  :commit:`acfd557`, :commit:`3177c8f`)
+- Tasks that are done waiting for subtasks are now properly marked as complete in the
+  manifest (:commit:`95ab8d3`, :commit:`c95e1e2`)
+
+
 Version 26.0.0
 --------------
 

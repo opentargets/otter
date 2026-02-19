@@ -1,13 +1,13 @@
 [project]
 name = "opentargets-otter"
-version = "26.0.0"
+version = "26.0.1"
 description = "Open Targets Task ExcutoR"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Open Targets Core Team", email = "devs@opentargets.org" }]
 license = { text = "Apache-2.0" }
 dependencies = [
-  "filelock==3.24.2",
+  "filelock==3.24.3",
   "gcloud-aio-storage==9.6.1",
   "google-cloud-storage==3.9.0",
   "httpx==0.28.1",
