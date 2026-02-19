@@ -173,13 +173,6 @@ class Manifest:
         """
         step_name = f'{self.config.runner_name}_{step_manifest.name}'
 
-        if step_manifest.result == Result.SUCCESS:
-            logger.success(f'step {step_manifest.name} ran successfully')
-        elif step_manifest.result in [Result.FAILURE, Result.ABORTED]:
-            logger.error(f'step {step_manifest.name} failed')
-        else:
-            logger.info(f'step {step_manifest.name} is pending')
-
         if self.config.release_uri:
             remote_uri = f'{self.config.release_uri}/{MANIFEST_FILENAME}'
             h = StorageHandle(remote_uri, self.config)
