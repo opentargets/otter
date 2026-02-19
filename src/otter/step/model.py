@@ -1,6 +1,5 @@
 """Step model."""
 
-import sys
 from datetime import UTC, datetime
 
 from loguru import logger
@@ -35,16 +34,16 @@ class Step:
         self.manifest.started_run_at = datetime.now(UTC)
         logger.info(f'step {self.name} started running')
 
-    def finish(self, tasks: dict[str, Task]) -> None:
+    def finish(self, result: Result, failure_reason: str | None = None) -> None:
         """Update a step that has finished running."""
         self.manifest.finished_run_at = datetime.now(UTC)
-
-        if all(t.result == Result.SUCCESS for t in self.manifest.tasks):
+        if result == Result.SUCCESS:
             self.manifest.result = Result.SUCCESS
             logger.success(f'step {self.name} completed: took {self.manifest.elapsed:.3f}s')
         else:
             self.manifest.result = Result.FAILURE
             self.manifest.failure_reason = failure_reason
+            logger.error(f'step {self.name} failed: took {self.manifest.elapsed:.3f}s')
 
     def upsert_task_manifest(self, task: TaskReporter) -> None:
         """Update the step manifest with new task manifests."""

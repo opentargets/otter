@@ -115,6 +115,16 @@ class Coordinator:
         )
         return spec_count_and_task_count_match and all_tasks_done
 
+    def _step_result(self) -> Result:
+        """Determine the result of the step."""
+        if self._is_step_complete():
+            if any(t.manifest.result == Result.FAILURE for t in self.step.tasks.values()):
+                return Result.FAILURE
+            else:
+                return Result.SUCCESS
+        else:
+            return Result.PENDING
+
     def _get_task_results(self) -> list[Task]:
         """Get all done tasks from the task queue."""
         done_tasks = []
@@ -247,5 +257,4 @@ class Coordinator:
         finally:
             self._stop_workers()
             self._manager.shutdown()
-            self.step.finish(self.step.tasks)
-            logger.info(f'step {self.step.name} completed')
+            self.step.finish(result=self._step_result(), failure_reason=failure_reason)
