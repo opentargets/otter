@@ -240,6 +240,15 @@ class Coordinator:
                 worker.terminate()
                 worker.join()
 
+    def _kill_workers(self) -> None:
+        """Kill all worker processes immediately."""
+        logger.warning('killing worker processes')
+        for worker in self._workers:
+            if worker.is_alive():
+                logger.warning(f'killing worker {worker.pid}')
+                worker.kill()
+                worker.join()
+
     async def run(self) -> None:
         """Run the coordinator loop."""
         logger.info(f'starting coordinator for step: {self.step.name}')
@@ -253,8 +262,13 @@ class Coordinator:
                 self._complete_tasks_waiting_for_subtasks()
                 self._process_ready_specs()
                 await asyncio.sleep(COORDINATOR_POLLING_INTERVAL)
-
-        finally:
+        except Exception as e:
+            failure_reason = str(e)
+            logger.error(f'stopping run: {type(e).__name__}: {e}')
+            self._kill_workers()
+        else:
+            failure_reason = None
             self._stop_workers()
+        finally:
             self._manager.shutdown()
             self.step.finish(result=self._step_result(), failure_reason=failure_reason)
