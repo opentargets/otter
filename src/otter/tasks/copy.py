@@ -8,6 +8,7 @@ from otter.manifest.model import Artifact
 from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
+from otter.util.errors import TaskRunError
 from otter.validators import file
 
 
@@ -40,7 +41,10 @@ class Copy(Task):
     @report
     def run(self) -> Self:
         logger.info(f'copying file from {self.spec.source} to {self.spec.destination}')
-        src = StorageHandle(self.spec.source)
+        try:
+            src = StorageHandle(self.spec.source)
+        except ValueError:
+            raise TaskRunError(f'source {self.spec.source} is relative, copy task is intended for extenal resources')
         dst = StorageHandle(self.spec.destination, config=self.context.config)
 
         src.copy_to(dst)
