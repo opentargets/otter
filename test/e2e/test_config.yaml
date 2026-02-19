@@ -28,3 +28,16 @@ steps:
       do:
         - name: hello_world for ${each}
           who: ${each}
+
+  bad_copy:
+    - name: copy a non-existent file
+      source: http://localhost:19999/nonexistent.txt
+      destination: nonexistent.txt
+
+  failing_with_dependency:
+    - name: copy a non-existent file
+      source: http://localhost:19999/nonexistent.txt
+      destination: nonexistent.txt
+    - name: hello_world after bad copy
+      requires: [copy a non-existent file]
+      who: world
