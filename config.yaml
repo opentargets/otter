@@ -79,10 +79,6 @@ steps:
       source: gs://open-targets-pipeline-runs/jferrer/otterfs/source/copyfromgcp.txt
       destination: destination/copiedfromgcp.txt
 
-    # - name: copy otar meta spreadsheet
-    #   source: https://docs.google.com/spreadsheets/d/1CV_shXJy1ACM09HZBB_-3Nl6l_dfkrA26elMAF0ttHs/export?format=csv&gid=1179867447
-    #   destination: destination/otar_meta.csv
-
   download:
     - name: download from gcp
       source: source/downloadfromgcp.txt
@@ -92,14 +88,6 @@ steps:
     - name: upload to gcp
       source: source/uploadtogcp.txt
       destination: destination/uploadedtogcp.txt
-
-  # explode-glob:
-  #   - name: explode_glob test files
-  #     glob: test-explode-glob/**/*.txt
-  #     do:
-  #       - name: copy ${match_stem}
-  #         source: gs://open-targets-pipeline-runs/jferrer/otterfs/${match_prefix}/${match_path}/${match_stem}.${match_ext}
-  #         destination: test-explode-glob-copy/${match_path}/${match_stem}.${match_ext}
 
   find-latest:
     - name: find_latest cosmic
@@ -122,3 +110,20 @@ steps:
     - name: copy_many from a source list file
       source_list_file: src.txt
       destination: test-copy-many-file/
+
+  step-fails:
+    - name: copy huge file
+      source: https://ftp.ensembl.org/pub/release-115/json/homo_sapiens/homo_sapiens.json
+      destination: homo_sapiens.json
+
+    - name: copy from non existing source
+      source: https://input/will/not/exist/nonexistingfile.txt
+      destination: anywhere.txt
+
+    - name: explode some subtasks
+      foreach:
+        - alice
+        - bob
+      do:
+        - name: hello_world for ${each}
+          who: ${each}
