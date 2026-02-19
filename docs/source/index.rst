@@ -124,7 +124,12 @@ only run once the first has finished. A simple application that runs this step:
    def main() -> None:
       runner = Runner()
       runner.start()
-      asyncio.run(runner.run())  # or any other way you want to handle the event loop
+      s = asyncio.run(runner.run())  # or any other way you want to handle the event loop
+
+      if s.manifest.result not in [Result.PENDING, Result.SUCCESS]:
+          logger.error(f'step {s.name} failed')
+          raise SystemExit(1)
+
 
 .. tip::
    | Some other examples:
