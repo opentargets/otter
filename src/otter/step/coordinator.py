@@ -192,6 +192,7 @@ class Coordinator:
                 task = self.step.tasks.get(task_name)
                 if task:
                     task.context.state = task.get_next_state()
+                    self.step.upsert_task_manifest(task)
                 completed.append(task_name)
         # remove completed tasks from tracking
         for task_name in completed:
