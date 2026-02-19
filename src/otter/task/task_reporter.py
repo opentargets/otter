@@ -70,6 +70,7 @@ class TaskReporter:
     def fail(self, error: Exception, where: str) -> None:
         """Update a task that has failed running or validation."""
         self.manifest.result = Result.FAILURE
+        self.manifest.failure_reason = str(error)
         logger.opt(exception=sys.exc_info()).error(f'task {where} failed: {error}')
 
 

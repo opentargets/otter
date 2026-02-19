@@ -44,7 +44,7 @@ class Step:
             logger.success(f'step {self.name} completed: took {self.manifest.elapsed:.3f}s')
         else:
             self.manifest.result = Result.FAILURE
-            logger.opt(exception=sys.exc_info()).error(f'step {self.name} failed')
+            self.manifest.failure_reason = failure_reason
 
     def upsert_task_manifest(self, task: TaskReporter) -> None:
         """Update the step manifest with new task manifests."""
