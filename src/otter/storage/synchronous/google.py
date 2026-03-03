@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 from io import IOBase
+from typing import cast
 
 from google.api_core.exceptions import NotFound, PreconditionFailed
 from google.cloud import storage
+from google.cloud.storage import Blob, Bucket
 from loguru import logger
 
 from otter.storage.synchronous.model import Revision, StatResult, Storage
@@ -205,11 +207,14 @@ class GoogleStorage(Storage):
         client = self._get_client()
 
         try:
-            src_bucket = client.bucket(src_bucket_name)
-            src_blob = src_bucket.blob(src_blob_name)
-            dst_bucket = client.bucket(dst_bucket_name)
+            src_bucket = cast(Bucket, client.bucket(src_bucket_name))
+            src_blob = cast(Blob, src_bucket.blob(src_blob_name))
+            dst_bucket = cast(Bucket, client.bucket(dst_bucket_name))
+            dst_blob = cast(Blob, dst_bucket.blob(dst_blob_name))
 
-            dst_blob = src_bucket.copy_blob(src_blob, dst_bucket, dst_blob_name)
+            dst_blob.rewrite(src_blob, timeout=REQUEST_TIMEOUT)
+            dst_blob.reload()
+
             logger.debug(f'copied {src} to {dst}')
             return str(dst_blob.generation) if dst_blob.generation else None
         except NotFound:

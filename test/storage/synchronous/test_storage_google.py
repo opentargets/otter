@@ -1,6 +1,6 @@
 """Tests for the GoogleStorage class."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from google.api_core.exceptions import NotFound, PreconditionFailed
@@ -263,34 +263,26 @@ class TestGoogleStorage:
         self,
         storage: GoogleStorage,
     ) -> None:
-        with patch.object(storage, '_get_client') as mock_get_client:
-            mock_client = MagicMock()
-            mock_bucket = MagicMock()
-            mock_src_blob = MagicMock()
-            mock_dst_blob = MagicMock()
-            mock_dst_blob.generation = 44
-            mock_dst_blob.reload = MagicMock()
-            mock_bucket.blob = MagicMock(return_value=mock_src_blob)
-            mock_bucket.copy_blob = MagicMock(return_value=mock_dst_blob)
-            mock_client.bucket = MagicMock(return_value=mock_bucket)
-            mock_get_client.return_value = mock_client
+        mock_src_blob = MagicMock()
+        mock_dst_blob = MagicMock(generation=44)
+        mock_bucket = MagicMock()
+        mock_bucket.blob.side_effect = lambda name: mock_src_blob if name == 'source.txt' else mock_dst_blob
 
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_get_client.return_value.bucket.return_value = mock_bucket
             revision = storage.copy_within('gs://bucket/source.txt', 'gs://bucket/dest.txt')
 
         assert revision == '44'
-        mock_bucket.copy_blob.assert_called_once()
+        mock_dst_blob.rewrite.assert_called_once_with(mock_src_blob, timeout=ANY)
+        mock_dst_blob.reload.assert_called_once()
 
     def test_copy_within_not_found(
         self,
         storage: GoogleStorage,
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
-            mock_client = MagicMock()
-            mock_bucket = MagicMock()
-            mock_bucket.copy_blob = MagicMock(side_effect=NotFound('404 Not Found'))
-            mock_bucket.blob = MagicMock()
-            mock_client.bucket = MagicMock(return_value=mock_bucket)
-            mock_get_client.return_value = mock_client
+            mock_blob = mock_get_client.return_value.bucket.return_value.blob.return_value
+            mock_blob.rewrite.side_effect = NotFound('404 Not Found')
 
             with pytest.raises(NotFoundError):
                 storage.copy_within('gs://bucket/not-found.txt', 'gs://bucket/dest.txt')
