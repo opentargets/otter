@@ -265,6 +265,7 @@ class TestGoogleStorage:
     ) -> None:
         mock_src_blob = MagicMock()
         mock_dst_blob = MagicMock(generation=44)
+        mock_dst_blob.rewrite.return_value = (None, 100, 100)
         mock_bucket = MagicMock()
         mock_bucket.blob.side_effect = lambda name: mock_src_blob if name == 'source.txt' else mock_dst_blob
 
@@ -273,7 +274,7 @@ class TestGoogleStorage:
             revision = storage.copy_within('gs://bucket/source.txt', 'gs://bucket/dest.txt')
 
         assert revision == '44'
-        mock_dst_blob.rewrite.assert_called_once_with(mock_src_blob, timeout=ANY)
+        mock_dst_blob.rewrite.assert_called_once_with(mock_src_blob, token=None, timeout=ANY)
         mock_dst_blob.reload.assert_called_once()
 
     def test_copy_within_not_found(

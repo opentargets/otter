@@ -1,13 +1,25 @@
 Changelog
 =========
 
+Version 26.03.3
+---------------
+
+*Released on March 3, 2026*
+
+Bugfixes
+^^^^^^^^
+
+- **Fix Google's copy_within for large files**: The ``copy_within`` method was failing
+large files because multiple calls to ``rewrite`` must be made until the copy is complete
+(:commit:`8097b98`)
+
 Version 26.03.2
 ---------------
 
 *Released on March 3, 2026*
 
 This release moves into the new version schema, which will contain the year and month
-of the Open Targets release in the context of which the Otter changes happen.
+of the Open Targets release in the context of which the Otter changes happen
 
 Bugfixes
 ^^^^^^^^
@@ -15,7 +27,7 @@ Bugfixes
 - **Fix copy_within for Google Cloud Storage**: The ``copy_within`` method for Google
 Cloud Storage now properly handles copying files between different regions and files
 larger than 5TB by using the ``rewrite`` method instead of ``copy``. See
-https://docs.cloud.google.com/storage/docs/json_api/v1/objects/copy for details.
+https://docs.cloud.google.com/storage/docs/json_api/v1/objects/copy for details
 (:commit:`38b43db`)
 
 Version 26.0.1
@@ -66,7 +78,7 @@ Improvements
   of multiple files at once. This task is better suited for copying a large amount (100+) of
   relatively small (tens of MB) files. It avoids spawning a new process and a new client for
   each file. It supports passing a list of sources, a path to a file with a list of sources,
-  or a glob (when copying from backends that can handle those, like cloud services).
+  or a glob (when copying from backends that can handle those, like cloud services)
   (:commit:`db0a2b9`, :commit:`917e91f`, :commit:`21a707e`)
 
 Bugfixes

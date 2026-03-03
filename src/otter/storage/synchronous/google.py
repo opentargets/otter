@@ -212,7 +212,11 @@ class GoogleStorage(Storage):
             dst_bucket = cast(Bucket, client.bucket(dst_bucket_name))
             dst_blob = cast(Blob, dst_bucket.blob(dst_blob_name))
 
-            dst_blob.rewrite(src_blob, timeout=REQUEST_TIMEOUT)
+            token = None
+            while True:
+                token, _, _ = dst_blob.rewrite(src_blob, token=token, timeout=REQUEST_TIMEOUT)
+                if token is None:
+                    break
             dst_blob.reload()
 
             logger.debug(f'copied {src} to {dst}')
