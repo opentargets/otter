@@ -1,6 +1,22 @@
 Changelog
 =========
 
+Version 26.03.2
+---------------
+
+*Released on March 3, 2026*
+
+This release moves into the new version schema, which will contain the year and month
+of the Open Targets release in the context of which the Otter changes happen.
+
+Bugfixes
+^^^^^^^^
+
+- **Fix copy_within for Google Cloud Storage**: The ``copy_within`` method for Google
+Cloud Storage now properly handles copying files between different regions and files
+larger than 5TB by using the ``rewrite`` method instead of ``copy``. See
+https://docs.cloud.google.com/storage/docs/json_api/v1/objects/copy for details.
+(:commit:`38b43db`)
 
 Version 26.0.1
 --------------
