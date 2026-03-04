@@ -49,6 +49,72 @@ class TestStorageHandleResolution:
         with pytest.raises(ValueError, match='config must be provided'):
             AsyncStorageHandle('relative/path/file.txt')
 
+    def test_absolute_url_with_force_local_strips_release_uri(self) -> None:
+        config = fake_config(
+            work_path='/tmp/work',
+            release_uri='gs://bucket/release/path',
+        )
+        handle = AsyncStorageHandle(
+            'gs://bucket/release/path/data/file.txt',
+            config,
+            force_local=True,
+        )
+
+        assert handle.absolute == '/tmp/work/data/file.txt'
+        assert isinstance(handle.storage, AsyncFilesystemStorage)
+
+    def test_absolute_url_with_force_local_external_url_kept_as_is(self) -> None:
+        config = fake_config(
+            work_path='/tmp/work',
+            release_uri='gs://bucket/release/path',
+        )
+        handle = AsyncStorageHandle(
+            'gs://other-bucket/data/file.txt',
+            config,
+            force_local=True,
+        )
+
+        assert handle.absolute == 'gs://other-bucket/data/file.txt'
+        assert isinstance(handle.storage, AsyncGoogleStorage)
+
+    def test_absolute_filesystem_path_with_force_local(self) -> None:
+        config = fake_config(
+            work_path='/tmp/work',
+            release_uri='gs://bucket/release/path',
+        )
+        handle = AsyncStorageHandle(
+            '/absolute/path/to/file.txt',
+            config,
+            force_local=True,
+        )
+
+        assert handle.absolute == '/absolute/path/to/file.txt'
+        assert isinstance(handle.storage, AsyncFilesystemStorage)
+
+    def test_absolute_url_with_force_local_but_no_config(self) -> None:
+        from otter.util.errors import StorageError
+
+        with pytest.raises(StorageError, match='config must be passed'):
+            AsyncStorageHandle(
+                'gs://bucket/path/file.txt',
+                config=None,
+                force_local=True,
+            )
+
+    def test_absolute_url_with_force_local_but_no_release_uri(self) -> None:
+        config = fake_config(
+            work_path='/tmp/work',
+            release_uri=None,
+        )
+        handle = AsyncStorageHandle(
+            'gs://bucket/path/file.txt',
+            config,
+            force_local=True,
+        )
+
+        assert handle.absolute == 'gs://bucket/path/file.txt'
+        assert isinstance(handle.storage, AsyncGoogleStorage)
+
 
 class TestStorageHandleStorageSelection:
     @pytest.mark.parametrize(
