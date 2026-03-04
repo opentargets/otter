@@ -26,7 +26,12 @@ class StorageHandle:
 
     The resolution chain is:
 
-    1. If the location is absolute (remote url or uri), use it as is.
+    1. If the location is absolute:
+        1.1. If ``force_local`` is set, we have a config, a ``release_uri``, and
+             the location starts with release_uri, change it for ``work_path``.
+        1.2. If ``force_local`` is set but we don't have a config, then raise a
+             StorageError.
+        1.2. In any other case, use it as is.
     2. If ``force_local`` is False and there is a ``remote_uri``, prepend it.
     3. Otherwise prepend ``work_path``.
 
@@ -56,6 +61,14 @@ class StorageHandle:
             return location
 
         if '://' in location:
+            if self.force_local:
+                if self.config and self.config.release_uri and location.startswith(self.config.release_uri):
+                    stripped = location[len(self.config.release_uri) :].lstrip('/')
+                    resolved = f'{self.config.work_path}/{stripped}'
+                    logger.debug(f'force_local is set and {location} includes release root, changed to {resolved}')
+                    return resolved
+                elif self.config is None:
+                    raise StorageError('config must be passed to resolve an absolute location with force_local')
             logger.debug(f'location {location} is absolute, using as is')
             return location
 
