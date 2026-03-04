@@ -10,6 +10,7 @@ from otter.config.model import Config
 from otter.storage.asynchronous.model import AsyncStorage
 from otter.storage.model import Revision, StatResult
 from otter.storage.registry import async_storage_registry
+from otter.util.errors import StorageError
 
 
 class AsyncStorageHandle:
@@ -95,6 +96,21 @@ class AsyncStorageHandle:
         :rtype: bool
         """
         return self.location == self._resolved
+
+    @property
+    def relative(self) -> str:
+        """Get the path relative to the release root.
+
+        :return: The relative location.
+        :rtype: str
+        """
+        if self.config is None:
+            raise ValueError('config must be provided to get relative path')
+        if self.absolute.startswith(str(self.config.work_path)):
+            return self.absolute[len(str(self.config.work_path)) :].lstrip('/')
+        elif self.config.release_uri and self.absolute.startswith(self.config.release_uri):
+            return self.absolute[len(self.config.release_uri) :].lstrip('/')
+        raise StorageError('that path is not in the release root')
 
     async def stat(self) -> StatResult:
         """Get metadata for this resource.

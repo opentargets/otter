@@ -207,3 +207,44 @@ class TestStorageHandleDownload:
 
         assert result.is_dir is True
         assert result.is_reg is False
+
+
+class TestStorageHandleRelative:
+    def test_relative_from_work_path(
+        self,
+        work_path: Path,
+    ) -> None:
+        config = fake_config(work_path=work_path, release_uri=None)
+        handle = AsyncStorageHandle('data/file.txt', config)
+
+        assert handle.relative == 'data/file.txt'
+
+    def test_relative_from_release_uri(
+        self,
+    ) -> None:
+        config = fake_config(release_uri='gs://bucket/release')
+        handle = AsyncStorageHandle('data/file.txt', config)
+
+        assert handle.relative == 'data/file.txt'
+
+    def test_relative_from_absolute_path_in_work_path(
+        self,
+        work_path: Path,
+    ) -> None:
+        config = fake_config(work_path=work_path, release_uri=None)
+        absolute_location = f'{work_path}/subdir/file.txt'
+        handle = AsyncStorageHandle(absolute_location, config)
+
+        assert handle.relative == 'subdir/file.txt'
+
+    def test_relative_raises_for_unrelated_path(
+        self,
+        work_path: Path,
+    ) -> None:
+        from otter.util.errors import StorageError
+
+        config = fake_config(work_path=work_path, release_uri=None)
+        handle = AsyncStorageHandle('https://example.com/file.txt', config)
+
+        with pytest.raises(StorageError, match='not in the release root'):
+            _ = handle.relative
