@@ -1,6 +1,23 @@
 Changelog
 =========
 
+Version 26.03.4
+---------------
+
+*Released on March 4, 2026*
+
+Improvements
+^^^^^^^^^^^^
+
+- **Added a :py:property:`otter.storage.synchronous.StorageHandle.relative`` property**:
+This property returns the path of the handle relative to the release root, which is useful
+inside tasks that need to work with local files even when running with a ``release_uri``.
+(:commit:`d391724`)
+- **Resolve absolute paths to local with force_local**: When ``force_local`` is set,
+absolute paths that contain the release root will be resolved to local paths by replacing
+the remote release root with the local work path. This allows tasks to work with local files
+even when running with a ``release_uri``. (:commit:`26bbf87`)
+
 Version 26.03.3
 ---------------
 
