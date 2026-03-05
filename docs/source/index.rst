@@ -122,8 +122,10 @@ only run once the first has finished. A simple application that runs this step:
    from otter import Runner
 
    def main() -> None:
-      runner = Runner()
+      runner = Runner('mypipeline')
       runner.start()
+      runner.register_tasks('mypipeline.tasks') # you would have a mypipeline.tasks module
+                                                # with the task implementations
       s = asyncio.run(runner.run())  # or any other way you want to handle the event loop
 
       if s.manifest.result not in [Result.PENDING, Result.SUCCESS]:
