@@ -53,7 +53,7 @@ class CopyMany(Task):
     async def _copy_single_file(self, source: str, semaphore: asyncio.Semaphore) -> Artifact:
         async with semaphore:
             filename = Path(source).name
-            dest_path = f'{self.spec.destination}/{filename}'
+            dest_path = f'{self.spec.destination.rstrip("/")}/{filename.lstrip("/")}'
 
             for attempt in range(MAX_RETRIES + 1):
                 try:
