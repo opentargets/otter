@@ -1,6 +1,6 @@
 [project]
 name = "opentargets-otter"
-version = "26.03.4"
+version = "26.03.5"
 description = "Open Targets Task ExcutoR"
 readme = "README.md"
 requires-python = ">=3.11"
