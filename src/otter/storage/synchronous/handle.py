@@ -6,12 +6,14 @@ from io import IOBase
 from pathlib import Path
 
 from loguru import logger
+from pydantic import ValidationError
 
 from otter.config.model import Config
 from otter.storage.model import Revision, StatResult
 from otter.storage.registry import storage_registry
+from otter.storage.storage_context import get_storage_context
 from otter.storage.synchronous.model import Storage
-from otter.util.errors import StorageError
+from otter.util.errors import StorageContextSettingsError, StorageError
 
 
 class StorageHandle:
@@ -56,6 +58,9 @@ class StorageHandle:
         self._resolved = self._resolve(location)
         self._storage: Storage = storage_registry.get_storage(self._resolved)
 
+        # Validate storage context settings if present
+        self._validate_context_settings()
+
     def _resolve(self, location: str):
         if location.startswith('/'):
             return location
@@ -83,6 +88,28 @@ class StorageHandle:
         resolved = f'{self.config.work_path}/{location}'
         logger.debug(f'location {location} resolved to local {resolved}')
         return resolved
+
+    def _validate_context_settings(self) -> None:
+        """Validate storage context settings against the backend's model.
+
+        Raises:
+            StorageContextSettingsError: If context settings are invalid for this backend.
+        """
+        ctx = get_storage_context()
+        if not ctx:
+            return  # No context set, nothing to validate
+
+        settings_model = self._storage.get_context_settings_model()
+        if not settings_model:
+            return  # Backend doesn't define settings, skip validation
+
+        try:
+            # Validate context settings against the backend's model
+            settings_model(**ctx._settings)
+        except ValidationError as e:
+            backend_name = self._storage.name
+            error_details = '; '.join([f'{err["loc"][0]}: {err["msg"]}' for err in e.errors()])
+            raise StorageContextSettingsError(f'Invalid storage context settings for {backend_name}: {error_details}')
 
     @property
     def storage(self) -> Storage:
