@@ -1,6 +1,6 @@
 """Storage settings models for different storage backends."""
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from otter.storage.model import StorageSettings
 

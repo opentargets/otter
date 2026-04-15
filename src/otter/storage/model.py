@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 Revision = float | str | None
 """Type alias for file revision identifiers."""
@@ -22,6 +22,9 @@ class StorageSettings(BaseModel):
                 description='Project ID for requester-pays bucket billing',
             )
     """
+
+    model_config = ConfigDict(extra='forbid')
+    """Forbid extra fields in storage settings to ensure only valid context parameters are used."""
 
 
 @dataclass

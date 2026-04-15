@@ -33,7 +33,7 @@ class CopyManySpec(Spec):
     destination: str
     """The destination directory, relative to the release root."""
     max_concurrency: int = 10
-    """Maximum number of concurrent copy operations. Defaults to 5."""
+    """Maximum number of concurrent copy operations. Defaults to 10."""
     settings: dict[str, Any] | None = None
     """Optional storage context settings for backend-specific configuration.
 
