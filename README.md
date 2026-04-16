@@ -5,6 +5,8 @@
 [![build](https://github.com/opentargets/otter/actions/workflows/ci.yaml/badge.svg)](https://github.com/opentargets/otter/actions/workflows/ci.yaml)
 [![license](https://img.shields.io/github/license/opentargets/otter.svg)](LICENSE)
 
+![Otter](docs/images/otter.svg)
+
 Otter is a the task execution framework used in the Open Targets data Pipeline.
 
 It provides an easy to use API to implement generic tasks that are then used by
