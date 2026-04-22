@@ -30,6 +30,16 @@ def load_specs(config_path: Path, step_name: str) -> list[Spec]:
             logger.critical(f'duplicate task name found: {name}')
             raise SystemExit(errno.EINVAL)
         seen_names.add(name)
+
+    # check for unknown requires references
+    for spec in spec_dicts:
+        for dep in spec.get('requires', []):
+            if dep not in seen_names:
+                logger.critical(
+                    f'unknown task in requires: {dep!r} (referenced by {spec["name"]!r})'
+                )
+                raise SystemExit(errno.EINVAL)
+
     logger.trace(f'loaded task specs for step {step_name}: {spec_dicts}')
 
     try:
