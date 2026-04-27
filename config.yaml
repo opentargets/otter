@@ -10,6 +10,15 @@ steps:
   simple:
     - name: hello_world simple
       who: simple
+      retry:
+        run:
+          retries: 1
+          backoff: exponential
+          initial_delay: 30
+        validation:
+          retries: 2
+          backoff: fixed
+          initial_delay: 10
 
   test:
     - name: hello_world test1

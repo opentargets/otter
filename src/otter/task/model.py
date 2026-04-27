@@ -13,6 +13,7 @@ from pydantic import BaseModel, field_validator
 
 from otter.config.model import Config
 from otter.scratchpad.model import Scratchpad
+from otter.task.retry import RetryConfig
 from otter.task.task_reporter import TaskReporter, report
 
 
@@ -60,6 +61,9 @@ class Spec(BaseModel, extra='allow', arbitrary_types_allowed=True):
         scratchpads when running, e.g.: explode task.
 
         Defaults to ``False``."""
+    retry: RetryConfig = RetryConfig()
+    """The retry configuration for the task, determines how many times
+    the task should be retried in case of failure. Defaults to 0."""
 
     @property
     def task_type(self) -> str:
