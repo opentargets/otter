@@ -101,6 +101,15 @@ steps:
   find-latest:
     - name: find_latest cosmic
       source: gs://otar007-cosmic
+      retry:
+        run:
+          retries: 1
+          backoff: fixed
+          initial_delay: 5
+        validation:
+          retries: 1
+          backoff: fixed
+          initial_delay: 5
 
   copy-many-list:
     - name: copy_many a list of files

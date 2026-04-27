@@ -83,35 +83,42 @@ def report(func: Callable[..., Task] | Callable[..., Awaitable[Task]]) -> Callab
         if name is None:
             raise ValueError('wrapped function must have a __name__ attribute')
 
-        try:
-            # perform these before the wrapped method runs
-            if name == 'run':
-                self.start_run()
-            elif name == 'validate':
-                self.start_validation()
+        policy = self.spec.retry.run if name == 'run' else self.spec.retry.validation
 
-            # call the wrapped method (handle both async and sync)
-            result: Task
-            if asyncio.iscoroutinefunction(func):
-                result = await func(self, *args, **kwargs)
-            else:
-                result = func(self, *args, **kwargs)  # type: ignore[assignment]
+        # start phase — called once, not per attempt
+        if name == 'run':
+            self.start_run()
+        elif name == 'validate':
+            self.start_validation()
 
-            # perform these after the wrapped method runs
-            if name == 'run':
-                self.finish_run(done=not self.has_validation())
-            elif name == 'validate':
-                self.finish_validation()
+        for attempt in range(policy.retries + 1):
+            try:
+                result: Task
+                if asyncio.iscoroutinefunction(func):
+                    result = await func(self, *args, **kwargs)
+                else:
+                    result = func(self, *args, **kwargs)  # type: ignore[assignment]
 
-            return result
+                if name == 'run':
+                    self.finish_run(done=not self.has_validation())
+                elif name == 'validate':
+                    self.finish_validation()
 
-        # handle exceptions
-        except Exception as e:
-            self.context.abort.set()
-            if isinstance(e, TaskAbortedError):
-                self.abort()
-            else:
-                self.fail(e, name)
-            return self
+                return result
+
+            except Exception as e:
+                if attempt < policy.retries:
+                    logger.warning(
+                        f'task {name} failed (attempt {attempt + 1}/{policy.retries + 1}), '
+                        f'retrying in {policy.initial_delay}s'
+                    )
+                    await asyncio.sleep(policy.initial_delay)
+                else:
+                    self.context.abort.set()
+                    if isinstance(e, TaskAbortedError):
+                        self.abort()
+                    else:
+                        self.fail(e, name)
+                    return self
 
     return wrapper
