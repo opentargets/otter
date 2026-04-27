@@ -23,7 +23,10 @@ steps:
           initial_delay: 10
 ```
 
-I added retry.py defining separate retry policies for run and validation and imported RetryConfig in model.py, so now retry gets parsed in Spec and old examples with no retries are still parsed:
+I added retry.py defining separate retry policies for run and validation and imported RetryConfig in model.py, so now retry gets parsed in Spec and old examples with no retries are still parsed. Work for the future: now if retries are set to 0, other arguments (backoff, initial_delay, max_delay, jitter) are still default values, which doesn't make sense. It is fixable with adding another layer after retry but I am out of time.
+
+retry.py intentionally imports nothing from within Otter. The dependency graph is model.py to retry.py to pydantic only. This avoids a circular import between retry.py and model.py that would occur if RetryConfig knew about Spec or Task.
+
 ```
 >>> from otter.task.model import Spec
 >>> 
@@ -41,6 +44,8 @@ Spec(name='hello_world simple', requires=[], scratchpad_ignore_missing=False, wh
 >>> s2 = Spec(**{ "name": "hello_world simple", "who": "simple"})
 >>> s2
 Spec(name='hello_world simple', requires=[], scratchpad_ignore_missing=False, who='simple')
+>>> s2.retry
+RetryConfig(run=RetryPolicy(retries=0, backoff=<BackoffStrategy.EXPONENTIAL: 'exponential'>, initial_delay=5.0, max_delay=120.0, jitter=False), validation=RetryPolicy(retries=0, backoff=<BackoffStrategy.EXPONENTIAL: 'exponential'>, initial_delay=5.0, max_delay=120.0, jitter=False))
 ```
 
 In task_reporter.py, I wrapped the function call in a loop and moved fail to the final attempt only.
@@ -103,6 +108,10 @@ except Exception as e:
         return self
 ```
 
+
+State transitions
+
+Retry introduces no new states. The existing state machine (PENDING_RUN → RUNNING → PENDING_VALIDATION → VALIDATING → DONE) is unchanged. The retry loop runs entirely within RUNNING or VALIDATING, so from the coordinator's perspective a retrying task looks identical to the first attempt of a task.
 
 
 Manifest behaviour
