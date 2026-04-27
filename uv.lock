@@ -1194,9 +1194,11 @@ wheels = [
 
 [[package]]
 name = "opentargets-otter"
-version = "26.3.4"
+version = "26.3.5"
 source = { editable = "." }
 dependencies = [
+    { name = "aiofiles" },
+    { name = "aiohttp" },
     { name = "filelock" },
     { name = "gcloud-aio-storage" },
     { name = "google-cloud-storage" },
@@ -1205,7 +1207,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "urllib3" },
 ]
 
 [package.optional-dependencies]
@@ -1235,6 +1236,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiofiles", specifier = "==25.1.0" },
+    { name = "aiohttp", specifier = "==3.13.3" },
     { name = "autodoc-pydantic", marker = "extra == 'docs'", specifier = ">=2.2.0" },
     { name = "coverage", marker = "extra == 'test'", specifier = "==7.13.4" },
     { name = "esbonio", marker = "extra == 'docs'", specifier = ">=1.0.0" },
@@ -1254,7 +1257,6 @@ requires-dist = [
     { name = "sphinx-autobuild", marker = "extra == 'docs'", specifier = ">=2025.8.25" },
     { name = "sphinx-issues", marker = "extra == 'docs'", specifier = ">=5.0.1" },
     { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.0.2" },
-    { name = "urllib3", specifier = "==2.6.3" },
 ]
 provides-extras = ["test", "docs"]
 
