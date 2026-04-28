@@ -206,3 +206,8 @@ When a task exhausts all retries, `context.abort.set()` fires and the coordinato
 ### No Global Retry Defaults
 
 Every task that wants retry must configure it explicitly. There is no step-level or global `retry:` default. This is good because different tasks have different failure profiles and a global default would apply retry to tasks where it is inappropriate. The tradeoff is verbosity: in a step with 10 HTTP download tasks, each one needs its own `retry:` block. A future improvement could be a step-level `retry_defaults:` that individual tasks can override, similar to how Airflow supports default args on a DAG.
+
+
+## Further work
+
+For observability would be great to have Grafana dashboard to see how many retries, how long retries take, flag runs that are taking unusually long time, notice if a lot of tasks are failing at the same time. The bottleneck is that developers are guessing how many retries to specify and how much of a delay is enough to fix rate limits on APIs (e.g. tasks failing on retries because you always retry just a bit too fast).
