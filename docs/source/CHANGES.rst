@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Version 26.06.0
+---------------
+
+*Released on May 1, 2026*
+
+Bugfixes
+^^^^^^^^
+
+- **Check for missing dependencies in task specs**: When loading task specifications,
+Otter now checks if all required dependencies are present and raises an error if any
+are missing. (:pr:`19`, :user:`dsuveges`)
+
 Version 26.03.4
 ---------------
 

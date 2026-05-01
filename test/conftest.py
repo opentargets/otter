@@ -39,5 +39,3 @@ def worker(queues):
 
     shutdown_event.set()
     worker.join(timeout=2)
-    if worker.is_alive():
-        pass
