@@ -1,10 +1,11 @@
 """Tests for the AsyncGoogleStorage class."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from otter.storage.asynchronous.google import AsyncGoogleStorage
+from otter.storage.storage_context import storage_context
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
 
@@ -41,14 +42,10 @@ class TestGoogleStorage:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_client.download_metadata = AsyncMock(side_effect=Exception('Not Found'))
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': 'prefix/file1.txt'}]})
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
-                mock_bucket = MagicMock()
-                mock_bucket.list_blobs = AsyncMock(return_value=['file1.txt', 'file2.txt'])
-                mock_bucket_class.return_value = mock_bucket
-
-                result = await storage.stat('gs://bucket/prefix')
+            result = await storage.stat('gs://bucket/prefix')
 
         assert result.is_dir is True
         assert result.is_reg is False
@@ -62,15 +59,11 @@ class TestGoogleStorage:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_client.download_metadata = AsyncMock(side_effect=Exception('Not Found'))
+            mock_client.list_objects = AsyncMock(return_value={'items': []})
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
-                mock_bucket = MagicMock()
-                mock_bucket.list_blobs = AsyncMock(return_value=[])
-                mock_bucket_class.return_value = mock_bucket
-
-                with pytest.raises(NotFoundError):
-                    await storage.stat('gs://bucket/not-found.txt')
+            with pytest.raises(NotFoundError):
+                await storage.stat('gs://bucket/not-found.txt')
 
     @pytest.mark.asyncio
     async def test_glob(
@@ -79,14 +72,17 @@ class TestGoogleStorage:
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(
+                return_value={
+                    'items': [
+                        {'name': 'data/file1.txt'},
+                        {'name': 'data/file2.txt'},
+                    ]
+                }
+            )
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
-                mock_bucket = MagicMock()
-                mock_bucket.list_blobs = AsyncMock(return_value=['data/file1.txt', 'data/file2.txt'])
-                mock_bucket_class.return_value = mock_bucket
-
-                result = await storage.glob('gs://bucket/data/', '*.txt')
+            result = await storage.glob('gs://bucket/data/', '*.txt')
 
         assert len(result) == 2
         assert 'gs://bucket/data/file1.txt' in result
@@ -99,15 +95,11 @@ class TestGoogleStorage:
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(side_effect=Exception('API Error'))
             mock_get_client.return_value = mock_client
 
-            with patch('otter.storage.asynchronous.google.Bucket') as mock_bucket_class:
-                mock_bucket = MagicMock()
-                mock_bucket.list_blobs = AsyncMock(side_effect=Exception('API Error'))
-                mock_bucket_class.return_value = mock_bucket
-
-                with pytest.raises(StorageError, match='error listing blobs'):
-                    await storage.glob('gs://bucket/data/', '*.txt')
+            with pytest.raises(StorageError, match='error listing blobs'):
+                await storage.glob('gs://bucket/data/', '*.txt')
 
     @pytest.mark.asyncio
     async def test_read(
@@ -251,7 +243,14 @@ class TestGoogleStorage:
             revision = await storage.copy_within('gs://bucket/source.txt', 'gs://bucket/dest.txt')
 
         assert revision == '44'
-        mock_client.copy.assert_called_once_with('bucket', 'source.txt', 'bucket', new_name='dest.txt')
+        mock_client.copy.assert_called_once_with(
+            'bucket',
+            'source.txt',
+            'bucket',
+            new_name='dest.txt',
+            params=None,
+            headers=None,
+        )
 
     @pytest.mark.asyncio
     async def test_copy_within_not_found(
@@ -265,3 +264,45 @@ class TestGoogleStorage:
 
             with pytest.raises(NotFoundError):
                 await storage.copy_within('gs://bucket/not-found.txt', 'gs://bucket/dest.txt')
+
+    @pytest.mark.asyncio
+    async def test_read_uses_billing_project_context(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.download_metadata = AsyncMock(return_value={'generation': '42'})
+            mock_client.download = AsyncMock(return_value=b'data')
+            mock_get_client.return_value = mock_client
+
+            with storage_context(billing_project='billing-project'):
+                await storage.read('gs://bucket/file.txt')
+
+        expected_headers = {'x-goog-user-project': 'billing-project'}
+        first_call = mock_client.download_metadata.call_args_list[0]
+        assert first_call.kwargs['headers'] == expected_headers
+        assert mock_client.download.call_args.kwargs['headers'] == expected_headers
+
+    @pytest.mark.asyncio
+    async def test_copy_within_uses_billing_project_context(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.copy = AsyncMock()
+            mock_client.download_metadata = AsyncMock(return_value={'generation': '44'})
+            mock_get_client.return_value = mock_client
+
+            with storage_context(billing_project='billing-project'):
+                await storage.copy_within('gs://bucket/source.txt', 'gs://bucket/dest.txt')
+
+        mock_client.copy.assert_called_once_with(
+            'bucket',
+            'source.txt',
+            'bucket',
+            new_name='dest.txt',
+            params={'userProject': 'billing-project'},
+            headers={'x-goog-user-project': 'billing-project'},
+        )

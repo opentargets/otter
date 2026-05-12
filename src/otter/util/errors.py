@@ -89,6 +89,10 @@ class StorageError(OtterError):
     """Raise when an error occurs in a storage class."""
 
 
+class StorageContextSettingsError(StorageError):
+    """Raise when invalid settings are provided in storage context."""
+
+
 class ManifestError(OtterError):
     """Raise when an error occurs in the manifest management."""
 

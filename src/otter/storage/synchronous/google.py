@@ -11,6 +11,8 @@ from google.cloud import storage
 from google.cloud.storage import Blob, Bucket
 from loguru import logger
 
+from otter.storage.settings import GoogleStorageSettings
+from otter.storage.storage_context import get_storage_context
 from otter.storage.synchronous.model import Revision, StatResult, Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
@@ -18,15 +20,36 @@ REQUEST_TIMEOUT = 300
 
 
 class GoogleStorage(Storage):
-    """Google Cloud Storage class using google-cloud-storage for operations."""
+    """Google Cloud Storage class using google-cloud-storage for operations.
+
+    This storage backend supports the following context settings (via storage_context):
+        - billing_project: Project ID for requester-pays bucket access
+
+    See :class:`otter.storage.settings.GoogleStorageSettings` for detailed documentation of available settings.
+    """
 
     def __init__(self) -> None:
         self._client: storage.Client | None = None
+
+    @classmethod
+    def get_context_settings_model(cls) -> type[GoogleStorageSettings]:
+        """Get the settings model for Google Cloud Storage context validation.
+
+        :return: GoogleStorageSettings model class.
+        :rtype: type[BaseModel]
+        """
+        return GoogleStorageSettings
 
     def _get_client(self) -> storage.Client:
         if self._client is None:
             self._client = storage.Client()
         return self._client
+
+    def _get_bucket(self, client: storage.Client, bucket_name: str) -> Bucket:
+        ctx = get_storage_context()
+        if ctx and (billing_project := ctx.get('billing_project')):
+            return cast(Bucket, client.bucket(bucket_name, user_project=billing_project))
+        return cast(Bucket, client.bucket(bucket_name))
 
     @property
     def name(self) -> str:
@@ -52,7 +75,7 @@ class GoogleStorage(Storage):
             )
         # regular blob
         try:
-            bucket = client.bucket(bucket_name)
+            bucket = self._get_bucket(client, bucket_name)
             blob = bucket.blob(blob_name)
             blob.reload()
             logger.trace(f'got metadata for blob {location}')
@@ -65,7 +88,7 @@ class GoogleStorage(Storage):
         # maybe a prefix if blobs exist underneath
         except NotFound:
             try:
-                bucket = client.bucket(bucket_name)
+                bucket = self._get_bucket(client, bucket_name)
                 prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
                 blobs = list(bucket.list_blobs(prefix=prefix, max_results=1))
                 if blobs:
@@ -83,7 +106,7 @@ class GoogleStorage(Storage):
     def glob(self, location: str, pattern: str = '*') -> list[str]:
         bucket_name, prefix = self._parse_uri(location)
         client = self._get_client()
-        bucket = client.bucket(bucket_name)
+        bucket = self._get_bucket(client, bucket_name)
 
         if prefix.endswith('/'):
             search_prefix = prefix
@@ -112,7 +135,7 @@ class GoogleStorage(Storage):
     ) -> IOBase:
         bucket_name, blob_name = self._parse_uri(location)
         client = self._get_client()
-        bucket = client.bucket(bucket_name)
+        bucket = self._get_bucket(client, bucket_name)
         blob = bucket.blob(blob_name)
 
         try:
@@ -128,7 +151,7 @@ class GoogleStorage(Storage):
     ) -> tuple[bytes, Revision]:
         bucket_name, blob_name = self._parse_uri(location)
         client = self._get_client()
-        bucket = client.bucket(bucket_name)
+        bucket = self._get_bucket(client, bucket_name)
 
         try:
             while True:
@@ -169,7 +192,7 @@ class GoogleStorage(Storage):
     ) -> Revision:
         bucket_name, blob_name = self._parse_uri(location)
         client = self._get_client()
-        bucket = client.bucket(bucket_name)
+        bucket = self._get_bucket(client, bucket_name)
         blob = bucket.blob(blob_name)
 
         try:
@@ -207,9 +230,9 @@ class GoogleStorage(Storage):
         client = self._get_client()
 
         try:
-            src_bucket = cast(Bucket, client.bucket(src_bucket_name))
+            src_bucket = self._get_bucket(client, src_bucket_name)
             src_blob = cast(Blob, src_bucket.blob(src_blob_name))
-            dst_bucket = cast(Bucket, client.bucket(dst_bucket_name))
+            dst_bucket = self._get_bucket(client, dst_bucket_name)
             dst_blob = cast(Blob, dst_bucket.blob(dst_blob_name))
 
             token = None
