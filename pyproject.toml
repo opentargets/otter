@@ -153,6 +153,7 @@ ignore = [
   'PLR6201', # sets are faster (by a factor of 10!) but it's noisy and we're in nanoseconds territory
   'PLR6301', # extremely noisy and generally annoying
   'PLW0108', # a lambda often makes it more clear what you actually want
+  'PLW0717', # too restrictive
   'PLW1510', # we often do not care about the status code of commands
   'PLW1514', # we expect UTF8 environments everywhere
   'PLW1641', # false positives with SA comparator classes
@@ -165,6 +166,7 @@ ignore = [
   'PERF203', # noisy, false positives, and not applicable for 3.11+
   'FURB113', # less readable
   'FURB140', # less readable and actually slower in 3.12+
+  'UP046',   # we need to support Python 3.11 for now
   'UP047',   # we need to support Python 3.11 for now
 ]
 

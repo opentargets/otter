@@ -1,8 +1,9 @@
 """Tests for the AsyncGoogleStorage class."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from aiohttp import ClientResponseError
 
 from otter.storage.asynchronous.google import AsyncGoogleStorage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
@@ -227,8 +228,12 @@ class TestGoogleStorage:
     ) -> None:
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
-            error = Exception('Precondition Failed')
-            error.status = 412  # type: ignore[attr-defined]
+            error = ClientResponseError(
+                request_info=Mock(),
+                history=(),
+                status=412,
+                message='Precondition Failed',
+            )
             mock_client.upload = AsyncMock(side_effect=error)
             mock_get_client.return_value = mock_client
 

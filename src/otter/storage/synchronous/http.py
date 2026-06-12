@@ -46,7 +46,11 @@ class HTTPStorage(Storage):
         if 'Content-Length' not in resp.headers:
             size = None
         else:
-            size = int(resp.headers.get('Content-Length'))
+            content_length = resp.headers.get('Content-Length')
+            if content_length is None:
+                size = None
+            else:
+                size = int(content_length)
 
         last_modified = resp.headers.get('Last-Modified', None)
         if last_modified is not None:

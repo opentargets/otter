@@ -181,7 +181,7 @@ class Task(TaskReporter):
         return len(self.context.specs) > 0
 
     @final
-    def get_execution_method(self) -> Callable[..., Self] | Callable[..., Awaitable[Self]]:
+    def get_execution_method(self) -> Callable[..., Task] | Callable[..., Awaitable[Task]]:
         """Get the method to execute based on the task state.
 
         :return: The method to execute.

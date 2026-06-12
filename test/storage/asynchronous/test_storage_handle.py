@@ -8,8 +8,7 @@ from otter.storage.asynchronous.filesystem import AsyncFilesystemStorage
 from otter.storage.asynchronous.google import AsyncGoogleStorage
 from otter.storage.asynchronous.handle import AsyncStorageHandle
 from otter.storage.asynchronous.http import AsyncHTTPStorage
-from otter.storage.synchronous.noop import NoopStorage
-from otter.util.errors import NotFoundError
+from otter.util.errors import NotFoundError, StorageError
 from test.mocks import fake_config
 
 
@@ -123,7 +122,6 @@ class TestStorageHandleStorageSelection:
             ('gs://bucket/path/file.txt', AsyncGoogleStorage),
             ('http://example.com/file.txt', AsyncHTTPStorage),
             ('https://example.com/file.txt', AsyncHTTPStorage),
-            ('ftp://example.com/file.txt', NoopStorage),
         ],
     )
     def test_protocol_selects_correct_storage(
@@ -134,6 +132,10 @@ class TestStorageHandleStorageSelection:
         handle = AsyncStorageHandle(url)
 
         assert isinstance(handle.storage, expected_storage)
+
+    def test_unknown_protocol_raises(self) -> None:
+        with pytest.raises(StorageError, match='no storage backend found'):
+            AsyncStorageHandle('ftp://example.com/file.txt')
 
     def test_no_protocol_selects_filesystem_storage(self) -> None:
         config = fake_config(work_path='/tmp/work', release_uri=None)

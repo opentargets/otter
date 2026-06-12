@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import queue
+import threading
 from collections import deque
 from multiprocessing import Manager, Process
-from threading import Event
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -18,8 +18,6 @@ from otter.task.model import State
 from otter.util.errors import StepFailedError, TaskBuildError, TaskDuplicateError, TaskRunError, TaskValidationError
 
 if TYPE_CHECKING:
-    from multiprocessing import Queue
-
     from otter.config.model import Config
     from otter.task.model import Spec, Task
     from otter.task.task_registry import TaskRegistry
@@ -46,10 +44,10 @@ class Coordinator:
         self._manager = Manager()
         self._spec_count: int = len(step.specs)  # total number of specs to be processed
         self._remaining_specs: deque[Spec] = deque(step.specs)  # specs yet to be built into tasks
-        self._task_queue: Queue[Task] = self._manager.Queue()  # queue of ready tasks
-        self._result_queue: Queue[Task] = self._manager.Queue()  # queue of done task
+        self._task_queue: queue.Queue[Task] = self._manager.Queue()  # queue of ready tasks
+        self._result_queue: queue.Queue[Task] = self._manager.Queue()  # queue of done task
         self._task_subtasks: dict[str, list[str]] = {}  # used to complete tasks that are waiting for subtasks
-        self._shutdown_event: Event = self._manager.Event()
+        self._shutdown_event: threading.Event = self._manager.Event()
         self._workers: list[Process] = []
 
     def _is_spec_ready(self, spec: Spec) -> bool:

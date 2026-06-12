@@ -45,7 +45,7 @@ def load_config(runner_name: str) -> Config:
     config_path = (cli.config_path or env.config_path or dfl.config_path).resolve()
     config_dict = parse_yaml(config_path)
     try:
-        yml = YamlConfig(**config_dict | {'steps': list(config_dict.get('steps', {}))})
+        yml = YamlConfig.model_validate({**config_dict, 'steps': list(config_dict.get('steps', {}))})
     except ValidationError as e:
         logger.critical('error validating yaml config')
         logger.error(log_pydantic(e))

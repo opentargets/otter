@@ -7,7 +7,7 @@ import sys
 from collections.abc import Awaitable
 from datetime import UTC, datetime
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from loguru import logger
 
@@ -95,7 +95,8 @@ def report(func: Callable[..., Task] | Callable[..., Awaitable[Task]]) -> Callab
             if asyncio.iscoroutinefunction(func):
                 result = await func(self, *args, **kwargs)
             else:
-                result = func(self, *args, **kwargs)  # type: ignore[assignment]
+                r = func(self, *args, **kwargs)
+                result = cast(Task, await r) if isinstance(r, Awaitable) else r
 
             # perform these after the wrapped method runs
             if name == 'run':
