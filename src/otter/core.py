@@ -105,7 +105,7 @@ class Runner:
 
         await coordinator.run()
 
-        manifest.update(step.manifest)
+        await manifest.update(step.manifest)
 
         return step
 

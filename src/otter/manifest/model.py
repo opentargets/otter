@@ -163,7 +163,7 @@ class Manifest:
             logger.critical(f'error serializing manifest: {e}')
             raise ManifestError('error serializing manifest') from e
 
-    def update(self, step_manifest: StepManifest) -> None:
+    async def update(self, step_manifest: StepManifest) -> None:
         """Update manifest with the given step and save it.
 
         :param step_manifest: The :class:`otter.manifest.model.StepManifest` to
@@ -211,7 +211,7 @@ class Manifest:
                 return
             except PreconditionFailedError:
                 logger.warning(f'manifest at {h.absolute} was modified by another process, retrying')
-                asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
+                await asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
             except StorageError as e:
                 logger.critical(f'error writing manifest to {h.absolute}: {e}')
                 raise ManifestError(f'error writing manifest: {e}') from e
