@@ -45,7 +45,7 @@ class FindLatest(Task):
         for p in file_paths:
             f = StorageHandle(p)
             s = f.stat()
-            if latest_mtime is None or s.mtime > latest_mtime:
+            if s.mtime is not None and (latest_mtime is None or s.mtime > latest_mtime):
                 latest, latest_mtime = f, s.mtime
 
         if latest is None:
