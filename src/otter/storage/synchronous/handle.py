@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from io import IOBase
 from pathlib import Path
+from typing import IO, Any
 
 from loguru import logger
 
@@ -51,7 +51,7 @@ class StorageHandle:
         if config and location.startswith(str(config.work_path)):
             location = location[len(str(config.work_path)) :].lstrip('/')
         self.location = location
-        self.config: Config = config
+        self.config = config
         self.force_local = force_local
         self._resolved = self._resolve(location)
         self._storage: Storage = storage_registry.get_storage(self._resolved)
@@ -145,7 +145,7 @@ class StorageHandle:
         """
         return self._storage.glob(location=self._resolved, pattern=pattern)
 
-    def open(self, mode: str = 'r') -> IOBase:
+    def open(self, mode: str = 'r') -> IO[Any]:
         """Open this resource as a file-like object.
 
         :param mode: The file mode. Defaults to 'r' for reading.

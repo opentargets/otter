@@ -4,9 +4,8 @@
 from __future__ import annotations
 
 import shutil
-from io import IOBase
 from pathlib import Path
-from typing import cast
+from typing import IO, Any, cast
 
 from filelock import FileLock
 from loguru import logger
@@ -49,7 +48,7 @@ class FilesystemStorage(Storage):
         self,
         location: str,
         mode: str = 'r',
-    ) -> IOBase:
+    ) -> IO[Any]:
         if 'w' in mode:
             Path(location).parent.mkdir(parents=True, exist_ok=True)
         return open(location, mode)

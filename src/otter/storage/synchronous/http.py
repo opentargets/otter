@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from io import IOBase
+from typing import IO, Any
 
 import requests
 
@@ -70,7 +70,7 @@ class HTTPStorage(Storage):
         self,
         location: str,
         mode: str = 'r',
-    ) -> IOBase:
+    ) -> IO[Any]:
         """Open is not supported for HTTP storage.
 
         :raises NotImplementedError: Always, since HTTP storage does not support
