@@ -24,7 +24,7 @@ jobs:
           python-version-file: 'pyproject.toml'
 
       - name: install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-groups
 
       - name: sphinx build
         run: uv run sphinx-build docs/source _build

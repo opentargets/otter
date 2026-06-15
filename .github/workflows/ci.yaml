@@ -59,7 +59,7 @@ jobs:
         with:
           python-version-file: 'pyproject.toml'
       - name: install
-        run: uv sync --all-extras --dev
+        run: uv sync --all-groups
       - name: run tests
         run: uv run pytest
 
@@ -76,6 +76,6 @@ jobs:
         with:
           python-version-file: 'pyproject.toml'
       - name: install
-        run: uv sync --all-extras --dev
+        run: uv sync --all-groups
       - name: run ruff
         run: uv run ruff check --output-format=github .
