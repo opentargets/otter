@@ -1,10 +1,11 @@
 """Copy a file."""
 
-from typing import Self
+from typing import Any, Self
 
 from loguru import logger
 
 from otter.manifest.model import Artifact
+from otter.storage.storage_context import storage_context
 from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
@@ -19,6 +20,16 @@ class CopySpec(Spec):
     """The source URI of the file to copy. Must be absolute."""
     destination: str
     """The destination for the file, relative to the release root."""
+    settings: dict[str, Any] | None = None
+    """Optional storage context settings for backend-specific configuration.
+
+    The allowed settings depend on the storage backend being used:
+        - For Google Cloud Storage (gs://): See :class:`otter.storage.settings.GoogleStorageSettings`
+        - For other backends: Check the backend's documentation for supported settings
+
+    Example:
+        settings={'billing_project': 'my-billing-project'}  # For GCS requester-pays buckets
+    """
 
 
 class Copy(Task):
@@ -41,13 +52,17 @@ class Copy(Task):
     @report
     def run(self) -> Self:
         logger.info(f'copying file from {self.spec.source} to {self.spec.destination}')
-        try:
-            src = StorageHandle(self.spec.source)
-        except ValueError:
-            raise TaskRunError(f'source {self.spec.source} is relative, copy task is intended for extenal resources')
-        dst = StorageHandle(self.spec.destination, config=self.context.config)
 
-        src.copy_to(dst)
+        with storage_context(**(self.spec.settings or {})):
+            try:
+                src = StorageHandle(self.spec.source)
+            except ValueError:
+                raise TaskRunError(
+                    f'source {self.spec.source} is relative, copy task is intended for external resources'
+                )
+            dst = StorageHandle(self.spec.destination, config=self.context.config)
+
+            src.copy_to(dst)
 
         self.artifacts = [Artifact(source=src.absolute, destination=dst.absolute)]
         return self
@@ -55,15 +70,16 @@ class Copy(Task):
     @report
     def validate(self) -> Self:
         """Check that the copied file exists and has a valid size."""
-        file.exists(
-            self.spec.destination,
-            config=self.context.config,
-        )
+        with storage_context(**(self.spec.settings or {})):
+            file.exists(
+                self.spec.destination,
+                config=self.context.config,
+            )
 
-        file.size(
-            self.spec.source,
-            self.spec.destination,
-            config=self.context.config,
-        )
+            file.size(
+                self.spec.source,
+                self.spec.destination,
+                config=self.context.config,
+            )
 
         return self

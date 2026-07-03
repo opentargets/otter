@@ -2,13 +2,14 @@
 
 import asyncio
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from httpx import ReadTimeout
 from loguru import logger
 
 from otter.manifest.model import Artifact
 from otter.storage.asynchronous.handle import AsyncStorageHandle
+from otter.storage.storage_context import storage_context
 from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
@@ -32,7 +33,17 @@ class CopyManySpec(Spec):
     destination: str
     """The destination directory, relative to the release root."""
     max_concurrency: int = 10
-    """Maximum number of concurrent copy operations. Defaults to 5."""
+    """Maximum number of concurrent copy operations. Defaults to 10."""
+    settings: dict[str, Any] | None = None
+    """Optional storage context settings for backend-specific configuration.
+
+    The allowed settings depend on the storage backend being used:
+        - For Google Cloud Storage (gs://): See :class:`otter.storage.settings.GoogleStorageSettings`
+        - For other backends: Check the backend's documentation for supported settings
+
+    Example:
+        settings={'billing_project': 'my-billing-project'}  # For GCS requester-pays buckets
+    """
 
 
 class CopyMany(Task):
@@ -77,23 +88,24 @@ class CopyMany(Task):
         if self.spec.source_list_file is None and self.spec.sources is None:
             raise ValueError('either sources or source_list_file must be provided')
 
-        sources = self.spec.sources or []
-        if isinstance(sources, str):
-            logger.info(f'resolving sources from glob {sources}')
-            prefix, glob = split_glob(sources)
-            h = StorageHandle(prefix, config=self.context.config)
-            sources = h.glob(glob)
-        if self.spec.source_list_file:
-            logger.info(f'reading source list from {self.spec.source_list_file}')
-            source_list = StorageHandle(self.spec.source_list_file, config=self.context.config)
-            content, _ = source_list.read_text()
-            sources = content.splitlines()
+        with storage_context(**(self.spec.settings or {})):
+            sources = self.spec.sources or []
+            if isinstance(sources, str):
+                logger.info(f'resolving sources from glob {sources}')
+                prefix, glob = split_glob(sources)
+                h = StorageHandle(prefix, config=self.context.config)
+                sources = h.glob(glob)
+            if self.spec.source_list_file:
+                logger.info(f'reading source list from {self.spec.source_list_file}')
+                source_list = StorageHandle(self.spec.source_list_file, config=self.context.config)
+                content, _ = source_list.read_text()
+                sources = content.splitlines()
 
-        logger.info(f'copying {len(sources)} files to {self.spec.destination}')
+            logger.info(f'copying {len(sources)} files to {self.spec.destination}')
 
-        semaphore = asyncio.Semaphore(self.spec.max_concurrency)
-        tasks = [self._copy_single_file(source, semaphore) for source in sources]
-        self.artifacts = await asyncio.gather(*tasks)
+            semaphore = asyncio.Semaphore(self.spec.max_concurrency)
+            tasks = [self._copy_single_file(source, semaphore) for source in sources]
+            self.artifacts = await asyncio.gather(*tasks)
 
         logger.info(f'successfully copied {len(self.artifacts or [])} files')
         return self

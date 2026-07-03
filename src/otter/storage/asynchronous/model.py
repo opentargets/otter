@@ -4,11 +4,33 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from otter.storage.model import Revision, StatResult
+from otter.storage.model import Revision, StatResult, StorageSettings
 
 
 class AsyncStorage(ABC):
     """Abstract base class for asynchronous storage backends."""
+
+    @classmethod
+    def get_context_settings_model(cls) -> type[StorageSettings] | None:
+        """Get the Pydantic model for validating storage context settings.
+
+        Storage backends that support context settings should override this method
+        to return their settings model. The model defines which context parameters
+        are valid for this backend.
+
+        :return: Pydantic model class for settings validation, or None if no validation.
+        :rtype: type[StorageSettings] | None
+
+        Example:
+            class GoogleStorageSettings(StorageSettings):
+                billing_project: str | None = None
+
+            class AsyncGoogleStorage(AsyncStorage):
+                @classmethod
+                def get_context_settings_model(cls):
+                    return GoogleStorageSettings
+        """
+        return None
 
     @property
     @abstractmethod

@@ -5,6 +5,7 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 from google.api_core.exceptions import NotFound, PreconditionFailed
 
+from otter.storage.storage_context import storage_context
 from otter.storage.synchronous.google import GoogleStorage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 
@@ -287,3 +288,23 @@ class TestGoogleStorage:
 
             with pytest.raises(NotFoundError):
                 storage.copy_within('gs://bucket/not-found.txt', 'gs://bucket/dest.txt')
+
+    def test_read_uses_billing_project_context(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_blob = MagicMock()
+            mock_blob.generation = 42
+            mock_blob.reload = MagicMock()
+            mock_blob.download_as_bytes = MagicMock(return_value=b'data')
+            mock_bucket.blob = MagicMock(return_value=mock_blob)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            with storage_context(billing_project='billing-project'):
+                storage.read('gs://bucket/file.txt')
+
+        mock_client.bucket.assert_called_once_with('bucket', user_project='billing-project')
