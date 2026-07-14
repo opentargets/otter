@@ -41,16 +41,23 @@ class FindLatest(Task):
 
         file_paths = h.glob(glob)
 
-        latest, latest_mtime = None, None
+        if not file_paths:
+            raise FileNotFoundError(f'no files found matching {self.spec.source}')
+
+        latest: StorageHandle | None = None
+        latest_mtime: float | None = None
         for p in file_paths:
             f = StorageHandle(p)
-            s = f.stat()
-            if latest_mtime is None or s.mtime > latest_mtime:  # ty:ignore[unsupported-operator]
-                latest, latest_mtime = f, s.mtime
+            mtime = f.stat().mtime
+            if mtime is None:
+                logger.warning(f'{f.absolute} has no modification time, skipping it')
+                continue
+            if latest_mtime is None or mtime > latest_mtime:
+                latest, latest_mtime = f, mtime
 
         if latest is None:
-            raise FileNotFoundError(f'no files found matching {self.spec.source}')
-        else:
-            logger.info(f'latest file is {latest.absolute}')
-            self.context.scratchpad.store(self.spec.scratchpad_key or self.spec.name, latest.absolute)
+            raise FileNotFoundError(f'none of the files matching {self.spec.source} have a modification time')
+
+        logger.info(f'latest file is {latest.absolute}')
+        self.context.scratchpad.store(self.spec.scratchpad_key or self.spec.name, latest.absolute)
         return self

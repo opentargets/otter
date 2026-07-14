@@ -1,5 +1,6 @@
 """Tests for the AsyncGoogleStorage class."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -34,6 +35,31 @@ class TestGoogleStorage:
         bucket, blob = storage._parse_uri(uri)
         assert bucket == expected_bucket
         assert blob == expected_blob
+
+    @pytest.mark.asyncio
+    async def test_stat_regular_blob_populates_mtime(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        # find_latest relies on mtime to pick the newest file; a stat that leaves it None
+        # silently drops every candidate
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.download_metadata = AsyncMock(
+                return_value={
+                    'size': '1913915',
+                    'generation': '42',
+                    'updated': '2026-04-23T07:47:33.195Z',
+                }
+            )
+            mock_get_client.return_value = mock_client
+
+            result = await storage.stat('gs://bucket/file.json.gz')
+
+        assert result.is_reg is True
+        assert result.size == 1913915
+        assert result.revision == '42'
+        assert result.mtime == datetime(2026, 4, 23, 7, 47, 33, 195000, tzinfo=UTC).timestamp()
 
     @pytest.mark.asyncio
     async def test_stat_prefix(
