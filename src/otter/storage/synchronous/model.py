@@ -202,16 +202,18 @@ class Storage(ABC):
         self,
         dst: str,
         is_recursive: bool = False,
-    ) -> Revision:
+    ) -> int:
         """Delete a file.
 
-        :param dst: The destination path to delete the file in.
-        :type dst: str
+        Deletion is idempotent: deleting a resource that does not exist is a
+        no-op and must not raise.
+
         :param dst: The destination path to delete the file in.
         :type dst: str
         :param is_recursive: Whether to delete recursively.
         :type is_recursive: bool
-        :return: The revision of the deleted file.
-        :rtype: Revision
-        :raises NotFoundError: If the source file does not exist.
+        :return: The number of files deleted. Zero if there are no files to delete.
+        :rtype: int
+        :raises StorageError: If ``dst`` is a directory and ``is_recursive`` is
+            ``False``, or if the deletion fails.
         """
