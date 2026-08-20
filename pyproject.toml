@@ -16,12 +16,18 @@ dependencies = [
   "httpx>=0.28.1",
   "loguru>=0.7.3",
   "pydantic>=2.13.4",
+  "pytest>=9.1.0",
   "PyYAML>=6.0.3",
   "requests>=2.34.2",
 ]
 
 [dependency-groups]
-dev = ["deptry>=0.25.1", "ruff>=0.15.17", "ty>=0.0.49"]
+dev = [
+    "deptry>=0.25.1",
+    "pytest>=9.1.0",
+    "ruff>=0.15.17",
+    "ty>=0.0.49",
+]
 test = [
   "coverage>=7.14.1",
   "freezegun>=1.5.5",
