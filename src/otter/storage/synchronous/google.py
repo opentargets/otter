@@ -247,3 +247,9 @@ class GoogleStorage(Storage):
             raise NotFoundError(thing=src)
         except Exception as e:
             raise StorageError(f'error copying {src} to {dst}: {e}')
+
+    def delete(self, dst: str, is_recursive: bool = False):
+        # TODO: delete google cloud bucket
+        # recursively it doesn't work like with / directories because they are not directories but just aesthetics
+        # so i need to delete everything with that prefix
+        raise NotImplementedError

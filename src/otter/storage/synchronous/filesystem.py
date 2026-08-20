@@ -156,3 +156,7 @@ class FilesystemStorage(Storage):
                 logger.debug(f'copying to same file skipped: {src_path}')
 
         return dst_path.stat().st_mtime
+
+    def delete(self, dst, is_recursive: bool = False):
+        # TODO: Delete locally filesystem recursive and not recursively
+        raise NotImplementedError

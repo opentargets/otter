@@ -265,3 +265,7 @@ class StorageHandle:
         # fallback to read and write
         data, _ = self.read()
         return dest.write(data)
+
+    def delete(self, dest, is_recursive: bool = False):
+        """Delete the resource in this destination."""
+        # TODO: delete recursively by default (right now set to False for testing) both locally and in cloud
