@@ -1237,7 +1237,6 @@ dependencies = [
     { name = "httpx" },
     { name = "loguru" },
     { name = "pydantic" },
-    { name = "pytest" },
     { name = "pyyaml" },
     { name = "requests" },
 ]
@@ -1276,7 +1275,6 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pytest", specifier = ">=9.1.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "requests", specifier = ">=2.34.2" },
 ]
