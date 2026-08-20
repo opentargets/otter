@@ -169,8 +169,8 @@ class FilesystemStorage(Storage):
             try:
                 shutil.rmtree(p)
             except OSError as e:
-                raise StorageError(f'Error deleting directory {dst}: {e}')
-            logger.info(f'Deleted directory {dst} and the {count} files in it')
+                raise StorageError(f'error deleting directory {dst}: {e}')
+            logger.info(f'deleted directory {dst} and the {count} files in it')
             return count
 
         # a file, a symlink, or nothing at all
@@ -179,9 +179,9 @@ class FilesystemStorage(Storage):
         try:
             p.unlink(missing_ok=True)
         except OSError as e:
-            raise StorageError(f'Error deleting {dst}: {e}')
+            raise StorageError(f'error deleting {dst}: {e}')
         if not existed:
             logger.debug(f'{dst} does not exist, nothing to delete')
             return 0
-        logger.info(f'Deleted {dst}')
+        logger.info(f'deleted {dst}')
         return 1

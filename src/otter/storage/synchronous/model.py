@@ -203,7 +203,7 @@ class Storage(ABC):
         dst: str,
         is_recursive: bool = False,
     ) -> int:
-        """Delete a file.
+        """Delete a file or directory.
 
         Deletion is idempotent: deleting a resource that does not exist is a
         no-op and must not raise.
