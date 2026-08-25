@@ -43,7 +43,7 @@ jobs:
         with:
           name: python-package-distribution
           path: dist/
-      - uses: sigstore/gh-action-sigstore-python@v3.0.0
+      - uses: sigstore/gh-action-sigstore-python@181074f4dc11b7e85ef44556e25248ef14fcb554 # v4.5.0
         with:
           inputs: >-
             ./dist/*.tar.gz
