@@ -201,6 +201,7 @@ class Storage(ABC):
     def delete(
         self,
         dst: str,
+        *,
         is_recursive: bool = False,
     ) -> int:
         """Delete a file or directory.

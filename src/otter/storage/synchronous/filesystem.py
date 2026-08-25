@@ -157,7 +157,7 @@ class FilesystemStorage(Storage):
 
         return dst_path.stat().st_mtime
 
-    def delete(self, dst: str, is_recursive: bool = False) -> int:
+    def delete(self, dst: str, *, is_recursive: bool = False) -> int:
         p = Path(dst)
 
         # a real directory, as opposed to a symlink pointing at one
