@@ -265,3 +265,19 @@ class StorageHandle:
         # fallback to read and write
         data, _ = self.read()
         return dest.write(data)
+
+    def delete(self, *, is_recursive: bool = False) -> int:
+        """Delete this resource.
+
+        If the resource does not exist, no action is taken and ``0`` is returned.
+
+        :param is_recursive: Whether to delete a directory or prefix and
+            everything under it. Defaults to ``False``.
+        :type is_recursive: bool
+        :return: The number of files deleted. Zero if there are no files to delete.
+        :rtype: int
+        :raises StorageError: If this resource is a directory or a prefix and
+            ``is_recursive`` is ``False``, or if the deletion fails.
+        :raises NotImplementedError: If the backend does not support deletion.
+        """
+        return self._storage.delete(self._resolved, is_recursive=is_recursive)

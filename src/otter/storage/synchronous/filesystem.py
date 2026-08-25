@@ -156,3 +156,32 @@ class FilesystemStorage(Storage):
                 logger.debug(f'copying to same file skipped: {src_path}')
 
         return dst_path.stat().st_mtime
+
+    def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+        p = Path(dst)
+
+        # a real directory, as opposed to a symlink pointing at one
+        if p.is_dir() and not p.is_symlink():
+            if not is_recursive:
+                raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
+            # count before deleting, rmtree does not report what it removed
+            count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
+            try:
+                shutil.rmtree(p)
+            except OSError as e:
+                raise StorageError(f'error deleting directory {dst}: {e}')
+            logger.info(f'deleted directory {dst} and the {count} files in it')
+            return count
+
+        # a file, a symlink, or nothing at all
+        # missing_ok: deleting something already gone is fine, not an error (idempotence)
+        existed = p.is_symlink() or p.exists()
+        try:
+            p.unlink(missing_ok=True)
+        except OSError as e:
+            raise StorageError(f'error deleting {dst}: {e}')
+        if not existed:
+            logger.debug(f'{dst} does not exist, nothing to delete')
+            return 0
+        logger.info(f'deleted {dst}')
+        return 1

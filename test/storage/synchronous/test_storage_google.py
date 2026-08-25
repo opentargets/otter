@@ -308,3 +308,156 @@ class TestGoogleStorage:
                 storage.read('gs://bucket/file.txt')
 
         mock_client.bucket.assert_called_once_with('bucket', user_project='billing-project')
+
+    def test_delete_blob(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Delete a single blob and return one."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_blob = MagicMock()
+            mock_bucket.blob = MagicMock(return_value=mock_blob)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/path/file.txt') == 1
+
+        mock_bucket.blob.assert_called_once_with('path/file.txt')
+        mock_blob.delete.assert_called_once()
+
+    def test_delete_missing_blob_returns_zero(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Deleting a blob that is not there does nothing and returns zero."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_blob = MagicMock()
+            mock_blob.delete = MagicMock(side_effect=NotFound('Not Found'))
+            mock_bucket.blob = MagicMock(return_value=mock_blob)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/path/gone.txt') == 0
+
+    def test_delete_prefix_recursive(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Recursive deletion removes every blob sharing the prefix."""
+        part_one = MagicMock()
+        part_two = MagicMock()
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.list_blobs = MagicMock(return_value=[part_one, part_two])
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+
+        mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/')
+        part_one.delete.assert_called_once()
+        part_two.delete.assert_called_once()
+
+    def test_delete_prefix_recursive_with_trailing_slash(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A location written with a trailing slash gives the same prefix."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.list_blobs = MagicMock(return_value=[MagicMock()])
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/dataset/', is_recursive=True) == 1
+
+        mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/')
+
+    def test_delete_empty_prefix_recursive_returns_zero(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Recursive deletion of a prefix with nothing under it returns zero."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.list_blobs = MagicMock(return_value=[])
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/gone', is_recursive=True) == 0
+
+    def test_delete_prefix_recursive_also_deletes_matching_blob(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A blob named like the prefix goes too, the prefix listing misses it."""
+        part = MagicMock()
+        exact = MagicMock()
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.list_blobs = MagicMock(return_value=[part])
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+
+        mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/')
+        mock_bucket.blob.assert_called_once_with('dataset')
+        part.delete.assert_called_once()
+        exact.delete.assert_called_once()
+
+    def test_delete_prefix_without_recursive_raises(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A prefix with blobs under it refuses to be deleted without is_recursive."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_bucket.list_blobs = MagicMock(return_value=[MagicMock()])
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='is_recursive'):
+                storage.delete('gs://bucket/dataset')
+
+        mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/', max_results=1)
+
+    @pytest.mark.parametrize('uri', ['gs://bucket', 'gs://bucket/'])
+    def test_delete_bucket_root_raises(
+        self,
+        storage: GoogleStorage,
+        uri: str,
+    ) -> None:
+        """Deleting the root of a bucket is refused, with or without is_recursive."""
+        with pytest.raises(StorageError, match='root of bucket'):
+            storage.delete(uri, is_recursive=True)
+
+        with pytest.raises(StorageError, match='root of bucket'):
+            storage.delete(uri)
