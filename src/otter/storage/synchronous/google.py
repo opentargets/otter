@@ -158,9 +158,16 @@ class GoogleStorage(Storage):
                 blob = bucket.blob(blob_name)
                 blob.reload()
                 revision = str(blob.generation) if blob.generation else None
-                data = blob.download_as_bytes(timeout=REQUEST_TIMEOUT)
-                blob.reload()
-                new_revision = str(blob.generation) if blob.generation else None
+                try:
+                    data = blob.download_as_bytes(timeout=REQUEST_TIMEOUT)
+                # blobs are tied to a revision, so we need to create a new one
+                # because the old one will 404 if the file would have changed
+                except NotFound:
+                    logger.info(f'{location} modified during read, retrying')
+                    continue
+                blob_current = bucket.blob(blob_name)
+                blob_current.reload()
+                new_revision = str(blob_current.generation) if blob_current.generation else None
                 if revision is None or revision == new_revision:
                     logger.debug(f'downloaded {location}')
                     return data, revision
