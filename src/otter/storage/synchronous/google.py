@@ -257,10 +257,19 @@ class GoogleStorage(Storage):
         listing every blob whose name starts with that prefix and deleting each
         one.
         """
-        # TODO: is_recursive, deleting every blob sharing the prefix
         bucket_name, blob_name = self._parse_uri(dst)
         client = self._get_client()
         bucket = self._get_bucket(client, bucket_name)
+
+        if is_recursive:
+            # a trailing slash keeps the match on `dataset/` and off `dataset2/`
+            prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
+            count = 0
+            for blob in bucket.list_blobs(prefix=prefix):
+                blob.delete()
+                count += 1
+            logger.debug(f'deleted {count} blobs under {dst}')
+            return count
 
         try:
             bucket.blob(blob_name).delete()
