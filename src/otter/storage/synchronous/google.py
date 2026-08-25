@@ -261,20 +261,23 @@ class GoogleStorage(Storage):
         client = self._get_client()
         bucket = self._get_bucket(client, bucket_name)
 
+        count = 0
+
         if is_recursive:
             # a trailing slash keeps the match on `dataset/` and off `dataset2/`
             prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
-            count = 0
             for blob in bucket.list_blobs(prefix=prefix):
                 blob.delete()
                 count += 1
             logger.debug(f'deleted {count} blobs under {dst}')
-            return count
 
+        # nothing stops a blob named `dataset` from sitting next to the `dataset/` ones,
+        # and the prefix listing above does not match it
         try:
             bucket.blob(blob_name).delete()
         except NotFound:
-            logger.debug(f'{dst} does not exist, nothing to delete')
-            return 0
+            if not count:
+                logger.debug(f'{dst} does not exist, nothing to delete')
+            return count
         logger.debug(f'deleted {dst}')
-        return 1
+        return count + 1

@@ -350,11 +350,14 @@ class TestGoogleStorage:
         """Recursive deletion removes every blob sharing the prefix."""
         part_one = MagicMock()
         part_two = MagicMock()
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
 
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = MagicMock()
             mock_bucket = MagicMock()
             mock_bucket.list_blobs = MagicMock(return_value=[part_one, part_two])
+            mock_bucket.blob = MagicMock(return_value=exact)
             mock_client.bucket = MagicMock(return_value=mock_bucket)
             mock_get_client.return_value = mock_client
 
@@ -369,10 +372,14 @@ class TestGoogleStorage:
         storage: GoogleStorage,
     ) -> None:
         """A location written with a trailing slash gives the same prefix."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = MagicMock()
             mock_bucket = MagicMock()
             mock_bucket.list_blobs = MagicMock(return_value=[MagicMock()])
+            mock_bucket.blob = MagicMock(return_value=exact)
             mock_client.bucket = MagicMock(return_value=mock_bucket)
             mock_get_client.return_value = mock_client
 
@@ -385,11 +392,38 @@ class TestGoogleStorage:
         storage: GoogleStorage,
     ) -> None:
         """Recursive deletion of a prefix with nothing under it returns zero."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = MagicMock()
             mock_bucket = MagicMock()
             mock_bucket.list_blobs = MagicMock(return_value=[])
+            mock_bucket.blob = MagicMock(return_value=exact)
             mock_client.bucket = MagicMock(return_value=mock_bucket)
             mock_get_client.return_value = mock_client
 
             assert storage.delete('gs://bucket/gone', is_recursive=True) == 0
+
+    def test_delete_prefix_recursive_also_deletes_matching_blob(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A blob named like the prefix goes too, the prefix listing misses it."""
+        part = MagicMock()
+        exact = MagicMock()
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.list_blobs = MagicMock(return_value=[part])
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+
+        mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/')
+        mock_bucket.blob.assert_called_once_with('dataset')
+        part.delete.assert_called_once()
+        exact.delete.assert_called_once()
