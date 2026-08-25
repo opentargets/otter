@@ -308,3 +308,102 @@ class TestGoogleStorage:
                 storage.read('gs://bucket/file.txt')
 
         mock_client.bucket.assert_called_once_with('bucket', user_project='billing-project')
+
+
+class TestGoogleStorageReadUnderContention:
+    """`read()`'s modified-during-read check, against a concurrently written object.
+
+    Google's client pins `generation` onto a `Blob` once a request resolves it, and
+    `Blob._query_params` then sends it on every subsequent request for that handle. On
+    a bucket without object versioning an overwrite deletes the previous generation
+    outright, so a request naming it 404s rather than returning newer bytes. Both facts
+    together decide what `read()` can observe, which is what these tests pin.
+    """
+
+    @pytest.fixture
+    def storage(self) -> GoogleStorage:
+        return GoogleStorage()
+
+    def _bucket(self, blobs: list[MagicMock]) -> MagicMock:
+        """Hand out a distinct blob per `bucket.blob()` call, in order.
+
+        A single shared mock would hide the bug entirely: the defect is precisely that
+        the old code reused one pinned handle where it needed a fresh one, so a mock
+        that cannot tell the two apart cannot fail.
+        """
+        bucket = MagicMock()
+        bucket.blob = MagicMock(side_effect=blobs)
+        return bucket
+
+    def _run(self, storage: GoogleStorage, bucket: MagicMock) -> tuple[bytes, str | None]:
+        with patch.object(storage, '_get_client') as mock_get_client:
+            client = MagicMock()
+            client.bucket = MagicMock(return_value=bucket)
+            mock_get_client.return_value = client
+            return storage.read('gs://bucket/manifest.json')
+
+    def test_a_replaced_object_is_retried_not_reported_missing(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A concurrent overwrite must not surface as `NotFoundError`.
+
+        The object exists throughout — the first reload proves it. Only the *generation*
+        the download asks for stops existing. Reporting that as "not found" is what made
+        a completed pipeline step fail, and made a separate real failure elsewhere
+        surface as a missing manifest instead of its own cause.
+        """
+        gone = MagicMock()
+        gone.generation = 1
+        gone.download_as_bytes = MagicMock(side_effect=NotFound('generation deleted'))
+
+        settled = MagicMock()
+        settled.generation = 2
+        settled.download_as_bytes = MagicMock(return_value=b'{"v": 2}')
+
+        recheck = MagicMock()
+        recheck.generation = 2
+
+        data, revision = self._run(storage, self._bucket([gone, settled, recheck]))
+        assert data == b'{"v": 2}'
+        assert revision == '2'
+
+    def test_the_modified_during_read_check_uses_a_fresh_handle(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """The re-check must ask "what is current?", not "is generation N still N?".
+
+        Re-reloading the pinned handle can only return the generation it already holds
+        or 404, so comparing it against itself is vacuous and the retry below it is
+        unreachable. Here the object moves 1 -> 2 while the data is downloading: the
+        read must notice and retry, landing on the settled generation.
+        """
+        first = MagicMock()
+        first.generation = 1
+        first.download_as_bytes = MagicMock(return_value=b'stale')
+
+        moved = MagicMock()  # the re-check: object is now at generation 2
+        moved.generation = 2
+
+        second = MagicMock()
+        second.generation = 2
+        second.download_as_bytes = MagicMock(return_value=b'fresh')
+
+        settled = MagicMock()
+        settled.generation = 2
+
+        data, revision = self._run(storage, self._bucket([first, moved, second, settled]))
+        assert data == b'fresh', 'read returned data it had already detected as stale'
+        assert revision == '2'
+
+    def test_a_genuinely_absent_object_still_raises(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """The retry must not swallow a real absence: reload failing is still not-found."""
+        absent = MagicMock()
+        absent.reload = MagicMock(side_effect=NotFound('no such object'))
+
+        with pytest.raises(NotFoundError):
+            self._run(storage, self._bucket([absent]))

@@ -157,9 +157,24 @@ class GoogleStorage(Storage):
                 blob = bucket.blob(blob_name)
                 blob.reload()
                 revision = str(blob.generation) if blob.generation else None
-                data = blob.download_as_bytes(timeout=REQUEST_TIMEOUT)
-                blob.reload()
-                new_revision = str(blob.generation) if blob.generation else None
+                try:
+                    data = blob.download_as_bytes(timeout=REQUEST_TIMEOUT)
+                except NotFound:
+                    # `blob` carries the generation the reload above resolved, and
+                    # `Blob._query_params` sends it on every later request, so this
+                    # download asks for that generation specifically. On a bucket
+                    # without object versioning a concurrent overwrite deletes it, and
+                    # the request 404s. That is this loop's own retry condition, not a
+                    # missing object -- the reload proved the object exists.
+                    logger.info(f'{location} was replaced during read, retrying')
+                    continue
+                # A fresh handle, because `blob` is pinned to `revision` by the reload
+                # above: reloading it again would re-request that same generation and
+                # so could only ever return `revision` or 404, never a newer generation.
+                # Comparing it against itself would make the check below vacuous.
+                current = bucket.blob(blob_name)
+                current.reload()
+                new_revision = str(current.generation) if current.generation else None
                 if revision is None or revision == new_revision:
                     logger.debug(f'downloaded {location}')
                     return data, revision

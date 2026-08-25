@@ -194,6 +194,15 @@ class Manifest:
         while True:
             try:
                 manifest, revision = h.read_text()
+            except NotFoundError:
+                # `NotFoundError` is a sibling of `StorageError`, not a subclass, so the
+                # handler below never caught it. The manifest existed at `stat()` above,
+                # so its absence here means it was removed between the two calls -- the
+                # same contention the `PreconditionFailedError` branch below already
+                # retries on, and not a reason to fail a step whose work is done.
+                logger.warning(f'manifest at {h.absolute} disappeared while reading, retrying')
+                await asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
+                continue
             except StorageError as e:
                 logger.critical(f'error reading manifest from {h.absolute}: {e}')
                 raise ManifestError('error reading manifest') from e
