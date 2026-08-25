@@ -194,6 +194,10 @@ class Manifest:
         while True:
             try:
                 manifest, revision = h.read_text()
+            except NotFoundError:
+                logger.warning(f'manifest at {h.absolute} removed between stat and read, retrying')
+                await asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
+                continue
             except StorageError as e:
                 logger.critical(f'error reading manifest from {h.absolute}: {e}')
                 raise ManifestError('error reading manifest') from e
