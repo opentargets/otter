@@ -256,28 +256,33 @@ class GoogleStorage(Storage):
         and nothing to recurse into. Deleting what looks like a directory means
         listing every blob whose name starts with that prefix and deleting each
         one.
+
+        Two different things can live at ``gs://bucket/dataset``: the blobs named
+        ``dataset/00000000.parquet`` and so on, and a blob named exactly
+        ``dataset``. A prefix listing only finds the first kind, so this method
+        counts the two separately and adds them up.
         """
         bucket_name, blob_name = self._parse_uri(dst)
         client = self._get_client()
         bucket = self._get_bucket(client, bucket_name)
 
-        count = 0
-
+        # the blobs named `dataset/...`, only when asked to recurse
+        deleted_under_prefix = 0
         if is_recursive:
-            # a trailing slash keeps the match on `dataset/` and off `dataset2/`
+            # the trailing slash keeps the match on `dataset/` and off `dataset2/`
             prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
             for blob in bucket.list_blobs(prefix=prefix):
                 blob.delete()
-                count += 1
-            logger.debug(f'deleted {count} blobs under {dst}')
+                deleted_under_prefix += 1
 
-        # nothing stops a blob named `dataset` from sitting next to the `dataset/` ones,
-        # and the prefix listing above does not match it
+        # the blob named exactly `dataset`, which the listing above never matches.
+        # NotFound just means there was no such blob, which is not an error
         try:
             bucket.blob(blob_name).delete()
+            deleted_exact = 1
         except NotFound:
-            if not count:
-                logger.debug(f'{dst} does not exist, nothing to delete')
-            return count
-        logger.debug(f'deleted {dst}')
-        return count + 1
+            deleted_exact = 0
+
+        total = deleted_under_prefix + deleted_exact
+        logger.debug(f'deleted {total} blobs at {dst}')
+        return total
