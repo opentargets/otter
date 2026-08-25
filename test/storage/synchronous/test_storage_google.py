@@ -308,3 +308,21 @@ class TestGoogleStorage:
                 storage.read('gs://bucket/file.txt')
 
         mock_client.bucket.assert_called_once_with('bucket', user_project='billing-project')
+
+    def test_delete_blob(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Delete a single blob and return one."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_blob = MagicMock()
+            mock_bucket.blob = MagicMock(return_value=mock_blob)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/path/file.txt') == 1
+
+        mock_bucket.blob.assert_called_once_with('path/file.txt')
+        mock_blob.delete.assert_called_once()

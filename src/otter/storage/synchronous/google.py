@@ -248,8 +248,20 @@ class GoogleStorage(Storage):
         except Exception as e:
             raise StorageError(f'error copying {src} to {dst}: {e}')
 
-    def delete(self, dst: str, *, is_recursive: bool = False):
-        # TODO: delete google cloud bucket
-        # recursively it doesn't work like with / directories because they are not directories but just aesthetics
-        # so i need to delete everything with that prefix
-        raise NotImplementedError
+    def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+        """Delete a blob, or every blob sharing a prefix.
+
+        A bucket is a flat list of blobs. The slashes in a blob name are part of
+        the name itself, not directory separators, so there is no tree to walk
+        and nothing to recurse into. Deleting what looks like a directory means
+        listing every blob whose name starts with that prefix and deleting each
+        one.
+        """
+        # TODO: is_recursive, deleting every blob sharing the prefix
+        bucket_name, blob_name = self._parse_uri(dst)
+        client = self._get_client()
+        bucket = self._get_bucket(client, bucket_name)
+
+        bucket.blob(blob_name).delete()
+        logger.debug(f'deleted {dst}')
+        return 1
