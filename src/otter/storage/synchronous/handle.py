@@ -269,7 +269,7 @@ class StorageHandle:
     def delete(self, *, is_recursive: bool = False) -> int:
         """Delete this resource.
 
-         If the resource does not exist, no action is taken and ``0`` is returned.
+        If the resource does not exist, no action is taken and ``0`` is returned.
 
         :param is_recursive: Whether to delete a directory or prefix and
             everything under it. Defaults to ``False``.

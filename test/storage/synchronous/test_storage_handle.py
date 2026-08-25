@@ -311,11 +311,11 @@ class TestStorageHandleRelative:
 
 
 class TestStorageHandleDelete:
-    def test_delete_resolves_to_work_path(
+    def test_delete_relative_location_from_work_path(
         self,
         tmp_path: Path,
     ) -> None:
-        """A relative location is deleted under the local work path."""
+        """Delete a relative location from the configured work path, not Python launch directory."""
         config = fake_config(work_path=tmp_path, release_uri=None)
         target = tmp_path / 'data' / 'file.txt'
         target.parent.mkdir(parents=True)
@@ -328,7 +328,7 @@ class TestStorageHandleDelete:
         self,
         tmp_path: Path,
     ) -> None:
-        """A directory is deleted when is_recursive reaches the backend."""
+        """Delete a directory and its contents when recursive deletion is enabled."""
         config = fake_config(work_path=tmp_path, release_uri=None)
         dataset = tmp_path / 'dataset'
         dataset.mkdir()
@@ -337,7 +337,7 @@ class TestStorageHandleDelete:
         assert StorageHandle('dataset', config).delete(is_recursive=True) == 1
         assert not dataset.exists()
 
-    def test_delete_missing_is_noop(
+    def test_delete_missing_location_returns_zero(
         self,
         tmp_path: Path,
     ) -> None:
@@ -347,7 +347,7 @@ class TestStorageHandleDelete:
         assert StorageHandle('data/gone.txt', config).delete() == 0
 
     def test_delete_not_implemented_for_http(self) -> None:
-        """HTTP cannot delete, and that surfaces instead of being swallowed."""
+        """HTTP cannot delete. Surface the unsupported HTTP delete instead of silently ignoring it."""
         handle = StorageHandle('https://example.com/file.txt')
 
         with pytest.raises(NotImplementedError):
