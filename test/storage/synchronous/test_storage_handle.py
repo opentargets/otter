@@ -308,3 +308,45 @@ class TestStorageHandleRelative:
 
         with pytest.raises(StorageError, match='not in the release root'):
             _ = handle.relative
+
+    def test_delete_resolves_to_work_path(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """A relative location is deleted under the local work path."""
+        config = fake_config(work_path=tmp_path, release_uri=None)
+        target = tmp_path / 'data' / 'file.txt'
+        target.parent.mkdir(parents=True)
+        target.write_text('hello world')
+
+        assert StorageHandle('data/file.txt', config).delete() == 1
+        assert not target.exists()
+
+    def test_delete_passes_is_recursive_to_backend(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """A directory is deleted when is_recursive reaches the backend."""
+        config = fake_config(work_path=tmp_path, release_uri=None)
+        dataset = tmp_path / 'dataset'
+        dataset.mkdir()
+        (dataset / '00000000.parquet').write_text('part one')
+
+        assert StorageHandle('dataset', config).delete(is_recursive=True) == 1
+        assert not dataset.exists()
+
+    def test_delete_missing_is_noop(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a location that is not there returns zero."""
+        config = fake_config(work_path=tmp_path, release_uri=None)
+
+        assert StorageHandle('data/gone.txt', config).delete() == 0
+
+    def test_delete_not_implemented_for_http(self) -> None:
+        """HTTP cannot delete, and that surfaces instead of being swallowed."""
+        handle = StorageHandle('https://example.com/file.txt')
+
+        with pytest.raises(NotImplementedError):
+            handle.delete()
