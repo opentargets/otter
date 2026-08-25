@@ -262,6 +262,10 @@ class GoogleStorage(Storage):
         client = self._get_client()
         bucket = self._get_bucket(client, bucket_name)
 
-        bucket.blob(blob_name).delete()
+        try:
+            bucket.blob(blob_name).delete()
+        except NotFound:
+            logger.debug(f'{dst} does not exist, nothing to delete')
+            return 0
         logger.debug(f'deleted {dst}')
         return 1

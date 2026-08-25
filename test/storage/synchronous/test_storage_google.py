@@ -326,3 +326,19 @@ class TestGoogleStorage:
 
         mock_bucket.blob.assert_called_once_with('path/file.txt')
         mock_blob.delete.assert_called_once()
+
+    def test_delete_missing_blob_returns_zero(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Deleting a blob that is not there does nothing and returns zero."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_blob = MagicMock()
+            mock_blob.delete = MagicMock(side_effect=NotFound('Not Found'))
+            mock_bucket.blob = MagicMock(return_value=mock_blob)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            assert storage.delete('gs://bucket/path/gone.txt') == 0
