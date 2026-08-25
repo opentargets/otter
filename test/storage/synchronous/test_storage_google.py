@@ -448,3 +448,16 @@ class TestGoogleStorage:
                 storage.delete('gs://bucket/dataset')
 
         mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/', max_results=1)
+
+    @pytest.mark.parametrize('uri', ['gs://bucket', 'gs://bucket/'])
+    def test_delete_bucket_root_raises(
+        self,
+        storage: GoogleStorage,
+        uri: str,
+    ) -> None:
+        """Deleting the root of a bucket is refused, with or without is_recursive."""
+        with pytest.raises(StorageError, match='root of bucket'):
+            storage.delete(uri, is_recursive=True)
+
+        with pytest.raises(StorageError, match='root of bucket'):
+            storage.delete(uri)

@@ -261,8 +261,14 @@ class GoogleStorage(Storage):
         ``dataset/00000000.parquet`` and so on, and a blob named exactly
         ``dataset``. A prefix listing only finds the first kind, so this method
         counts the two separately and adds them up.
+
+        Deleting the root of a bucket is refused. Both ``gs://bucket`` and
+        ``gs://bucket/`` name every blob in the bucket, and no caller means that.
         """
         bucket_name, blob_name = self._parse_uri(dst)
+        if not blob_name:
+            raise StorageError(f'refusing to delete the root of bucket {bucket_name}')
+
         client = self._get_client()
         bucket = self._get_bucket(client, bucket_name)
 
