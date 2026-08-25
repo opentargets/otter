@@ -266,11 +266,12 @@ class GoogleStorage(Storage):
         client = self._get_client()
         bucket = self._get_bucket(client, bucket_name)
 
+        # the trailing slash keeps the match on `dataset/` and off `dataset2/`
+        prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
+
         # the blobs named `dataset/...`, only when asked to recurse
         deleted_under_prefix = 0
         if is_recursive:
-            # the trailing slash keeps the match on `dataset/` and off `dataset2/`
-            prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
             for blob in bucket.list_blobs(prefix=prefix):
                 blob.delete()
                 deleted_under_prefix += 1
@@ -282,6 +283,13 @@ class GoogleStorage(Storage):
             deleted_exact = 1
         except NotFound:
             deleted_exact = 0
+
+        # nothing was deleted, but blobs do sit under the prefix. the caller meant
+        # a whole directory and did not ask to recurse, so say so instead of
+        # returning zero and leaving the blobs behind
+        if not is_recursive and not deleted_exact:
+            if list(bucket.list_blobs(prefix=prefix, max_results=1)):
+                raise StorageError(f'{dst} is a prefix, pass is_recursive to delete it')
 
         total = deleted_under_prefix + deleted_exact
         logger.debug(f'deleted {total} blobs at {dst}')

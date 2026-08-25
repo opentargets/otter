@@ -427,3 +427,24 @@ class TestGoogleStorage:
         mock_bucket.blob.assert_called_once_with('dataset')
         part.delete.assert_called_once()
         exact.delete.assert_called_once()
+
+    def test_delete_prefix_without_recursive_raises(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A prefix with blobs under it refuses to be deleted without is_recursive."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=NotFound('Not Found'))
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_bucket.list_blobs = MagicMock(return_value=[MagicMock()])
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='is_recursive'):
+                storage.delete('gs://bucket/dataset')
+
+        mock_bucket.list_blobs.assert_called_once_with(prefix='dataset/', max_results=1)
