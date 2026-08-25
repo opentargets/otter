@@ -309,6 +309,8 @@ class TestStorageHandleRelative:
         with pytest.raises(StorageError, match='not in the release root'):
             _ = handle.relative
 
+
+class TestStorageHandleDelete:
     def test_delete_resolves_to_work_path(
         self,
         tmp_path: Path,
