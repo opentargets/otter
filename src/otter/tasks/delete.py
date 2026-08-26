@@ -1,40 +1,55 @@
-"""Simple delete example."""
+"""Delete a file or directory."""
 
-import asyncio
 from typing import Self
 
 from loguru import logger
 
+from otter.storage.synchronous.handle import StorageHandle
 from otter.task.model import Spec, Task, TaskContext
 from otter.task.task_reporter import report
+from otter.util.errors import NotFoundError, TaskValidationError
 
 
 class DeleteSpec(Spec):
     """Configuration fields for the delete task."""
 
     file: str
-    """The file path to delete."""
+    """The location to delete, relative to the release root."""
+    is_recursive: bool = False
+    """Whether to delete a directory, or a prefix and everything under it.
+        Defaults to ``False``, which refuses to delete a directory."""
 
 
 class Delete(Task):
-    """Simple delete example."""
+    """Delete a file or directory.
+
+    Deleting something that is not there is not an error, the task succeeds and
+    reports zero files deleted.
+    """
 
     def __init__(self, spec: DeleteSpec, context: TaskContext) -> None:
         super().__init__(spec, context)
         self.spec: DeleteSpec
 
     @report
-    async def run(self) -> Self:
-        """Delete a file, then create an artifact about it."""
-        logger.info('deleting file...')
-        await asyncio.sleep(0.1)
-        logger.success(f'file deleted {self.spec.file}')
+    def run(self) -> Self:
+        h = StorageHandle(self.spec.file, config=self.context.config)
+        logger.info(f'deleting {h.absolute}')
+
+        count = h.delete(is_recursive=self.spec.is_recursive)
+
+        logger.success(f'deleted {count} files at {h.absolute}')
         return self
 
     @report
-    async def validate(self) -> Self:
-        """Dummy validation step."""
-        logger.info('did we delete the file properly?')
-        await asyncio.sleep(0.1)
-        logger.success('yes we did!')
-        return self
+    def validate(self) -> Self:
+        """Check that the location is gone."""
+        h = StorageHandle(self.spec.file, config=self.context.config)
+
+        try:
+            h.stat()
+        except NotFoundError:
+            logger.success(f'{h.absolute} is gone')
+            return self
+
+        raise TaskValidationError(f'{h.absolute} still exists after delete')
