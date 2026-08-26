@@ -150,6 +150,6 @@ steps:
       file: dataset
       is_recursive: true
 
-  delete:
-    - name: delete something that is not there
+  delete_missing_file:
+    - name: delete a file that does not exist
       file: never/existed.txt
