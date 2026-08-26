@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from aiohttp import ServerTimeoutError
 from gcloud.aio.storage import Storage as GCSClient
 from loguru import logger
@@ -112,11 +114,16 @@ class AsyncGoogleStorage(AsyncStorage):
                 headers=self._request_headers(),
             )
             logger.trace(f'got metadata for blob {location}')
+            updated = metadata.get('updated')
+            mtime = None
+            if updated:
+                mtime = datetime.fromisoformat(updated).timestamp()
             return StatResult(
                 is_dir=False,
                 is_reg=True,
                 size=int(metadata.get('size', 0)),
                 revision=metadata.get('generation'),
+                mtime=mtime,
             )
         # maybe a prefix if blobs exist underneath
         except Exception:

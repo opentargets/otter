@@ -1,5 +1,6 @@
 """Tests for the GoogleStorage class."""
 
+from datetime import UTC, datetime
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
@@ -55,6 +56,32 @@ class TestGoogleStorage:
         assert result.is_dir is True
         assert result.is_reg is False
         assert result.size == 0
+
+    def test_stat_regular_blob_populates_mtime(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        # find_latest relies on mtime to pick the newest file; a stat that leaves it
+        # None silently drops every candidate and raises 'no files found'.
+        updated = datetime(2026, 4, 23, 7, 47, 33, 195000, tzinfo=UTC)
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_blob = MagicMock()
+            mock_blob.reload = MagicMock()
+            mock_blob.size = 1913915
+            mock_blob.generation = 42
+            mock_blob.updated = updated
+            mock_bucket.blob = MagicMock(return_value=mock_blob)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            result = storage.stat('gs://bucket/file.json.gz')
+
+        assert result.is_reg is True
+        assert result.size == 1913915
+        assert result.revision == '42'
+        assert result.mtime == updated.timestamp()
 
     def test_stat_not_found(
         self,

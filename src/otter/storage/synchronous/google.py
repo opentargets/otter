@@ -83,6 +83,7 @@ class GoogleStorage(Storage):
                 is_reg=True,
                 size=blob.size or 0,
                 revision=str(blob.generation) if blob.generation else None,
+                mtime=blob.updated.timestamp() if blob.updated else None,
             )
         # maybe a prefix if blobs exist underneath
         except NotFound:

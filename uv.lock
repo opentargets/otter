@@ -1226,7 +1226,7 @@ wheels = [
 
 [[package]]
 name = "opentargets-otter"
-version = "26.9.0"
+version = "26.9.1"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
