@@ -136,10 +136,20 @@ steps:
       requires: [touch a single file]
       file: to-delete/file.txt
 
-  delete:
+  delete_directory:
+    - name: touch dataset directory with parquet file
+      file: dataset/00000000.parquet
+
+    - name: touch a nested dataset with parquet file
+      file: dataset/nested/00000000.parquet
+
     - name: delete a whole dataset directory
+      requires:
+        - touch dataset directory with parquet file
+        - touch a nested dataset with parquet file
       file: dataset
       is_recursive: true
 
+  delete:
     - name: delete something that is not there
       file: never/existed.txt
