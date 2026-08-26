@@ -127,3 +127,14 @@ steps:
       do:
         - name: hello_world for ${each}
           who: ${each}
+
+  delete:
+    - name: delete a single file
+      file: to-delete/file.txt
+
+    - name: delete a whole dataset directory
+      file: dataset
+      is_recursive: true
+
+    - name: delete something that is not there
+      file: never/existed.txt
