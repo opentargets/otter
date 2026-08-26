@@ -30,7 +30,6 @@ class Delete(Task):
         logger.info('deleting file...')
         await asyncio.sleep(0.1)
         logger.success(f'file deleted {self.spec.file}')
-        self.artifact = Artifact(source='me', destination=self.spec.file)
         return self
 
     @report
