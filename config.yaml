@@ -153,3 +153,12 @@ steps:
   delete_missing_file:
     - name: delete a file that does not exist
       file: never/existed.txt
+
+  delete_not:
+  # this should fail because is_recursive is false by default and it does fail
+    - name: touch a directory with parquet file
+      file: refuse-me/00000000.parquet
+
+    - name: delete without recursive
+      requires: [touch a directory with parquet file]
+      file: refuse-me
