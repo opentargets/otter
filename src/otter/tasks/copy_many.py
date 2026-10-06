@@ -4,8 +4,10 @@ import asyncio
 from pathlib import Path
 from typing import Any, Self
 
+import yaml
 from httpx import ReadTimeout
 from loguru import logger
+from pydantic import model_validator
 
 from otter.manifest.model import Artifact
 from otter.storage.asynchronous.handle import AsyncStorageHandle
@@ -30,8 +32,19 @@ class CopyManySpec(Spec):
     """Path (relative to release root) to a file containing a list of source URIs,
         one per line. Optional. If provided, the ``sources`` field will not be
         used."""
+    source_mapping_file: str | None = None
+    """Path (relative to release root) to a YAML file mapping each source to the
+        new file name it will have in ``destination``. Optional. Mutually
+        exclusive with ``sources`` and ``source_list_file``. Example:
+
+        .. code-block:: yaml
+
+            https://example.com/a/long_name.tsv.gz: a.tsv.gz
+            https://example.com/b/long_name.tsv.gz: b.tsv.gz
+        """
     destination: str
-    """The destination directory, relative to the release root."""
+    """The destination directory, relative to the release root. New file names
+        from ``source_mapping_file`` are relative to it."""
     max_concurrency: int = 10
     """Maximum number of concurrent copy operations. Defaults to 10."""
     settings: dict[str, Any] | None = None
@@ -45,13 +58,20 @@ class CopyManySpec(Spec):
         settings={'billing_project': 'my-billing-project'}  # For GCS requester-pays buckets
     """
 
+    @model_validator(mode='after')
+    def _mapping_excludes_other_sources(self) -> Self:
+        if self.source_mapping_file and (self.sources or self.source_list_file):
+            raise ValueError('source_mapping_file cannot be combined with sources or source_list_file')
+        return self
+
 
 class CopyMany(Task):
     """Copy multiple files.
 
     Copies multiple files from external sources to a destination directory inside
     the release. Each source file will be copied with its original filename to
-    the destination directory.
+    the destination directory, unless a ``source_mapping_file`` is provided, in
+    which case each file is renamed to the name given in the mapping.
 
     .. note:: `sources` must be absolute. This task is intended for external
         resources.
@@ -61,9 +81,9 @@ class CopyMany(Task):
         super().__init__(spec, context)
         self.spec: CopyManySpec
 
-    async def _copy_single_file(self, source: str, semaphore: asyncio.Semaphore) -> Artifact:
+    async def _copy_single_file(self, source: str, semaphore: asyncio.Semaphore, name: str | None = None) -> Artifact:
         async with semaphore:
-            filename = Path(source).name
+            filename = name or Path(source).name
             dest_path = f'{self.spec.destination.rstrip("/")}/{filename.lstrip("/")}'
 
             for attempt in range(MAX_RETRIES + 1):
@@ -83,13 +103,31 @@ class CopyMany(Task):
                         raise
             raise RuntimeError(f'unexpected error copying {source}')
 
+    def _read_mapping(self, path: str) -> dict[str, str]:
+        logger.info(f'reading source mapping from {path}')
+        content, _ = StorageHandle(path, config=self.context.config).read_text()
+        mapping = yaml.safe_load(content)
+        if not isinstance(mapping, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in mapping.items()
+        ):
+            raise ValueError(f'{path} must be a YAML mapping of source to new file name')
+        names = list(mapping.values())
+        duplicates = sorted({n for n in names if names.count(n) > 1})
+        if duplicates:
+            raise ValueError(f'duplicate destination names in {path}: {", ".join(duplicates)}')
+        return mapping
+
     @report
     async def run(self) -> Self:
-        if self.spec.source_list_file is None and self.spec.sources is None:
-            raise ValueError('either sources or source_list_file must be provided')
+        if self.spec.source_mapping_file is None and self.spec.source_list_file is None and self.spec.sources is None:
+            raise ValueError('either sources, source_list_file or source_mapping_file must be provided')
 
         with storage_context(**(self.spec.settings or {})):
+            names: dict[str, str] = {}
             sources = self.spec.sources or []
+            if self.spec.source_mapping_file:
+                names = self._read_mapping(self.spec.source_mapping_file)
+                sources = list(names)
             if isinstance(sources, str):
                 logger.info(f'resolving sources from glob {sources}')
                 prefix, glob = split_glob(sources)
@@ -104,7 +142,7 @@ class CopyMany(Task):
             logger.info(f'copying {len(sources)} files to {self.spec.destination}')
 
             semaphore = asyncio.Semaphore(self.spec.max_concurrency)
-            tasks = [self._copy_single_file(source, semaphore) for source in sources]
+            tasks = [self._copy_single_file(source, semaphore, name=names.get(source)) for source in sources]
             self.artifacts = await asyncio.gather(*tasks)
 
         logger.info(f'successfully copied {len(self.artifacts or [])} files')
