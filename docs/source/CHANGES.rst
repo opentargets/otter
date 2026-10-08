@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 26.9.2
+--------------
+
+*Released on October 8, 2026*
+
 Improvements
 ^^^^^^^^^^^^
 
