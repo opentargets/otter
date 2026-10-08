@@ -1,18 +1,6 @@
 Changelog
 =========
 
-Version 26.9.2
---------------
-
-*Released on October 8, 2026*
-
-Improvements
-^^^^^^^^^^^^
-
-- **Rename files in copy_many with a file containing file name mapping**: The ``copy_many`` task accepts
-a new ``source_mapping_file`` field, a YAML file mapping each source to the new file
-name it will have inside ``destination``.
-
 Version 26.06.0
 ---------------
 
