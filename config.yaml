@@ -111,6 +111,11 @@ steps:
       source_list_file: src.txt
       destination: test-copy-many-file/
 
+  copy-many-mapping:
+    - name: copy_many from a source mapping file
+      source_mapping_file: mapping.yaml
+      destination: test-copy-many-mapping/
+
   step-fails:
     - name: copy huge file
       source: https://ftp.ensembl.org/pub/release-115/json/homo_sapiens/homo_sapiens.json

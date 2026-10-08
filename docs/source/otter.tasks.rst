@@ -21,6 +21,15 @@ tasks.copy module
    :show-inheritance:
    :exclude-members: run
 
+tasks.copy\_many module
+-------------------------
+
+.. automodule:: otter.tasks.copy_many
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: run
+
 tasks.download module
 -------------------------
 
