@@ -1,16 +1,12 @@
 Changelog
 =========
 
-Unreleased
-----------
-
 Improvements
 ^^^^^^^^^^^^
 
-- **Rename files in copy_many with a mapping file**: The ``copy_many`` task accepts
+- **Rename files in copy_many with a file containing file name mapping**: The ``copy_many`` task accepts
 a new ``source_mapping_file`` field, a YAML file mapping each source to the new file
-name it will have inside ``destination``. It cannot be combined with ``sources`` or
-``source_list_file``.
+name it will have inside ``destination``.
 
 Version 26.06.0
 ---------------
