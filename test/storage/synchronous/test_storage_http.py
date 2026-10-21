@@ -144,3 +144,17 @@ class TestHTTPStorage:
 
             with pytest.raises(requests.exceptions.HTTPError):
                 storage.read_text('http://example.com/not_found.txt')
+
+    def test_delete_not_implemented(
+        self,
+        storage: HTTPStorage,
+    ) -> None:
+        with pytest.raises(NotImplementedError):
+            storage.delete('http://example.com/file.txt')
+
+    def test_delete_not_implemented_recursive(
+        self,
+        storage: HTTPStorage,
+    ) -> None:
+        with pytest.raises(NotImplementedError):
+            storage.delete('http://example.com/dir/', is_recursive=True)
