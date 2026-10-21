@@ -337,3 +337,58 @@ class TestGoogleStorage:
             params={'userProject': 'billing-project'},
             headers={'x-goog-user-project': 'billing-project'},
         )
+
+    @pytest.mark.asyncio
+    async def test_delete_blob(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Delete a single blob and return one."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/path/file.txt') == 1
+
+        assert mock_client.delete.await_args.args == ('bucket', 'path/file.txt')
+
+    @pytest.mark.asyncio
+    async def test_delete_missing_blob_returns_zero(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A 404 means there was no such blob, which is not an error."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.delete = AsyncMock(
+                side_effect=ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=404,
+                    message='Not Found',
+                )
+            )
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/path/gone.txt') == 0
+
+    @pytest.mark.asyncio
+    async def test_delete_other_error_raises(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Any status other than 404 is a real failure."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.delete = AsyncMock(
+                side_effect=ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=403,
+                    message='Forbidden',
+                )
+            )
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='error deleting'):
+                await storage.delete('gs://bucket/path/file.txt')

@@ -279,5 +279,25 @@ class AsyncGoogleStorage(AsyncStorage):
             raise StorageError(f'error copying {src} to {dst}: {e}')
 
     async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
-        # TODO: a blob, or every blob sharing a prefix
-        raise NotImplementedError
+        # TODO: is_recursive, deleting every blob sharing the prefix
+        bucket_name, blob_name = self._parse_uri(dst)
+        client = self._get_client()
+
+        # the blob named exactly `dataset`.
+        # a 404 just means there was no such blob, which is not an error
+        try:
+            await client.delete(
+                bucket_name,
+                blob_name,
+                params=self._request_params(),
+                headers=self._request_headers(),
+                timeout=REQUEST_TIMEOUT,
+            )
+        except Exception as e:
+            if getattr(e, 'status', None) == 404:
+                logger.debug(f'{dst} does not exist, nothing to delete')
+                return 0
+            raise StorageError(f'error deleting {dst}: {e}')
+
+        logger.debug(f'deleted {dst}')
+        return 1
