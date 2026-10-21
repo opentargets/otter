@@ -13,7 +13,7 @@ from otter.storage.asynchronous.model import AsyncStorage
 from otter.storage.model import Revision, StatResult
 from otter.storage.settings import GoogleStorageSettings
 from otter.storage.storage_context import get_storage_context
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 REQUEST_TIMEOUT = 300
 
@@ -305,16 +305,21 @@ class AsyncGoogleStorage(AsyncStorage):
         prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
 
         # the blobs named `dataset/...`, only when asked to recurse
+        # a failure here leaves the rest of the prefix untouched, so stop at once
+        # rather than carry on and report a count the caller cannot act on
         deleted_under_prefix = 0
         if is_recursive:
             for name in await self._list_blob_names(bucket_name, prefix=prefix):
-                await client.delete(
-                    bucket_name,
-                    name,
-                    params=self._request_params(),
-                    headers=self._request_headers(),
-                    timeout=REQUEST_TIMEOUT,
-                )
+                try:
+                    await client.delete(
+                        bucket_name,
+                        name,
+                        params=self._request_params(),
+                        headers=self._request_headers(),
+                        timeout=REQUEST_TIMEOUT,
+                    )
+                except Exception as e:
+                    raise PartialDeleteError(dst, deleted_under_prefix, name, str(e))
                 deleted_under_prefix += 1
 
         # the blob named exactly `dataset`, which the listing above never matches.
@@ -331,6 +336,8 @@ class AsyncGoogleStorage(AsyncStorage):
         except Exception as e:
             if getattr(e, 'status', None) == 404:
                 deleted_exact = 0
+            elif deleted_under_prefix:
+                raise PartialDeleteError(dst, deleted_under_prefix, blob_name, str(e))
             else:
                 raise StorageError(f'error deleting {dst}: {e}')
 

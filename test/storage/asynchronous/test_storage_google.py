@@ -8,7 +8,7 @@ from aiohttp import ClientResponseError
 
 from otter.storage.asynchronous.google import AsyncGoogleStorage
 from otter.storage.storage_context import storage_context
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 
 class TestGoogleStorage:
@@ -518,3 +518,63 @@ class TestGoogleStorage:
 
         with pytest.raises(StorageError, match='root of bucket'):
             await storage.delete(uri)
+
+    @pytest.mark.asyncio
+    async def test_delete_stops_at_the_first_failure(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A blob that will not delete stops the run and reports what already went."""
+        parts = [
+            'dataset/00000000.parquet',
+            'dataset/00000001.parquet',
+            'dataset/00000002.parquet',
+        ]
+
+        def fail_on_the_second(*args: object, **_kwargs: object) -> str:
+            if args[1] == parts[1]:
+                raise ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=403,
+                    message='Forbidden',
+                )
+            return ''
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': n} for n in parts]})
+            mock_client.delete = AsyncMock(side_effect=fail_on_the_second)
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(PartialDeleteError) as excinfo:
+                await storage.delete('gs://bucket/dataset', is_recursive=True)
+
+        assert excinfo.value.deleted == 1
+        assert excinfo.value.failed == parts[1]
+        # the run stopped, it did not carry on to the third blob
+        attempted = [call.args[1] for call in mock_client.delete.await_args_list]
+        assert parts[2] not in attempted
+
+    @pytest.mark.asyncio
+    async def test_delete_single_blob_failure_is_not_partial(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Nothing was deleted, so there is no partial state to report."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.delete = AsyncMock(
+                side_effect=ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=403,
+                    message='Forbidden',
+                )
+            )
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='error deleting') as excinfo:
+                await storage.delete('gs://bucket/path/file.txt')
+
+        assert not isinstance(excinfo.value, PartialDeleteError)

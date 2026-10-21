@@ -13,7 +13,7 @@ from loguru import logger
 from otter.storage.settings import GoogleStorageSettings
 from otter.storage.storage_context import get_storage_context
 from otter.storage.synchronous.model import Revision, StatResult, Storage
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 REQUEST_TIMEOUT = 300
 
@@ -284,10 +284,15 @@ class GoogleStorage(Storage):
         prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
 
         # the blobs named `dataset/...`, only when asked to recurse
+        # a failure here leaves the rest of the prefix untouched, so stop at once
+        # rather than carry on and report a count the caller cannot act on
         deleted_under_prefix = 0
         if is_recursive:
             for blob in bucket.list_blobs(prefix=prefix):
-                blob.delete()
+                try:
+                    blob.delete()
+                except Exception as e:
+                    raise PartialDeleteError(dst, deleted_under_prefix, blob.name, str(e))
                 deleted_under_prefix += 1
 
         # the blob named exactly `dataset`, which the listing above never matches.
@@ -297,6 +302,10 @@ class GoogleStorage(Storage):
             deleted_exact = 1
         except NotFound:
             deleted_exact = 0
+        except Exception as e:
+            if deleted_under_prefix:
+                raise PartialDeleteError(dst, deleted_under_prefix, blob_name, str(e))
+            raise StorageError(f'error deleting {dst}: {e}')
 
         # nothing was deleted, but blobs do sit under the prefix. the caller meant
         # a whole directory and did not ask to recurse, so say so instead of

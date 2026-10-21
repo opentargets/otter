@@ -4,12 +4,12 @@ from datetime import UTC, datetime
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
-from google.api_core.exceptions import NotFound, PreconditionFailed
+from google.api_core.exceptions import Forbidden, NotFound, PreconditionFailed
 
 from otter.storage.model import Revision
 from otter.storage.storage_context import storage_context
 from otter.storage.synchronous.google import GoogleStorage
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 
 class TestGoogleStorage:
@@ -557,3 +557,58 @@ class TestGoogleStorage:
 
         with pytest.raises(StorageError, match='root of bucket'):
             storage.delete(uri)
+
+    def test_delete_stops_at_the_first_failure(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """A blob that will not delete stops the run and reports what already went."""
+        part_one = MagicMock()
+        part_one.name = 'dataset/00000000.parquet'
+        part_two = MagicMock()
+        part_two.name = 'dataset/00000001.parquet'
+        part_two.delete = MagicMock(side_effect=Forbidden('Forbidden'))
+        part_three = MagicMock()
+        part_three.name = 'dataset/00000002.parquet'
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.list_blobs = MagicMock(return_value=[part_one, part_two, part_three])
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(PartialDeleteError) as excinfo:
+                storage.delete('gs://bucket/dataset', is_recursive=True)
+
+        assert excinfo.value.deleted == 1
+        assert excinfo.value.failed == 'dataset/00000001.parquet'
+        # the run stopped, it did not carry on to the third blob
+        part_three.delete.assert_not_called()
+
+    def test_delete_partial_error_is_a_storage_error(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Existing `except StorageError` handlers still catch a partial delete."""
+        assert issubclass(PartialDeleteError, StorageError)
+
+    def test_delete_single_blob_failure_is_not_partial(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """Nothing was deleted, so there is no partial state to report."""
+        exact = MagicMock()
+        exact.delete = MagicMock(side_effect=Forbidden('Forbidden'))
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = MagicMock()
+            mock_bucket = MagicMock()
+            mock_bucket.blob = MagicMock(return_value=exact)
+            mock_client.bucket = MagicMock(return_value=mock_bucket)
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='error deleting') as excinfo:
+                storage.delete('gs://bucket/path/file.txt')
+
+        assert not isinstance(excinfo.value, PartialDeleteError)
