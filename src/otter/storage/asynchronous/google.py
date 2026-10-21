@@ -291,8 +291,14 @@ class AsyncGoogleStorage(AsyncStorage):
         ``dataset/00000000.parquet`` and so on, and a blob named exactly
         ``dataset``. A prefix listing only finds the first kind, so this method
         counts the two separately and adds them up.
+
+        Deleting the root of a bucket is refused. Both ``gs://bucket`` and
+        ``gs://bucket/`` name every blob in the bucket, and no caller means that.
         """
         bucket_name, blob_name = self._parse_uri(dst)
+        if not blob_name:
+            raise StorageError(f'refusing to delete the root of bucket {bucket_name}')
+
         client = self._get_client()
 
         # the trailing slash keeps the match on `dataset/` and off `dataset2/`
@@ -327,6 +333,19 @@ class AsyncGoogleStorage(AsyncStorage):
                 deleted_exact = 0
             else:
                 raise StorageError(f'error deleting {dst}: {e}')
+
+        # nothing was deleted, but blobs do sit under the prefix. the caller meant
+        # a whole directory and did not ask to recurse, so say so instead of
+        # returning zero and leaving the blobs behind
+        if not is_recursive and not deleted_exact:
+            # maxResults keeps this a yes or no question rather than listing every blob
+            content = await client.list_objects(
+                bucket_name,
+                params=self._request_params({'prefix': prefix, 'maxResults': '1'}),
+                headers=self._request_headers(),
+            )
+            if content.get('items'):
+                raise StorageError(f'{dst} is a prefix, pass is_recursive to delete it')
 
         total = deleted_under_prefix + deleted_exact
         logger.debug(f'deleted {total} blobs at {dst}')

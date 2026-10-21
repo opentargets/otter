@@ -360,6 +360,8 @@ class TestGoogleStorage:
         """A 404 means there was no such blob, which is not an error."""
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
+            # nothing sits under the prefix either, so there is nothing to refuse
+            mock_client.list_objects = AsyncMock(return_value={'items': []})
             mock_client.delete = AsyncMock(
                 side_effect=ClientResponseError(
                     request_info=Mock(),
@@ -483,3 +485,36 @@ class TestGoogleStorage:
             mock_get_client.return_value = mock_client
 
             assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 0
+
+    @pytest.mark.asyncio
+    async def test_delete_prefix_without_recursive_raises(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A prefix with blobs under it refuses to be deleted without is_recursive."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': 'dataset/00000000.parquet'}]})
+            mock_client.delete = AsyncMock(side_effect=self._bucket_holding())
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='is_recursive'):
+                await storage.delete('gs://bucket/dataset')
+
+        params = mock_client.list_objects.await_args_list[0].kwargs['params']
+        assert params['prefix'] == 'dataset/'
+        assert params['maxResults'] == '1'
+
+    @pytest.mark.parametrize('uri', ['gs://bucket', 'gs://bucket/'])
+    @pytest.mark.asyncio
+    async def test_delete_bucket_root_raises(
+        self,
+        storage: AsyncGoogleStorage,
+        uri: str,
+    ) -> None:
+        """Deleting the root of a bucket is refused, with or without is_recursive."""
+        with pytest.raises(StorageError, match='root of bucket'):
+            await storage.delete(uri, is_recursive=True)
+
+        with pytest.raises(StorageError, match='root of bucket'):
+            await storage.delete(uri)
