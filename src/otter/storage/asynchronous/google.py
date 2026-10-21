@@ -279,11 +279,39 @@ class AsyncGoogleStorage(AsyncStorage):
             raise StorageError(f'error copying {src} to {dst}: {e}')
 
     async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
-        # TODO: is_recursive, deleting every blob sharing the prefix
+        """Delete a blob, or every blob sharing a prefix.
+
+        A bucket is a flat list of blobs. The slashes in a blob name are part of
+        the name itself, not directory separators, so there is no tree to walk
+        and nothing to recurse into. Deleting what looks like a directory means
+        listing every blob whose name starts with that prefix and deleting each
+        one.
+
+        Two different things can live at ``gs://bucket/dataset``: the blobs named
+        ``dataset/00000000.parquet`` and so on, and a blob named exactly
+        ``dataset``. A prefix listing only finds the first kind, so this method
+        counts the two separately and adds them up.
+        """
         bucket_name, blob_name = self._parse_uri(dst)
         client = self._get_client()
 
-        # the blob named exactly `dataset`.
+        # the trailing slash keeps the match on `dataset/` and off `dataset2/`
+        prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
+
+        # the blobs named `dataset/...`, only when asked to recurse
+        deleted_under_prefix = 0
+        if is_recursive:
+            for name in await self._list_blob_names(bucket_name, prefix=prefix):
+                await client.delete(
+                    bucket_name,
+                    name,
+                    params=self._request_params(),
+                    headers=self._request_headers(),
+                    timeout=REQUEST_TIMEOUT,
+                )
+                deleted_under_prefix += 1
+
+        # the blob named exactly `dataset`, which the listing above never matches.
         # a 404 just means there was no such blob, which is not an error
         try:
             await client.delete(
@@ -293,11 +321,13 @@ class AsyncGoogleStorage(AsyncStorage):
                 headers=self._request_headers(),
                 timeout=REQUEST_TIMEOUT,
             )
+            deleted_exact = 1
         except Exception as e:
             if getattr(e, 'status', None) == 404:
-                logger.debug(f'{dst} does not exist, nothing to delete')
-                return 0
-            raise StorageError(f'error deleting {dst}: {e}')
+                deleted_exact = 0
+            else:
+                raise StorageError(f'error deleting {dst}: {e}')
 
-        logger.debug(f'deleted {dst}')
-        return 1
+        total = deleted_under_prefix + deleted_exact
+        logger.debug(f'deleted {total} blobs at {dst}')
+        return total
