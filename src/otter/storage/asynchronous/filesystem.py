@@ -146,3 +146,7 @@ class AsyncFilesystemStorage(AsyncStorage):
                 logger.debug(f'copying to same file skipped: {src_path}')
 
         return dst_path.stat().st_mtime
+
+    async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+        # TODO: local files, directories and symlinks
+        raise NotImplementedError

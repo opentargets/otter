@@ -404,6 +404,7 @@ class TestGoogleStorage:
 
             with pytest.raises(NotFoundError):
                 self._run(storage, self._bucket([absent]))
+
     def test_delete_blob(
         self,
         storage: GoogleStorage,

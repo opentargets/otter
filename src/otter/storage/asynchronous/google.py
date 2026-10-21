@@ -277,3 +277,7 @@ class AsyncGoogleStorage(AsyncStorage):
             if 'Not Found' in str(e) or '404' in str(e):
                 raise NotFoundError(thing=src)
             raise StorageError(f'error copying {src} to {dst}: {e}')
+
+    async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+        # TODO: a blob, or every blob sharing a prefix
+        raise NotImplementedError

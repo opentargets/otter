@@ -124,3 +124,10 @@ class AsyncHTTPStorage(AsyncStorage):
         :raises NotImplementedError: Always, since HTTP storage is read-only.
         """
         raise NotImplementedError
+
+    async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+        """Deleting is not supported for HTTP storage.
+
+        :raises NotImplementedError: Always, since HTTP storage is read-only.
+        """
+        raise NotImplementedError
