@@ -150,6 +150,11 @@ steps:
       file: dataset
       is_recursive: true
 
+  delete_existing_directory:
+    - name: delete a whole existing directory
+      file: delete-this-directory/
+      is_recursive: true
+
   delete_missing_file:
     - name: delete a file that does not exist
       file: never/existed.txt
