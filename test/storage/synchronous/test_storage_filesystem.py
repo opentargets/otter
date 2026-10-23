@@ -381,3 +381,54 @@ class TestFilesystemStorage:
         storage.copy_within(str(src_file), str(dst_file))
 
         assert src_file.stat().st_ino == dst_file.stat().st_ino  # test same inode
+
+    def test_delete_file(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a file removes it and returns one."""
+        test_file = tmp_path / 'test.txt'
+        test_file.write_text('hello world')
+
+        assert storage.delete(str(test_file)) == 1
+        assert not test_file.exists()
+
+    def test_delete_missing_is_noop(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a file that is not there does nothing and returns zero."""
+        nonexistent = tmp_path / 'does_not_exist.txt'
+
+        assert storage.delete(str(nonexistent)) == 0
+
+    def test_delete_directory_recursive(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """With is_recursive, a directory and everything under it is deleted."""
+        test_dir = tmp_path / 'dataset'
+        (test_dir / 'nested').mkdir(parents=True)
+        (test_dir / '00000000.parquet').write_text('part one')
+        (test_dir / 'nested' / '00000001.parquet').write_text('part two')
+
+        assert storage.delete(str(test_dir), is_recursive=True) == 2
+        assert not test_dir.exists()
+
+    def test_delete_directory_without_recursive_raises(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Without is_recursive, a directory raises instead of being skipped."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / '00000000.parquet').write_text('part one')
+
+        with pytest.raises(StorageError, match='is_recursive'):
+            storage.delete(str(test_dir))
+
+        assert test_dir.exists()

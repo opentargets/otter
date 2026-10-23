@@ -8,7 +8,7 @@ from aiohttp import ClientResponseError
 
 from otter.storage.asynchronous.google import AsyncGoogleStorage
 from otter.storage.storage_context import storage_context
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 
 class TestGoogleStorage:
@@ -337,3 +337,244 @@ class TestGoogleStorage:
             params={'userProject': 'billing-project'},
             headers={'x-goog-user-project': 'billing-project'},
         )
+
+    @pytest.mark.asyncio
+    async def test_delete_blob(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Delete a single blob and return one."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/path/file.txt') == 1
+
+        assert mock_client.delete.await_args_list[0].args == ('bucket', 'path/file.txt')
+
+    @pytest.mark.asyncio
+    async def test_delete_missing_blob_returns_zero(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A 404 means there was no such blob, which is not an error."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            # nothing sits under the prefix either, so there is nothing to refuse
+            mock_client.list_objects = AsyncMock(return_value={'items': []})
+            mock_client.delete = AsyncMock(
+                side_effect=ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=404,
+                    message='Not Found',
+                )
+            )
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/path/gone.txt') == 0
+
+    @pytest.mark.asyncio
+    async def test_delete_other_error_raises(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Any status other than 404 is a real failure."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.delete = AsyncMock(
+                side_effect=ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=403,
+                    message='Forbidden',
+                )
+            )
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='error deleting'):
+                await storage.delete('gs://bucket/path/file.txt')
+
+    @staticmethod
+    def _bucket_holding(*names: str):
+        """Fake client.delete for a bucket that holds exactly ``names``.
+
+        Deleting anything else raises a 404, the way the real API would.
+        """
+        existing = set(names)
+
+        def fake_delete(*args: object, **_kwargs: object) -> str:
+            if args[1] not in existing:
+                raise ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=404,
+                    message='Not Found',
+                )
+            return ''
+
+        return fake_delete
+
+    @pytest.mark.asyncio
+    async def test_delete_prefix_recursive(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Recursive deletion removes every blob sharing the prefix."""
+        parts = ['dataset/00000000.parquet', 'dataset/00000001.parquet']
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': n} for n in parts]})
+            mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts))
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+
+        assert mock_client.list_objects.await_args_list[0].kwargs['params']['prefix'] == 'dataset/'
+        deleted = [call.args[1] for call in mock_client.delete.await_args_list]
+        assert deleted == [*parts, 'dataset']
+
+    @pytest.mark.asyncio
+    async def test_delete_prefix_recursive_with_trailing_slash(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A location written with a trailing slash gives the same prefix."""
+        parts = ['dataset/00000000.parquet']
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': n} for n in parts]})
+            mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts))
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/dataset/', is_recursive=True) == 1
+
+        assert mock_client.list_objects.await_args_list[0].kwargs['params']['prefix'] == 'dataset/'
+
+    @pytest.mark.asyncio
+    async def test_delete_prefix_recursive_also_deletes_matching_blob(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A blob named like the prefix goes too, the prefix listing misses it."""
+        parts = ['dataset/00000000.parquet']
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': n} for n in parts]})
+            mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts, 'dataset'))
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+
+        deleted = [call.args[1] for call in mock_client.delete.await_args_list]
+        assert deleted == [*parts, 'dataset']
+
+    @pytest.mark.asyncio
+    async def test_delete_empty_prefix_recursive_returns_zero(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Recursive deletion of a prefix with nothing under it returns zero."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': []})
+            mock_client.delete = AsyncMock(side_effect=self._bucket_holding())
+            mock_get_client.return_value = mock_client
+
+            assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 0
+
+    @pytest.mark.asyncio
+    async def test_delete_prefix_without_recursive_raises(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A prefix with blobs under it refuses to be deleted without is_recursive."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': 'dataset/00000000.parquet'}]})
+            mock_client.delete = AsyncMock(side_effect=self._bucket_holding())
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='is_recursive'):
+                await storage.delete('gs://bucket/dataset')
+
+        params = mock_client.list_objects.await_args_list[0].kwargs['params']
+        assert params['prefix'] == 'dataset/'
+        assert params['maxResults'] == '1'
+
+    @pytest.mark.parametrize('uri', ['gs://bucket', 'gs://bucket/'])
+    @pytest.mark.asyncio
+    async def test_delete_bucket_root_raises(
+        self,
+        storage: AsyncGoogleStorage,
+        uri: str,
+    ) -> None:
+        """Deleting the root of a bucket is refused, with or without is_recursive."""
+        with pytest.raises(StorageError, match='root of bucket'):
+            await storage.delete(uri, is_recursive=True)
+
+        with pytest.raises(StorageError, match='root of bucket'):
+            await storage.delete(uri)
+
+    @pytest.mark.asyncio
+    async def test_delete_stops_at_the_first_failure(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """A blob that will not delete stops the run and reports what already went."""
+        parts = [
+            'dataset/00000000.parquet',
+            'dataset/00000001.parquet',
+            'dataset/00000002.parquet',
+        ]
+
+        def fail_on_the_second(*args: object, **_kwargs: object) -> str:
+            if args[1] == parts[1]:
+                raise ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=403,
+                    message='Forbidden',
+                )
+            return ''
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.list_objects = AsyncMock(return_value={'items': [{'name': n} for n in parts]})
+            mock_client.delete = AsyncMock(side_effect=fail_on_the_second)
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(PartialDeleteError) as excinfo:
+                await storage.delete('gs://bucket/dataset', is_recursive=True)
+
+        assert excinfo.value.deleted == 1
+        assert excinfo.value.failed == parts[1]
+        # the run stopped, it did not carry on to the third blob
+        attempted = [call.args[1] for call in mock_client.delete.await_args_list]
+        assert parts[2] not in attempted
+
+    @pytest.mark.asyncio
+    async def test_delete_single_blob_failure_is_not_partial(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        """Nothing was deleted, so there is no partial state to report."""
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.delete = AsyncMock(
+                side_effect=ClientResponseError(
+                    request_info=Mock(),
+                    history=(),
+                    status=403,
+                    message='Forbidden',
+                )
+            )
+            mock_get_client.return_value = mock_client
+
+            with pytest.raises(StorageError, match='error deleting') as excinfo:
+                await storage.delete('gs://bucket/path/file.txt')
+
+        assert not isinstance(excinfo.value, PartialDeleteError)

@@ -134,3 +134,21 @@ class TestHTTPStorage:
         with patch.object(httpx.AsyncClient, 'get', return_value=mock_response):
             with pytest.raises(httpx.HTTPStatusError):
                 await storage.read_text('http://example.com/not_found.txt')
+
+    @pytest.mark.asyncio
+    async def test_delete_not_implemented(
+        self,
+        storage: AsyncHTTPStorage,
+    ) -> None:
+        """HTTP cannot delete, and that surfaces instead of being ignored."""
+        with pytest.raises(NotImplementedError):
+            await storage.delete('http://example.com/file.txt')
+
+    @pytest.mark.asyncio
+    async def test_delete_recursive_not_implemented(
+        self,
+        storage: AsyncHTTPStorage,
+    ) -> None:
+        """Asking HTTP to recurse does not change the answer."""
+        with pytest.raises(NotImplementedError):
+            await storage.delete('http://example.com/dir/', is_recursive=True)
