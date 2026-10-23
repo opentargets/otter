@@ -1244,7 +1244,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "deptry" },
-    { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
 ]
@@ -1282,7 +1281,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "deptry", specifier = ">=0.25.1" },
-    { name = "pytest", specifier = ">=9.1.0" },
     { name = "ruff", specifier = ">=0.15.17" },
     { name = "ty", specifier = ">=0.0.49" },
 ]
