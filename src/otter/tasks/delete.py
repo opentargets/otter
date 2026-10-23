@@ -13,7 +13,7 @@ from otter.util.errors import NotFoundError, TaskValidationError
 class DeleteSpec(Spec):
     """Configuration fields for the delete task."""
 
-    file: str
+    location: str
     """The location to delete, relative to the release root."""
     is_recursive: bool = False
     """Whether to delete a directory, or a prefix and everything under it.
@@ -33,7 +33,7 @@ class Delete(Task):
 
     @report
     def run(self) -> Self:
-        h = StorageHandle(self.spec.file, config=self.context.config)
+        h = StorageHandle(self.spec.location, config=self.context.config)
         logger.info(f'deleting {h.absolute}')
 
         count = h.delete(is_recursive=self.spec.is_recursive)
@@ -44,7 +44,7 @@ class Delete(Task):
     @report
     def validate(self) -> Self:
         """Check that the location is gone."""
-        h = StorageHandle(self.spec.file, config=self.context.config)
+        h = StorageHandle(self.spec.location, config=self.context.config)
 
         try:
             h.stat()

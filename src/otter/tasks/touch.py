@@ -13,7 +13,7 @@ from otter.validators.file import exists
 class TouchSpec(Spec):
     """Configuration fields for the touch task."""
 
-    file: str
+    location: str
     """The location to create, relative to the release root."""
     content: str = ''
     """What to write into it. Defaults to an empty string."""
@@ -31,7 +31,7 @@ class Touch(Task):
 
     @report
     def run(self) -> Self:
-        h = StorageHandle(self.spec.file, config=self.context.config)
+        h = StorageHandle(self.spec.location, config=self.context.config)
         logger.info(f'creating {h.absolute}')
 
         h.write_text(self.spec.content)
@@ -42,5 +42,5 @@ class Touch(Task):
     @report
     def validate(self) -> Self:
         """Check that the file is there."""
-        exists(self.spec.file, config=self.context.config)
+        exists(self.spec.location, config=self.context.config)
         return self
