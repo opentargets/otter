@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import asyncio
 import shutil
-import stat
 from pathlib import Path
+from stat import S_ISDIR
 from typing import cast
 
 import aiofiles
@@ -161,7 +161,7 @@ class AsyncFilesystemStorage(AsyncStorage):
             raise StorageError(f'error deleting {dst}: {e}')
 
         # a real directory, as opposed to a symlink pointing at one
-        if stat.S_ISDIR(s.st_mode):
+        if S_ISDIR(s.st_mode):
             if not is_recursive:
                 raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
 
@@ -179,7 +179,7 @@ class AsyncFilesystemStorage(AsyncStorage):
             logger.info(f'deleted directory {dst} and the {count} files in it')
             return count
 
-        # a file, a symlink, or nothing at all
+        # a file or a symlink
         # deleting something already gone is fine, not an error (idempotence)
         try:
             await aiofiles.os.unlink(p)
