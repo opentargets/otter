@@ -544,3 +544,28 @@ class TestFilesystemStorage:
         with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=PermissionError('access denied')):
             with pytest.raises(StorageError, match=r'error deleting directory .*access denied'):
                 await storage.delete(str(test_dir), is_recursive=True)
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_removed_by_someone_else_returns_zero(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """A directory that goes away between the stat and the rmtree is still gone."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / 'part.txt').write_text('content')
+
+        original_rmtree = shutil.rmtree
+
+        def rmtree_after_someone_else_won(path: Path) -> None:
+            original_rmtree(path)
+            raise FileNotFoundError(2, 'No such file or directory', str(path))
+
+        with patch(
+            'otter.storage.asynchronous.filesystem.shutil.rmtree',
+            side_effect=rmtree_after_someone_else_won,
+        ):
+            assert await storage.delete(str(test_dir), is_recursive=True) == 0
+
+        assert not test_dir.exists()

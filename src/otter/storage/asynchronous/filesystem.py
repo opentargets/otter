@@ -174,6 +174,10 @@ class AsyncFilesystemStorage(AsyncStorage):
 
             try:
                 count = await asyncio.to_thread(delete_directory)
+            except FileNotFoundError:
+                # file got deleted between the stat above and the rmtree, so it is gone either way
+                logger.debug(f'{dst} does not exist, nothing to delete')
+                return 0
             except OSError as e:
                 raise StorageError(f'error deleting directory {dst}: {e}')
             logger.info(f'deleted directory {dst} and the {count} files in it')
