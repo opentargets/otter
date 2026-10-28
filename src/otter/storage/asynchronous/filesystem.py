@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import stat
 from pathlib import Path
 from typing import cast
 
 import aiofiles
 import aiofiles.os
-import aiofiles.ospath
 from filelock import FileLock
 from loguru import logger
 
@@ -152,9 +152,16 @@ class AsyncFilesystemStorage(AsyncStorage):
 
     async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
         p = Path(dst)
+        try:
+            s = await aiofiles.os.stat(p, follow_symlinks=False)
+        except FileNotFoundError:
+            logger.debug(f'{dst} does not exist, nothing to delete')
+            return 0
+        except OSError as e:
+            raise StorageError(f'error deleting {dst}: {e}')
 
         # a real directory, as opposed to a symlink pointing at one
-        if await aiofiles.ospath.isdir(p) and not await aiofiles.ospath.islink(p):
+        if stat.S_ISDIR(s.st_mode):
             if not is_recursive:
                 raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
 

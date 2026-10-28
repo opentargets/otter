@@ -523,9 +523,12 @@ class TestFilesystemStorage:
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
+        test_file = tmp_path / 'file.txt'
+        test_file.write_text('content')
+
         with patch('aiofiles.os.unlink', side_effect=PermissionError('access denied')) as unlink:
             with pytest.raises(StorageError, match=r'error deleting .*access denied'):
-                await storage.delete(str(tmp_path / 'file.txt'))
+                await storage.delete(str(test_file))
 
         unlink.assert_awaited_once()
 
