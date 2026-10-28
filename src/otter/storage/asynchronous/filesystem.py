@@ -3,11 +3,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import shutil
 from pathlib import Path
 from typing import cast
 
 import aiofiles
+import aiofiles.os
+import aiofiles.ospath
 from filelock import FileLock
 from loguru import logger
 
@@ -151,27 +154,32 @@ class AsyncFilesystemStorage(AsyncStorage):
         p = Path(dst)
 
         # a real directory, as opposed to a symlink pointing at one
-        if p.is_dir() and not p.is_symlink():
+        if await aiofiles.ospath.isdir(p) and not await aiofiles.ospath.islink(p):
             if not is_recursive:
                 raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
-            # count before deleting, rmtree does not report what it removed
-            count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
-            try:
+
+            def delete_directory() -> int:
+                """Count and remove the tree outside the event loop."""
+                # count before deleting, rmtree does not report what it removed
+                count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
                 shutil.rmtree(p)
+                return count
+
+            try:
+                count = await asyncio.to_thread(delete_directory)
             except OSError as e:
                 raise StorageError(f'error deleting directory {dst}: {e}')
             logger.info(f'deleted directory {dst} and the {count} files in it')
             return count
 
         # a file, a symlink, or nothing at all
-        # missing_ok: deleting something already gone is fine, not an error (idempotence)
-        existed = p.is_symlink() or p.exists()
+        # deleting something already gone is fine, not an error (idempotence)
         try:
-            p.unlink(missing_ok=True)
-        except OSError as e:
-            raise StorageError(f'error deleting {dst}: {e}')
-        if not existed:
+            await aiofiles.os.unlink(p)
+        except FileNotFoundError:
             logger.debug(f'{dst} does not exist, nothing to delete')
             return 0
+        except OSError as e:
+            raise StorageError(f'error deleting {dst}: {e}')
         logger.info(f'deleted {dst}')
         return 1

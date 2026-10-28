@@ -1,6 +1,8 @@
 """Tests for the AsyncFilesystemStorage class."""
 
 import os
+import shutil
+import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -461,3 +463,81 @@ class TestFilesystemStorage:
             await storage.delete(str(test_dir))
 
         assert test_dir.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_runs_in_worker_thread(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / 'part.txt').write_text('content')
+        event_loop_thread = threading.get_ident()
+        original_rglob = Path.rglob
+        original_rmtree = shutil.rmtree
+
+        def checked_rglob(path, pattern):
+            assert threading.get_ident() != event_loop_thread
+            yield from original_rglob(path, pattern)
+
+        def checked_rmtree(path):
+            assert threading.get_ident() != event_loop_thread
+            original_rmtree(path)
+
+        with (
+            patch.object(Path, 'rglob', checked_rglob),
+            patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=checked_rmtree),
+        ):
+            assert await storage.delete(str(test_dir), is_recursive=True) == 1
+
+        assert not test_dir.exists()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('target_kind', ['file', 'directory', 'missing'])
+    async def test_delete_symlink_preserves_target(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+        target_kind: str,
+    ) -> None:
+        target = tmp_path / 'target'
+        if target_kind == 'file':
+            target.write_text('content')
+        elif target_kind == 'directory':
+            target.mkdir()
+            (target / 'part.txt').write_text('content')
+        link = tmp_path / 'link'
+        link.symlink_to(target)
+
+        assert await storage.delete(str(link)) == 1
+        assert not link.is_symlink()
+        if target_kind == 'file':
+            assert target.read_text() == 'content'
+        elif target_kind == 'directory':
+            assert (target / 'part.txt').read_text() == 'content'
+
+    @pytest.mark.asyncio
+    async def test_delete_file_error_raises_storage_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        with patch('aiofiles.os.unlink', side_effect=PermissionError('access denied')) as unlink:
+            with pytest.raises(StorageError, match=r'error deleting .*access denied'):
+                await storage.delete(str(tmp_path / 'file.txt'))
+
+        unlink.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_error_raises_storage_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+
+        with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=PermissionError('access denied')):
+            with pytest.raises(StorageError, match=r'error deleting directory .*access denied'):
+                await storage.delete(str(test_dir), is_recursive=True)
