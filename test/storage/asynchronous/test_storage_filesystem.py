@@ -569,3 +569,32 @@ class TestFilesystemStorage:
             assert await storage.delete(str(test_dir), is_recursive=True) == 0
 
         assert not test_dir.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_missing_child_raises_storage_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """A missing child must not hide an incomplete directory deletion."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        child = test_dir / 'part.txt'
+        child.write_text('content')
+        remaining = test_dir / 'remaining.txt'
+        remaining.write_text('keep me')
+
+        def rmtree_after_child_disappeared(path: Path) -> None:
+            child.unlink()
+            raise FileNotFoundError(2, 'No such file or directory', str(child))
+
+        with patch(
+            'otter.storage.asynchronous.filesystem.shutil.rmtree',
+            side_effect=rmtree_after_child_disappeared,
+        ):
+            with pytest.raises(StorageError, match=r'error deleting directory .*part\.txt'):
+                await storage.delete(str(test_dir), is_recursive=True)
+
+        assert test_dir.is_dir()
+        assert not child.exists()
+        assert remaining.read_text() == 'keep me'
