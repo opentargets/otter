@@ -1,12 +1,13 @@
 """Tests for the AsyncGoogleStorage class."""
 
+import asyncio
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from aiohttp import ClientResponseError
 
-from otter.storage.asynchronous.google import AsyncGoogleStorage
+from otter.storage.asynchronous.google import DELETE_CONCURRENCY, AsyncGoogleStorage
 from otter.storage.storage_context import storage_context
 from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
@@ -561,6 +562,74 @@ class TestGoogleStorage:
         # the run stopped, it did not carry on to the third blob
         attempted = [call.args[1] for call in mock_client.delete.await_args_list]
         assert parts[2] not in attempted
+
+    @pytest.mark.asyncio
+    async def test_delete_prefix_limits_concurrent_requests(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        parts = [f'dataset/{i}.parquet' for i in range(DELETE_CONCURRENCY * 2 + 1)]
+        active = 0
+        peak = 0
+        first_batch_started = asyncio.Event()
+
+        async def delete_with_overlap(bucket, name, **kwargs):
+            nonlocal active, peak
+            active += 1
+            peak = max(peak, active)
+            if active == DELETE_CONCURRENCY:
+                first_batch_started.set()
+            try:
+                await first_batch_started.wait()
+                await asyncio.sleep(0)
+            finally:
+                active -= 1
+
+        client = AsyncMock()
+        client.list_objects.return_value = {'items': [{'name': name} for name in parts]}
+        client.delete.side_effect = delete_with_overlap
+        with patch.object(storage, '_get_client', return_value=client):
+            await asyncio.wait_for(storage.delete('gs://bucket/dataset', is_recursive=True), timeout=5)
+
+        assert peak == DELETE_CONCURRENCY
+        assert active == 0
+        assert {call.args[1] for call in client.delete.await_args_list} == {*parts, 'dataset'}
+        assert client.delete.await_args_list[-1].args[1] == 'dataset'
+
+    @pytest.mark.asyncio
+    async def test_delete_failure_waits_for_active_requests_and_skips_queued_requests(
+        self,
+        storage: AsyncGoogleStorage,
+    ) -> None:
+        parts = [f'dataset/{i}.parquet' for i in range(DELETE_CONCURRENCY + 5)]
+        started = 0
+        first_batch_started = asyncio.Event()
+        failure_raised = asyncio.Event()
+        completed = []
+
+        async def fail_while_others_are_active(bucket, name, **kwargs):
+            nonlocal started
+            started += 1
+            if started == DELETE_CONCURRENCY:
+                first_batch_started.set()
+            await first_batch_started.wait()
+            if name == parts[0]:
+                failure_raised.set()
+                raise PermissionError('access denied')
+            await failure_raised.wait()
+            await asyncio.sleep(0)
+            completed.append(name)
+
+        client = AsyncMock()
+        client.list_objects.return_value = {'items': [{'name': name} for name in parts]}
+        client.delete.side_effect = fail_while_others_are_active
+        with patch.object(storage, '_get_client', return_value=client):
+            with pytest.raises(PartialDeleteError) as excinfo:
+                await asyncio.wait_for(storage.delete('gs://bucket/dataset', is_recursive=True), timeout=5)
+
+        assert excinfo.value.failed == parts[0]
+        assert excinfo.value.deleted == len(completed) == DELETE_CONCURRENCY - 1
+        assert {call.args[1] for call in client.delete.await_args_list} == set(parts[:DELETE_CONCURRENCY])
 
     @pytest.mark.asyncio
     async def test_delete_single_blob_failure_is_not_partial(

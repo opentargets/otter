@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 
 from aiohttp import ServerTimeoutError
@@ -16,6 +17,7 @@ from otter.storage.storage_context import get_storage_context
 from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 REQUEST_TIMEOUT = 300
+DELETE_CONCURRENCY = 20
 
 
 class AsyncGoogleStorage(AsyncStorage):
@@ -305,23 +307,38 @@ class AsyncGoogleStorage(AsyncStorage):
         prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
 
         # the blobs named `dataset/...`, only when asked to recurse.
-        # a failure here leaves the rest of the prefix untouched, so stop at once
-        # rather than carry on. the count is not returned, it only tells
-        # PartialDeleteError how far the deletion got before it failed
+        # Stop starting requests after a failure, but let requests already in flight
+        # finish so PartialDeleteError includes all confirmed deletions.
         deleted_under_prefix = 0
         if is_recursive:
-            for name in await self._list_blob_names(bucket_name, prefix=prefix):
-                try:
-                    await client.delete(
-                        bucket_name,
-                        name,
-                        params=self._request_params(),
-                        headers=self._request_headers(),
-                        timeout=REQUEST_TIMEOUT,
-                    )
-                except Exception as e:
-                    raise PartialDeleteError(dst, deleted_under_prefix, name, str(e))
-                deleted_under_prefix += 1
+            names = await self._list_blob_names(bucket_name, prefix=prefix)
+            semaphore = asyncio.Semaphore(DELETE_CONCURRENCY)
+            first_failure: tuple[str, Exception] | None = None
+
+            async def delete_blob(name: str) -> None:
+                """Delete one blob while respecting the request limit and earlier failures."""
+                nonlocal deleted_under_prefix, first_failure
+                async with semaphore:
+                    if first_failure is not None:
+                        return
+                    try:
+                        await client.delete(
+                            bucket_name,
+                            name,
+                            params=self._request_params(),
+                            headers=self._request_headers(),
+                            timeout=REQUEST_TIMEOUT,
+                        )
+                    except Exception as e:
+                        if first_failure is None:
+                            first_failure = (name, e)
+                    else:
+                        deleted_under_prefix += 1
+
+            await asyncio.gather(*(delete_blob(name) for name in names))
+            if first_failure is not None:
+                name, error = first_failure
+                raise PartialDeleteError(dst, deleted_under_prefix, name, str(error))
 
         # the blob named exactly `dataset`, which the listing above never matches.
         # a 404 just means there was no such blob, which is not an error
