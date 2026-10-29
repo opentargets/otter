@@ -1,6 +1,7 @@
 """Tests for the FilesystemStorage class."""
 
 import os
+import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -432,3 +433,78 @@ class TestFilesystemStorage:
             storage.delete(str(test_dir))
 
         assert test_dir.exists()
+
+    @pytest.mark.parametrize('target_kind', ['file', 'directory', 'missing'])
+    def test_delete_symlink_preserves_target(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+        target_kind: str,
+    ) -> None:
+        target = tmp_path / 'target'
+        if target_kind == 'file':
+            target.write_text('content')
+        elif target_kind == 'directory':
+            target.mkdir()
+            (target / 'part.txt').write_text('content')
+        link = tmp_path / 'link'
+        link.symlink_to(target)
+
+        assert storage.delete(str(link)) == 1
+        assert not link.is_symlink()
+        if target_kind == 'file':
+            assert target.read_text() == 'content'
+        elif target_kind == 'directory':
+            assert (target / 'part.txt').read_text() == 'content'
+
+    def test_delete_file_removed_before_unlink_returns_zero(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_file = tmp_path / 'file.txt'
+        test_file.write_text('content')
+        original_unlink = Path.unlink
+
+        def unlink_after_someone_else_won(path: Path) -> None:
+            original_unlink(path)
+            original_unlink(path)
+
+        with patch.object(Path, 'unlink', unlink_after_someone_else_won):
+            assert storage.delete(str(test_file)) == 0
+
+        assert not test_file.exists()
+
+    @pytest.mark.parametrize('remove_target', [True, False])
+    def test_delete_directory_disappearing_paths(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+        remove_target: bool,
+    ) -> None:
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        child = test_dir / 'part.txt'
+        child.write_text('content')
+        original_rmtree = shutil.rmtree
+
+        def rmtree_after_path_disappeared(path: Path) -> None:
+            if remove_target:
+                original_rmtree(path)
+                missing = path
+            else:
+                child.unlink()
+                missing = child
+            raise FileNotFoundError(2, 'No such file or directory', str(missing))
+
+        with patch(
+            'otter.storage.synchronous.filesystem.shutil.rmtree',
+            side_effect=rmtree_after_path_disappeared,
+        ):
+            if remove_target:
+                assert storage.delete(str(test_dir), is_recursive=True) == 0
+            else:
+                with pytest.raises(StorageError, match='error deleting directory'):
+                    storage.delete(str(test_dir), is_recursive=True)
+
+        assert test_dir.exists() is not remove_target

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from stat import S_ISDIR
 from typing import IO, Any, cast
 
 from filelock import FileLock
@@ -159,29 +160,45 @@ class FilesystemStorage(Storage):
 
     def delete(self, dst: str, *, is_recursive: bool = False) -> int:
         p = Path(dst)
+        try:
+            s = p.stat(follow_symlinks=False)
+        except FileNotFoundError:
+            logger.debug(f'{dst} does not exist, nothing to delete')
+            return 0
+        except OSError as e:
+            raise StorageError(f'error deleting {dst}: {e}')
 
         # a real directory, as opposed to a symlink pointing at one
-        if p.is_dir() and not p.is_symlink():
+        if S_ISDIR(s.st_mode):
             if not is_recursive:
                 raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
-            # count before deleting, rmtree does not report what it removed
-            count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
             try:
+                # count before deleting, rmtree does not report what it removed
+                count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
                 shutil.rmtree(p)
+            except FileNotFoundError as e:
+                # A child may have disappeared while the target itself still exists.
+                try:
+                    p.stat(follow_symlinks=False)
+                except FileNotFoundError:
+                    logger.debug(f'{dst} does not exist, nothing to delete')
+                    return 0
+                except OSError as stat_error:
+                    raise StorageError(f'error deleting directory {dst}: {stat_error}')
+                raise StorageError(f'error deleting directory {dst}: {e}')
             except OSError as e:
                 raise StorageError(f'error deleting directory {dst}: {e}')
             logger.info(f'deleted directory {dst} and the {count} files in it')
             return count
 
-        # a file, a symlink, or nothing at all
-        # missing_ok: deleting something already gone is fine, not an error (idempotence)
-        existed = p.is_symlink() or p.exists()
+        # a file or a symlink
+        # deleting something already gone is fine, not an error (idempotence)
         try:
-            p.unlink(missing_ok=True)
-        except OSError as e:
-            raise StorageError(f'error deleting {dst}: {e}')
-        if not existed:
+            p.unlink()
+        except FileNotFoundError:
             logger.debug(f'{dst} does not exist, nothing to delete')
             return 0
+        except OSError as e:
+            raise StorageError(f'error deleting {dst}: {e}')
         logger.info(f'deleted {dst}')
         return 1
