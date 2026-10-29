@@ -415,23 +415,24 @@ class TestFilesystemStorage:
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """Deleting a file removes the file and returns one."""
+        """Deleting a file removes the file."""
         test_file = tmp_path / 'test.txt'
         test_file.write_text('hello world')
 
-        assert await storage.delete(str(test_file)) == 1
+        await storage.delete(str(test_file))
+
         assert not test_file.exists()
 
     @pytest.mark.asyncio
-    async def test_delete_missing_location_returns_zero(
+    async def test_delete_missing_location_is_noop(
         self,
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """Deleting a file that is not there does nothing and returns zero."""
+        """Deleting a file that is not there does nothing and does not raise."""
         nonexistent = tmp_path / 'does_not_exist.txt'
 
-        assert await storage.delete(str(nonexistent)) == 0
+        await storage.delete(str(nonexistent))
 
     @pytest.mark.asyncio
     async def test_delete_directory_recursive(
@@ -445,7 +446,8 @@ class TestFilesystemStorage:
         (test_dir / '00000000.parquet').write_text('part one')
         (test_dir / 'nested' / '00000001.parquet').write_text('part two')
 
-        assert await storage.delete(str(test_dir), is_recursive=True) == 2
+        await storage.delete(str(test_dir), is_recursive=True)
+
         assert not test_dir.exists()
 
     @pytest.mark.asyncio
@@ -474,22 +476,14 @@ class TestFilesystemStorage:
         test_dir.mkdir()
         (test_dir / 'part.txt').write_text('content')
         event_loop_thread = threading.get_ident()
-        original_rglob = Path.rglob
         original_rmtree = shutil.rmtree
-
-        def checked_rglob(path, pattern):
-            assert threading.get_ident() != event_loop_thread
-            yield from original_rglob(path, pattern)
 
         def checked_rmtree(path):
             assert threading.get_ident() != event_loop_thread
             original_rmtree(path)
 
-        with (
-            patch.object(Path, 'rglob', checked_rglob),
-            patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=checked_rmtree),
-        ):
-            assert await storage.delete(str(test_dir), is_recursive=True) == 1
+        with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=checked_rmtree):
+            await storage.delete(str(test_dir), is_recursive=True)
 
         assert not test_dir.exists()
 
@@ -510,7 +504,8 @@ class TestFilesystemStorage:
         link = tmp_path / 'link'
         link.symlink_to(target)
 
-        assert await storage.delete(str(link)) == 1
+        await storage.delete(str(link))
+
         assert not link.is_symlink()
         if target_kind == 'file':
             assert target.read_text() == 'content'
@@ -546,7 +541,7 @@ class TestFilesystemStorage:
                 await storage.delete(str(test_dir), is_recursive=True)
 
     @pytest.mark.asyncio
-    async def test_delete_directory_removed_by_someone_else_returns_zero(
+    async def test_delete_directory_removed_by_someone_else_is_not_an_error(
         self,
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
@@ -566,7 +561,7 @@ class TestFilesystemStorage:
             'otter.storage.asynchronous.filesystem.shutil.rmtree',
             side_effect=rmtree_after_someone_else_won,
         ):
-            assert await storage.delete(str(test_dir), is_recursive=True) == 0
+            await storage.delete(str(test_dir), is_recursive=True)
 
         assert not test_dir.exists()
 

@@ -330,7 +330,8 @@ class TestStorageHandleDelete:
         target.parent.mkdir(parents=True)
         target.write_text('hello world')
 
-        assert await AsyncStorageHandle('data/file.txt', config).delete() == 1
+        await AsyncStorageHandle('data/file.txt', config).delete()
+
         assert not target.exists()
 
     @pytest.mark.asyncio
@@ -344,18 +345,19 @@ class TestStorageHandleDelete:
         dataset.mkdir()
         (dataset / '00000000.parquet').write_text('part one')
 
-        assert await AsyncStorageHandle('dataset', config).delete(is_recursive=True) == 1
+        await AsyncStorageHandle('dataset', config).delete(is_recursive=True)
+
         assert not dataset.exists()
 
     @pytest.mark.asyncio
-    async def test_delete_missing_location_returns_zero(
+    async def test_delete_missing_location_is_not_an_error(
         self,
         tmp_path: Path,
     ) -> None:
-        """Deleting a location that is not there returns zero."""
+        """Deleting a location that is not there does not raise."""
         config = fake_config(work_path=tmp_path, release_uri=None)
 
-        assert await AsyncStorageHandle('data/gone.txt', config).delete() == 0
+        await AsyncStorageHandle('data/gone.txt', config).delete()
 
     @pytest.mark.asyncio
     async def test_delete_not_implemented_for_http(self) -> None:

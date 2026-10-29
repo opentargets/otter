@@ -23,8 +23,7 @@ class DeleteSpec(Spec):
 class Delete(Task):
     """Delete a file or directory.
 
-    Deleting something that is not there is not an error, the task succeeds and
-    reports zero files deleted.
+    Deleting something that is not there is not an error, the task succeeds.
     """
 
     def __init__(self, spec: DeleteSpec, context: TaskContext) -> None:
@@ -36,9 +35,9 @@ class Delete(Task):
         h = StorageHandle(self.spec.location, config=self.context.config)
         logger.info(f'deleting {h.absolute}')
 
-        count = h.delete(is_recursive=self.spec.is_recursive)
+        h.delete(is_recursive=self.spec.is_recursive)
 
-        logger.success(f'deleted {count} files at {h.absolute}')
+        logger.success(f'deleted {h.absolute}')
         return self
 
     @report

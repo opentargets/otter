@@ -343,17 +343,17 @@ class TestGoogleStorage:
         self,
         storage: AsyncGoogleStorage,
     ) -> None:
-        """Delete a single blob and return one."""
+        """Delete a single blob."""
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
 
-            assert await storage.delete('gs://bucket/path/file.txt') == 1
+            await storage.delete('gs://bucket/path/file.txt')
 
         assert mock_client.delete.await_args_list[0].args == ('bucket', 'path/file.txt')
 
     @pytest.mark.asyncio
-    async def test_delete_missing_blob_returns_zero(
+    async def test_delete_missing_blob_is_not_an_error(
         self,
         storage: AsyncGoogleStorage,
     ) -> None:
@@ -372,7 +372,9 @@ class TestGoogleStorage:
             )
             mock_get_client.return_value = mock_client
 
-            assert await storage.delete('gs://bucket/path/gone.txt') == 0
+            await storage.delete('gs://bucket/path/gone.txt')
+
+        assert mock_client.delete.await_args_list[0].args == ('bucket', 'path/gone.txt')
 
     @pytest.mark.asyncio
     async def test_delete_other_error_raises(
@@ -429,7 +431,7 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts))
             mock_get_client.return_value = mock_client
 
-            assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+            await storage.delete('gs://bucket/dataset', is_recursive=True)
 
         assert mock_client.list_objects.await_args_list[0].kwargs['params']['prefix'] == 'dataset/'
         deleted = [call.args[1] for call in mock_client.delete.await_args_list]
@@ -449,9 +451,11 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts))
             mock_get_client.return_value = mock_client
 
-            assert await storage.delete('gs://bucket/dataset/', is_recursive=True) == 1
+            await storage.delete('gs://bucket/dataset/', is_recursive=True)
 
         assert mock_client.list_objects.await_args_list[0].kwargs['params']['prefix'] == 'dataset/'
+        deleted = [call.args[1] for call in mock_client.delete.await_args_list]
+        assert deleted == [*parts, 'dataset/']
 
     @pytest.mark.asyncio
     async def test_delete_prefix_recursive_also_deletes_matching_blob(
@@ -467,24 +471,26 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts, 'dataset'))
             mock_get_client.return_value = mock_client
 
-            assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 2
+            await storage.delete('gs://bucket/dataset', is_recursive=True)
 
         deleted = [call.args[1] for call in mock_client.delete.await_args_list]
         assert deleted == [*parts, 'dataset']
 
     @pytest.mark.asyncio
-    async def test_delete_empty_prefix_recursive_returns_zero(
+    async def test_delete_empty_prefix_recursive_is_not_an_error(
         self,
         storage: AsyncGoogleStorage,
     ) -> None:
-        """Recursive deletion of a prefix with nothing under it returns zero."""
+        """Recursive deletion of a prefix with nothing under it does not raise."""
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_client.list_objects = AsyncMock(return_value={'items': []})
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding())
             mock_get_client.return_value = mock_client
 
-            assert await storage.delete('gs://bucket/dataset', is_recursive=True) == 0
+            await storage.delete('gs://bucket/dataset', is_recursive=True)
+
+        assert mock_client.delete.await_args_list[0].args == ('bucket', 'dataset')
 
     @pytest.mark.asyncio
     async def test_delete_prefix_without_recursive_raises(

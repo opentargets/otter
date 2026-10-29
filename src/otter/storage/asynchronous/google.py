@@ -278,7 +278,7 @@ class AsyncGoogleStorage(AsyncStorage):
                 raise NotFoundError(thing=src)
             raise StorageError(f'error copying {src} to {dst}: {e}')
 
-    async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+    async def delete(self, dst: str, *, is_recursive: bool = False) -> None:
         """Delete a blob, or every blob sharing a prefix.
 
         A bucket is a flat list of blobs. The slashes in a blob name are part of
@@ -290,7 +290,7 @@ class AsyncGoogleStorage(AsyncStorage):
         Two different things can live at ``gs://bucket/dataset``: the blobs named
         ``dataset/00000000.parquet`` and so on, and a blob named exactly
         ``dataset``. A prefix listing only finds the first kind, so this method
-        counts the two separately and adds them up.
+        deletes the two separately.
 
         Deleting the root of a bucket is refused. Both ``gs://bucket`` and
         ``gs://bucket/`` name every blob in the bucket, and no caller means that.
@@ -304,9 +304,10 @@ class AsyncGoogleStorage(AsyncStorage):
         # the trailing slash keeps the match on `dataset/` and off `dataset2/`
         prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
 
-        # the blobs named `dataset/...`, only when asked to recurse
+        # the blobs named `dataset/...`, only when asked to recurse.
         # a failure here leaves the rest of the prefix untouched, so stop at once
-        # rather than carry on and report a count the caller cannot act on
+        # rather than carry on. the count is not returned, it only tells
+        # PartialDeleteError how far the deletion got before it failed
         deleted_under_prefix = 0
         if is_recursive:
             for name in await self._list_blob_names(bucket_name, prefix=prefix):
@@ -332,10 +333,10 @@ class AsyncGoogleStorage(AsyncStorage):
                 headers=self._request_headers(),
                 timeout=REQUEST_TIMEOUT,
             )
-            deleted_exact = 1
+            deleted_exact = True
         except Exception as e:
             if getattr(e, 'status', None) == 404:
-                deleted_exact = 0
+                deleted_exact = False
             elif deleted_under_prefix:
                 raise PartialDeleteError(dst, deleted_under_prefix, blob_name, str(e))
             else:
@@ -343,7 +344,7 @@ class AsyncGoogleStorage(AsyncStorage):
 
         # nothing was deleted, but blobs do sit under the prefix. the caller meant
         # a whole directory and did not ask to recurse, so say so instead of
-        # returning zero and leaving the blobs behind
+        # succeeding quietly and leaving the blobs behind
         if not is_recursive and not deleted_exact:
             # maxResults keeps this a yes or no question rather than listing every blob
             content = await client.list_objects(
@@ -354,6 +355,4 @@ class AsyncGoogleStorage(AsyncStorage):
             if content.get('items'):
                 raise StorageError(f'{dst} is a prefix, pass is_recursive to delete it')
 
-        total = deleted_under_prefix + deleted_exact
-        logger.debug(f'deleted {total} blobs at {dst}')
-        return total
+        logger.debug(f'deleted {dst}')

@@ -388,11 +388,12 @@ class TestFilesystemStorage:
         storage: FilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """Deleting a file removes it and returns one."""
+        """Deleting a file removes it."""
         test_file = tmp_path / 'test.txt'
         test_file.write_text('hello world')
 
-        assert storage.delete(str(test_file)) == 1
+        storage.delete(str(test_file))
+
         assert not test_file.exists()
 
     def test_delete_missing_is_noop(
@@ -400,10 +401,10 @@ class TestFilesystemStorage:
         storage: FilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """Deleting a file that is not there does nothing and returns zero."""
+        """Deleting a file that is not there does nothing and does not raise."""
         nonexistent = tmp_path / 'does_not_exist.txt'
 
-        assert storage.delete(str(nonexistent)) == 0
+        storage.delete(str(nonexistent))
 
     def test_delete_directory_recursive(
         self,
@@ -416,7 +417,8 @@ class TestFilesystemStorage:
         (test_dir / '00000000.parquet').write_text('part one')
         (test_dir / 'nested' / '00000001.parquet').write_text('part two')
 
-        assert storage.delete(str(test_dir), is_recursive=True) == 2
+        storage.delete(str(test_dir), is_recursive=True)
+
         assert not test_dir.exists()
 
     def test_delete_directory_without_recursive_raises(
@@ -450,14 +452,15 @@ class TestFilesystemStorage:
         link = tmp_path / 'link'
         link.symlink_to(target)
 
-        assert storage.delete(str(link)) == 1
+        storage.delete(str(link))
+
         assert not link.is_symlink()
         if target_kind == 'file':
             assert target.read_text() == 'content'
         elif target_kind == 'directory':
             assert (target / 'part.txt').read_text() == 'content'
 
-    def test_delete_file_removed_before_unlink_returns_zero(
+    def test_delete_file_removed_before_unlink_is_not_an_error(
         self,
         storage: FilesystemStorage,
         tmp_path: Path,
@@ -471,7 +474,7 @@ class TestFilesystemStorage:
             original_unlink(path)
 
         with patch.object(Path, 'unlink', unlink_after_someone_else_won):
-            assert storage.delete(str(test_file)) == 0
+            storage.delete(str(test_file))
 
         assert not test_file.exists()
 
@@ -502,7 +505,7 @@ class TestFilesystemStorage:
             side_effect=rmtree_after_path_disappeared,
         ):
             if remove_target:
-                assert storage.delete(str(test_dir), is_recursive=True) == 0
+                storage.delete(str(test_dir), is_recursive=True)
             else:
                 with pytest.raises(StorageError, match='error deleting directory'):
                     storage.delete(str(test_dir), is_recursive=True)

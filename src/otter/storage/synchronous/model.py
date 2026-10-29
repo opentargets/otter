@@ -203,7 +203,7 @@ class Storage(ABC):
         dst: str,
         *,
         is_recursive: bool = False,
-    ) -> int:
+    ) -> None:
         """Delete a file or directory.
 
         Deletion is idempotent: deleting a resource that does not exist is a
@@ -213,8 +213,6 @@ class Storage(ABC):
         :type dst: str
         :param is_recursive: Whether to delete recursively.
         :type is_recursive: bool
-        :return: The number of files deleted. Zero if there are no files to delete.
-        :rtype: int
         :raises StorageError: If ``dst`` is a directory and ``is_recursive`` is
             ``False``, or if the deletion fails.
         """

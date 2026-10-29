@@ -150,14 +150,14 @@ class AsyncFilesystemStorage(AsyncStorage):
 
         return dst_path.stat().st_mtime
 
-    async def delete(self, dst: str, *, is_recursive: bool = False) -> int:
+    async def delete(self, dst: str, *, is_recursive: bool = False) -> None:
         p = Path(dst)
         try:
             s = await aiofiles.os.stat(p, follow_symlinks=False)
         except FileNotFoundError:
             # The target is already missing; deleting it again is a successful no-op.
             logger.debug(f'{dst} does not exist, nothing to delete')
-            return 0
+            return
         except OSError as e:
             # Inspection failed for another reason, such as permissions; report the failure.
             raise StorageError(f'error deleting {dst}: {e}')
@@ -166,38 +166,31 @@ class AsyncFilesystemStorage(AsyncStorage):
         if S_ISDIR(s.st_mode):
             if not is_recursive:
                 raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
-
-            def delete_directory() -> int:
-                """Count and remove the tree outside the event loop."""
-                # count before deleting, rmtree does not report what it removed
-                count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
-                shutil.rmtree(p)
-                return count
-
             try:
-                count = await asyncio.to_thread(delete_directory)
+                # rmtree blocks while it walks the tree, so hand it to a worker thread
+                await asyncio.to_thread(shutil.rmtree, p)
             except FileNotFoundError as e:
-                # Counting or deletion tried to access a path that does not exist.
+                # Deletion tried to access a path that does not exist.
                 # Check whether the directory we were asked to delete is also missing,
                 # or whether it still exists and deletion failed somewhere inside it.
                 try:
                     await aiofiles.os.stat(p, follow_symlinks=False)
                 except FileNotFoundError:
-                    # The directory we were asked to delete does not exist, so there is nothing left to delete.
+                    # The target itself is gone, so there is nothing left to delete.
                     logger.debug(f'{dst} does not exist, nothing to delete')
-                    return 0
+                    return
                 except OSError as stat_error:
                     # Checking whether the directory exists failed, for example due to permissions.
-                    # Its existence is unknown, so we cannot return 0 to indicate it is missing.
+                    # Its existence is unknown, so we cannot treat it as already deleted.
                     # Report the error from this check as a StorageError.
                     raise StorageError(f'error deleting directory {dst}: {stat_error}')
-                # The directory still exists, so deletion is incomplete; report the original error.
+                # The target still exists, so deletion is incomplete; report the original error.
                 raise StorageError(f'error deleting directory {dst}: {e}')
             except OSError as e:
-                # Counting or removal failed for another reason; report it rather than returning a count.
+                # Removal failed for another reason; report it.
                 raise StorageError(f'error deleting directory {dst}: {e}')
-            logger.info(f'deleted directory {dst} and the {count} files in it')
-            return count
+            logger.info(f'deleted directory {dst} and everything in it')
+            return
 
         # a file or a symlink
         # deleting something already gone is fine, not an error (idempotence)
@@ -206,9 +199,8 @@ class AsyncFilesystemStorage(AsyncStorage):
         except FileNotFoundError:
             # The file or symlink disappeared after stat; there is nothing left to delete.
             logger.debug(f'{dst} does not exist, nothing to delete')
-            return 0
+            return
         except OSError as e:
             # Unlink failed for another reason, such as permissions; report the failure.
             raise StorageError(f'error deleting {dst}: {e}')
         logger.info(f'deleted {dst}')
-        return 1
