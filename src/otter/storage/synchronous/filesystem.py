@@ -163,9 +163,11 @@ class FilesystemStorage(Storage):
         try:
             s = p.stat(follow_symlinks=False)
         except FileNotFoundError:
+            # The target is already missing; deleting it again is a successful no-op.
             logger.debug(f'{dst} does not exist, nothing to delete')
             return 0
         except OSError as e:
+            # Inspection failed for another reason, such as permissions; report the failure.
             raise StorageError(f'error deleting {dst}: {e}')
 
         # a real directory, as opposed to a symlink pointing at one
@@ -177,16 +179,24 @@ class FilesystemStorage(Storage):
                 count = sum(1 for f in p.rglob('*') if f.is_file() or f.is_symlink())
                 shutil.rmtree(p)
             except FileNotFoundError as e:
-                # A child may have disappeared while the target itself still exists.
+                # Counting or deletion tried to access a path that does not exist.
+                # Check whether the directory we were asked to delete is also missing,
+                # or whether it still exists and deletion failed somewhere inside it.
                 try:
                     p.stat(follow_symlinks=False)
                 except FileNotFoundError:
+                    # The target itself is gone, so there is nothing left to delete.
                     logger.debug(f'{dst} does not exist, nothing to delete')
                     return 0
                 except OSError as stat_error:
+                    # Checking whether the directory exists failed, for example due to permissions.
+                    # Its existence is unknown, so we cannot return 0 to indicate it is missing.
+                    # Report the error from this check as a StorageError.
                     raise StorageError(f'error deleting directory {dst}: {stat_error}')
+                # The target still exists, so deletion is incomplete; report the original error.
                 raise StorageError(f'error deleting directory {dst}: {e}')
             except OSError as e:
+                # Counting or removal failed for another reason; report it rather than returning a count.
                 raise StorageError(f'error deleting directory {dst}: {e}')
             logger.info(f'deleted directory {dst} and the {count} files in it')
             return count
@@ -196,9 +206,11 @@ class FilesystemStorage(Storage):
         try:
             p.unlink()
         except FileNotFoundError:
+            # The file or symlink disappeared after stat; there is nothing left to delete.
             logger.debug(f'{dst} does not exist, nothing to delete')
             return 0
         except OSError as e:
+            # Unlink failed for another reason, such as permissions; report the failure.
             raise StorageError(f'error deleting {dst}: {e}')
         logger.info(f'deleted {dst}')
         return 1
