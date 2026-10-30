@@ -143,3 +143,10 @@ class HTTPStorage(Storage):
         :raises NotImplementedError: Always, since HTTP storage is read-only.
         """
         raise NotImplementedError
+
+    def delete(self, dst: str, *, recursive: bool = False) -> None:
+        """Deleting is not supported for HTTP storage.
+
+        :raises NotImplementedError: Always, since HTTP storage is read-only.
+        """
+        raise NotImplementedError

@@ -255,3 +255,17 @@ class AsyncStorageHandle:
         # fallback to read and write
         data, _ = await self.read()
         return await dest.write(data)
+
+    async def delete(self, *, recursive: bool = False) -> None:
+        """Delete this resource.
+
+        If the resource does not exist, no action is taken.
+
+        :param recursive: Whether to delete a directory or prefix and
+            everything under it. Defaults to ``False``.
+        :type recursive: bool
+        :raises StorageError: If this resource is a directory or a prefix and
+            ``recursive`` is ``False``, or if the deletion fails.
+        :raises NotImplementedError: If the backend does not support deletion.
+        """
+        return await self._storage.delete(self._resolved, recursive=recursive)

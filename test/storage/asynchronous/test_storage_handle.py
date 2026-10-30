@@ -316,3 +316,53 @@ class TestStorageHandleRelative:
 
         with pytest.raises(StorageError, match='not in the release root'):
             _ = handle.relative
+
+
+class TestStorageHandleDelete:
+    @pytest.mark.asyncio
+    async def test_delete_relative_location_from_work_path(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Delete a relative location from the configured work path."""
+        config = fake_config(work_path=tmp_path, release_uri=None)
+        target = tmp_path / 'data' / 'file.txt'
+        target.parent.mkdir(parents=True)
+        target.write_text('hello world')
+
+        await AsyncStorageHandle('data/file.txt', config).delete()
+
+        assert not target.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_passes_recursive_to_backend(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Delete a directory and its contents when recursive deletion is enabled."""
+        config = fake_config(work_path=tmp_path, release_uri=None)
+        dataset = tmp_path / 'dataset'
+        dataset.mkdir()
+        (dataset / '00000000.parquet').write_text('part one')
+
+        await AsyncStorageHandle('dataset', config).delete(recursive=True)
+
+        assert not dataset.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_missing_location_is_not_an_error(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a location that is not there does not raise."""
+        config = fake_config(work_path=tmp_path, release_uri=None)
+
+        await AsyncStorageHandle('data/gone.txt', config).delete()
+
+    @pytest.mark.asyncio
+    async def test_delete_not_implemented_for_http(self) -> None:
+        """HTTP cannot delete. Surface it instead of silently ignoring it."""
+        handle = AsyncStorageHandle('https://example.com/file.txt')
+
+        with pytest.raises(NotImplementedError):
+            await handle.delete()

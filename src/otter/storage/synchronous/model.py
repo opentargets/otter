@@ -196,3 +196,23 @@ class Storage(ABC):
         :rtype: Revision
         :raises NotFoundError: If the source file does not exist.
         """
+
+    @abstractmethod
+    def delete(
+        self,
+        dst: str,
+        *,
+        recursive: bool = False,
+    ) -> None:
+        """Delete a file or directory.
+
+        Deletion is idempotent: deleting a resource that does not exist is a
+        no-op and must not raise.
+
+        :param dst: The destination path to delete the file in.
+        :type dst: str
+        :param recursive: Whether to delete recursively.
+        :type recursive: bool
+        :raises StorageError: If ``dst`` is a directory and ``recursive`` is
+            ``False``, or if the deletion fails.
+        """

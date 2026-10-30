@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from stat import S_ISDIR
 from typing import IO, Any, cast
 
 from filelock import FileLock
@@ -156,3 +157,57 @@ class FilesystemStorage(Storage):
                 logger.debug(f'copying to same file skipped: {src_path}')
 
         return dst_path.stat().st_mtime
+
+    def delete(self, dst: str, *, recursive: bool = False) -> None:
+        p = Path(dst)
+        try:
+            s = p.stat(follow_symlinks=False)
+        except FileNotFoundError:
+            # The target is already missing; deleting it again is a successful no-op.
+            logger.debug(f'{dst} does not exist, nothing to delete')
+            return
+        except OSError as e:
+            # Inspection failed for another reason, such as permissions; report the failure.
+            raise StorageError(f'error deleting {dst}: {e}')
+
+        # a real directory, as opposed to a symlink pointing at one
+        if S_ISDIR(s.st_mode):
+            if not recursive:
+                raise StorageError(f'{dst} is a directory, pass recursive to delete it')
+            try:
+                shutil.rmtree(p)
+            except FileNotFoundError as e:
+                # Deletion tried to access a path that does not exist.
+                # Check whether the directory we were asked to delete is also missing,
+                # or whether it still exists and deletion failed somewhere inside it.
+                try:
+                    p.stat(follow_symlinks=False)
+                except FileNotFoundError:
+                    # The target itself is gone, so there is nothing left to delete.
+                    logger.debug(f'{dst} does not exist, nothing to delete')
+                    return
+                except OSError as stat_error:
+                    # Checking whether the directory exists failed, for example due to permissions.
+                    # Its existence is unknown, so we cannot treat it as already deleted.
+                    # Report the error from this check as a StorageError.
+                    raise StorageError(f'error deleting directory {dst}: {stat_error}')
+                # The target still exists, so deletion is incomplete; report the original error.
+                raise StorageError(f'error deleting directory {dst}: {e}')
+            except OSError as e:
+                # Removal failed for another reason; report it.
+                raise StorageError(f'error deleting directory {dst}: {e}')
+            logger.info(f'deleted directory {dst} and everything in it')
+            return
+
+        # a file or a symlink
+        # deleting something already gone is fine, not an error (idempotence)
+        try:
+            p.unlink()
+        except FileNotFoundError:
+            # The file or symlink disappeared after stat; there is nothing left to delete.
+            logger.debug(f'{dst} does not exist, nothing to delete')
+            return
+        except OSError as e:
+            # Unlink failed for another reason, such as permissions; report the failure.
+            raise StorageError(f'error deleting {dst}: {e}')
+        logger.info(f'deleted {dst}')

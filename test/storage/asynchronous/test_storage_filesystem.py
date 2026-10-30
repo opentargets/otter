@@ -1,6 +1,8 @@
 """Tests for the AsyncFilesystemStorage class."""
 
 import os
+import shutil
+import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -406,3 +408,188 @@ class TestFilesystemStorage:
         await storage.copy_within(str(src_file), str(dst_file))
 
         assert src_file.stat().st_ino == dst_file.stat().st_ino  # test same inode
+
+    @pytest.mark.asyncio
+    async def test_delete_file(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a file removes the file."""
+        test_file = tmp_path / 'test.txt'
+        test_file.write_text('hello world')
+
+        await storage.delete(str(test_file))
+
+        assert not test_file.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_missing_location_is_noop(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a file that is not there does nothing and does not raise."""
+        nonexistent = tmp_path / 'does_not_exist.txt'
+
+        await storage.delete(str(nonexistent))
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_recursive(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """With recursive, a directory and everything under directory gets deleted."""
+        test_dir = tmp_path / 'dataset'
+        (test_dir / 'nested').mkdir(parents=True)
+        (test_dir / '00000000.parquet').write_text('part one')
+        (test_dir / 'nested' / '00000001.parquet').write_text('part two')
+
+        await storage.delete(str(test_dir), recursive=True)
+
+        assert not test_dir.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_without_recursive_raises(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Without recursive, a directory raises instead of being skipped."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / '00000000.parquet').write_text('part one')
+
+        with pytest.raises(StorageError, match='recursive'):
+            await storage.delete(str(test_dir))
+
+        assert test_dir.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_runs_in_worker_thread(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / 'part.txt').write_text('content')
+        event_loop_thread = threading.get_ident()
+        original_rmtree = shutil.rmtree
+
+        def checked_rmtree(path):
+            assert threading.get_ident() != event_loop_thread
+            original_rmtree(path)
+
+        with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=checked_rmtree):
+            await storage.delete(str(test_dir), recursive=True)
+
+        assert not test_dir.exists()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize('target_kind', ['file', 'directory', 'missing'])
+    async def test_delete_symlink_preserves_target(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+        target_kind: str,
+    ) -> None:
+        target = tmp_path / 'target'
+        if target_kind == 'file':
+            target.write_text('content')
+        elif target_kind == 'directory':
+            target.mkdir()
+            (target / 'part.txt').write_text('content')
+        link = tmp_path / 'link'
+        link.symlink_to(target)
+
+        await storage.delete(str(link))
+
+        assert not link.is_symlink()
+        if target_kind == 'file':
+            assert target.read_text() == 'content'
+        elif target_kind == 'directory':
+            assert (target / 'part.txt').read_text() == 'content'
+
+    @pytest.mark.asyncio
+    async def test_delete_file_error_raises_storage_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_file = tmp_path / 'file.txt'
+        test_file.write_text('content')
+
+        with patch('aiofiles.os.unlink', side_effect=PermissionError('access denied')) as unlink:
+            with pytest.raises(StorageError, match=r'error deleting .*access denied'):
+                await storage.delete(str(test_file))
+
+        unlink.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_error_raises_storage_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+
+        with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=PermissionError('access denied')):
+            with pytest.raises(StorageError, match=r'error deleting directory .*access denied'):
+                await storage.delete(str(test_dir), recursive=True)
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_removed_by_someone_else_is_not_an_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """A directory that goes away between the stat and the rmtree is still gone."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / 'part.txt').write_text('content')
+
+        original_rmtree = shutil.rmtree
+
+        def rmtree_after_someone_else_won(path: Path) -> None:
+            original_rmtree(path)
+            raise FileNotFoundError(2, 'No such file or directory', str(path))
+
+        with patch(
+            'otter.storage.asynchronous.filesystem.shutil.rmtree',
+            side_effect=rmtree_after_someone_else_won,
+        ):
+            await storage.delete(str(test_dir), recursive=True)
+
+        assert not test_dir.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_directory_missing_child_raises_storage_error(
+        self,
+        storage: AsyncFilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """A missing child must not hide an incomplete directory deletion."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        child = test_dir / 'part.txt'
+        child.write_text('content')
+        remaining = test_dir / 'remaining.txt'
+        remaining.write_text('keep me')
+
+        def rmtree_after_child_disappeared(path: Path) -> None:
+            child.unlink()
+            raise FileNotFoundError(2, 'No such file or directory', str(child))
+
+        with patch(
+            'otter.storage.asynchronous.filesystem.shutil.rmtree',
+            side_effect=rmtree_after_child_disappeared,
+        ):
+            with pytest.raises(StorageError, match=r'error deleting directory .*part\.txt'):
+                await storage.delete(str(test_dir), recursive=True)
+
+        assert test_dir.is_dir()
+        assert not child.exists()
+        assert remaining.read_text() == 'keep me'

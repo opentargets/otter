@@ -1,6 +1,7 @@
 """Tests for the FilesystemStorage class."""
 
 import os
+import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -381,3 +382,132 @@ class TestFilesystemStorage:
         storage.copy_within(str(src_file), str(dst_file))
 
         assert src_file.stat().st_ino == dst_file.stat().st_ino  # test same inode
+
+    def test_delete_file(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a file removes it."""
+        test_file = tmp_path / 'test.txt'
+        test_file.write_text('hello world')
+
+        storage.delete(str(test_file))
+
+        assert not test_file.exists()
+
+    def test_delete_missing_is_noop(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Deleting a file that is not there does nothing and does not raise."""
+        nonexistent = tmp_path / 'does_not_exist.txt'
+
+        storage.delete(str(nonexistent))
+
+    def test_delete_directory_recursive(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """With recursive, a directory and everything under it is deleted."""
+        test_dir = tmp_path / 'dataset'
+        (test_dir / 'nested').mkdir(parents=True)
+        (test_dir / '00000000.parquet').write_text('part one')
+        (test_dir / 'nested' / '00000001.parquet').write_text('part two')
+
+        storage.delete(str(test_dir), recursive=True)
+
+        assert not test_dir.exists()
+
+    def test_delete_directory_without_recursive_raises(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        """Without recursive, a directory raises instead of being skipped."""
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        (test_dir / '00000000.parquet').write_text('part one')
+
+        with pytest.raises(StorageError, match='recursive'):
+            storage.delete(str(test_dir))
+
+        assert test_dir.exists()
+
+    @pytest.mark.parametrize('target_kind', ['file', 'directory', 'missing'])
+    def test_delete_symlink_preserves_target(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+        target_kind: str,
+    ) -> None:
+        target = tmp_path / 'target'
+        if target_kind == 'file':
+            target.write_text('content')
+        elif target_kind == 'directory':
+            target.mkdir()
+            (target / 'part.txt').write_text('content')
+        link = tmp_path / 'link'
+        link.symlink_to(target)
+
+        storage.delete(str(link))
+
+        assert not link.is_symlink()
+        if target_kind == 'file':
+            assert target.read_text() == 'content'
+        elif target_kind == 'directory':
+            assert (target / 'part.txt').read_text() == 'content'
+
+    def test_delete_file_removed_before_unlink_is_not_an_error(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+    ) -> None:
+        test_file = tmp_path / 'file.txt'
+        test_file.write_text('content')
+        original_unlink = Path.unlink
+
+        def unlink_after_someone_else_won(path: Path) -> None:
+            original_unlink(path)
+            original_unlink(path)
+
+        with patch.object(Path, 'unlink', unlink_after_someone_else_won):
+            storage.delete(str(test_file))
+
+        assert not test_file.exists()
+
+    @pytest.mark.parametrize('remove_target', [True, False])
+    def test_delete_directory_disappearing_paths(
+        self,
+        storage: FilesystemStorage,
+        tmp_path: Path,
+        remove_target: bool,
+    ) -> None:
+        test_dir = tmp_path / 'dataset'
+        test_dir.mkdir()
+        child = test_dir / 'part.txt'
+        child.write_text('content')
+        original_rmtree = shutil.rmtree
+
+        def rmtree_after_path_disappeared(path: Path) -> None:
+            if remove_target:
+                original_rmtree(path)
+                missing = path
+            else:
+                child.unlink()
+                missing = child
+            raise FileNotFoundError(2, 'No such file or directory', str(missing))
+
+        with patch(
+            'otter.storage.synchronous.filesystem.shutil.rmtree',
+            side_effect=rmtree_after_path_disappeared,
+        ):
+            if remove_target:
+                storage.delete(str(test_dir), recursive=True)
+            else:
+                with pytest.raises(StorageError, match='error deleting directory'):
+                    storage.delete(str(test_dir), recursive=True)
+
+        assert test_dir.exists() is not remove_target
