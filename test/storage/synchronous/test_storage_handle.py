@@ -325,7 +325,7 @@ class TestStorageHandleDelete:
 
         assert not target.exists()
 
-    def test_delete_passes_is_recursive_to_backend(
+    def test_delete_passes_recursive_to_backend(
         self,
         tmp_path: Path,
     ) -> None:
@@ -335,7 +335,7 @@ class TestStorageHandleDelete:
         dataset.mkdir()
         (dataset / '00000000.parquet').write_text('part one')
 
-        StorageHandle('dataset', config).delete(is_recursive=True)
+        StorageHandle('dataset', config).delete(recursive=True)
 
         assert not dataset.exists()
 

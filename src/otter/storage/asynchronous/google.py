@@ -280,7 +280,7 @@ class AsyncGoogleStorage(AsyncStorage):
                 raise NotFoundError(thing=src)
             raise StorageError(f'error copying {src} to {dst}: {e}')
 
-    async def delete(self, dst: str, *, is_recursive: bool = False) -> None:
+    async def delete(self, dst: str, *, recursive: bool = False) -> None:
         """Delete a blob, or every blob sharing a prefix.
 
         A bucket is a flat list of blobs. The slashes in a blob name are part of
@@ -310,7 +310,7 @@ class AsyncGoogleStorage(AsyncStorage):
         # Stop starting requests after a failure, but let requests already in flight
         # finish so PartialDeleteError includes all confirmed deletions.
         deleted_under_prefix = 0
-        if is_recursive:
+        if recursive:
             names = await self._list_blob_names(bucket_name, prefix=prefix)
             semaphore = asyncio.Semaphore(DELETE_CONCURRENCY)
             first_failure: tuple[str, Exception] | None = None
@@ -362,7 +362,7 @@ class AsyncGoogleStorage(AsyncStorage):
         # nothing was deleted, but blobs do sit under the prefix. the caller meant
         # a whole directory and did not ask to recurse, so say so instead of
         # succeeding quietly and leaving the blobs behind
-        if not is_recursive and not deleted_exact:
+        if not recursive and not deleted_exact:
             # maxResults keeps this a yes or no question rather than listing every blob
             content = await client.list_objects(
                 bucket_name,
@@ -370,6 +370,6 @@ class AsyncGoogleStorage(AsyncStorage):
                 headers=self._request_headers(),
             )
             if content.get('items'):
-                raise StorageError(f'{dst} is a prefix, pass is_recursive to delete it')
+                raise StorageError(f'{dst} is a prefix, pass recursive to delete it')
 
         logger.debug(f'deleted {dst}')

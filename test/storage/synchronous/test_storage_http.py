@@ -157,4 +157,4 @@ class TestHTTPStorage:
         storage: HTTPStorage,
     ) -> None:
         with pytest.raises(NotImplementedError):
-            storage.delete('http://example.com/dir/', is_recursive=True)
+            storage.delete('http://example.com/dir/', recursive=True)

@@ -411,13 +411,13 @@ class TestFilesystemStorage:
         storage: FilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """With is_recursive, a directory and everything under it is deleted."""
+        """With recursive, a directory and everything under it is deleted."""
         test_dir = tmp_path / 'dataset'
         (test_dir / 'nested').mkdir(parents=True)
         (test_dir / '00000000.parquet').write_text('part one')
         (test_dir / 'nested' / '00000001.parquet').write_text('part two')
 
-        storage.delete(str(test_dir), is_recursive=True)
+        storage.delete(str(test_dir), recursive=True)
 
         assert not test_dir.exists()
 
@@ -426,12 +426,12 @@ class TestFilesystemStorage:
         storage: FilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """Without is_recursive, a directory raises instead of being skipped."""
+        """Without recursive, a directory raises instead of being skipped."""
         test_dir = tmp_path / 'dataset'
         test_dir.mkdir()
         (test_dir / '00000000.parquet').write_text('part one')
 
-        with pytest.raises(StorageError, match='is_recursive'):
+        with pytest.raises(StorageError, match='recursive'):
             storage.delete(str(test_dir))
 
         assert test_dir.exists()
@@ -505,9 +505,9 @@ class TestFilesystemStorage:
             side_effect=rmtree_after_path_disappeared,
         ):
             if remove_target:
-                storage.delete(str(test_dir), is_recursive=True)
+                storage.delete(str(test_dir), recursive=True)
             else:
                 with pytest.raises(StorageError, match='error deleting directory'):
-                    storage.delete(str(test_dir), is_recursive=True)
+                    storage.delete(str(test_dir), recursive=True)
 
         assert test_dir.exists() is not remove_target

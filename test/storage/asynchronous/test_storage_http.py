@@ -151,4 +151,4 @@ class TestHTTPStorage:
     ) -> None:
         """Asking HTTP to recurse does not change the answer."""
         with pytest.raises(NotImplementedError):
-            await storage.delete('http://example.com/dir/', is_recursive=True)
+            await storage.delete('http://example.com/dir/', recursive=True)

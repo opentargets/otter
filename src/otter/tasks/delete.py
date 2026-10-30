@@ -15,7 +15,7 @@ class DeleteSpec(Spec):
 
     location: str
     """The location to delete, relative to the release root."""
-    is_recursive: bool = False
+    recursive: bool = False
     """Whether to delete a directory, or a prefix and everything under it.
         Defaults to ``False``, which refuses to delete a directory."""
 
@@ -35,7 +35,7 @@ class Delete(Task):
         h = StorageHandle(self.spec.location, config=self.context.config)
         logger.info(f'deleting {h.absolute}')
 
-        h.delete(is_recursive=self.spec.is_recursive)
+        h.delete(recursive=self.spec.recursive)
 
         logger.success(f'deleted {h.absolute}')
         return self

@@ -158,7 +158,7 @@ class FilesystemStorage(Storage):
 
         return dst_path.stat().st_mtime
 
-    def delete(self, dst: str, *, is_recursive: bool = False) -> None:
+    def delete(self, dst: str, *, recursive: bool = False) -> None:
         p = Path(dst)
         try:
             s = p.stat(follow_symlinks=False)
@@ -172,8 +172,8 @@ class FilesystemStorage(Storage):
 
         # a real directory, as opposed to a symlink pointing at one
         if S_ISDIR(s.st_mode):
-            if not is_recursive:
-                raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
+            if not recursive:
+                raise StorageError(f'{dst} is a directory, pass recursive to delete it')
             try:
                 shutil.rmtree(p)
             except FileNotFoundError as e:

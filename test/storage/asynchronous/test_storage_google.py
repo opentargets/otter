@@ -432,7 +432,7 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts))
             mock_get_client.return_value = mock_client
 
-            await storage.delete('gs://bucket/dataset', is_recursive=True)
+            await storage.delete('gs://bucket/dataset', recursive=True)
 
         assert mock_client.list_objects.await_args_list[0].kwargs['params']['prefix'] == 'dataset/'
         deleted = [call.args[1] for call in mock_client.delete.await_args_list]
@@ -452,7 +452,7 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts))
             mock_get_client.return_value = mock_client
 
-            await storage.delete('gs://bucket/dataset/', is_recursive=True)
+            await storage.delete('gs://bucket/dataset/', recursive=True)
 
         assert mock_client.list_objects.await_args_list[0].kwargs['params']['prefix'] == 'dataset/'
         deleted = [call.args[1] for call in mock_client.delete.await_args_list]
@@ -472,7 +472,7 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding(*parts, 'dataset'))
             mock_get_client.return_value = mock_client
 
-            await storage.delete('gs://bucket/dataset', is_recursive=True)
+            await storage.delete('gs://bucket/dataset', recursive=True)
 
         deleted = [call.args[1] for call in mock_client.delete.await_args_list]
         assert deleted == [*parts, 'dataset']
@@ -489,7 +489,7 @@ class TestGoogleStorage:
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding())
             mock_get_client.return_value = mock_client
 
-            await storage.delete('gs://bucket/dataset', is_recursive=True)
+            await storage.delete('gs://bucket/dataset', recursive=True)
 
         assert mock_client.delete.await_args_list[0].args == ('bucket', 'dataset')
 
@@ -498,14 +498,14 @@ class TestGoogleStorage:
         self,
         storage: AsyncGoogleStorage,
     ) -> None:
-        """A prefix with blobs under it refuses to be deleted without is_recursive."""
+        """A prefix with blobs under it refuses to be deleted without recursive."""
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             mock_client.list_objects = AsyncMock(return_value={'items': [{'name': 'dataset/00000000.parquet'}]})
             mock_client.delete = AsyncMock(side_effect=self._bucket_holding())
             mock_get_client.return_value = mock_client
 
-            with pytest.raises(StorageError, match='is_recursive'):
+            with pytest.raises(StorageError, match='recursive'):
                 await storage.delete('gs://bucket/dataset')
 
         params = mock_client.list_objects.await_args_list[0].kwargs['params']
@@ -519,9 +519,9 @@ class TestGoogleStorage:
         storage: AsyncGoogleStorage,
         uri: str,
     ) -> None:
-        """Deleting the root of a bucket is refused, with or without is_recursive."""
+        """Deleting the root of a bucket is refused, with or without recursive."""
         with pytest.raises(StorageError, match='root of bucket'):
-            await storage.delete(uri, is_recursive=True)
+            await storage.delete(uri, recursive=True)
 
         with pytest.raises(StorageError, match='root of bucket'):
             await storage.delete(uri)
@@ -555,7 +555,7 @@ class TestGoogleStorage:
             mock_get_client.return_value = mock_client
 
             with pytest.raises(PartialDeleteError) as excinfo:
-                await storage.delete('gs://bucket/dataset', is_recursive=True)
+                await storage.delete('gs://bucket/dataset', recursive=True)
 
         assert excinfo.value.deleted == 1
         assert excinfo.value.failed == parts[1]
@@ -589,7 +589,7 @@ class TestGoogleStorage:
         client.list_objects.return_value = {'items': [{'name': name} for name in parts]}
         client.delete.side_effect = delete_with_overlap
         with patch.object(storage, '_get_client', return_value=client):
-            await asyncio.wait_for(storage.delete('gs://bucket/dataset', is_recursive=True), timeout=5)
+            await asyncio.wait_for(storage.delete('gs://bucket/dataset', recursive=True), timeout=5)
 
         assert peak == DELETE_CONCURRENCY
         assert active == 0
@@ -625,7 +625,7 @@ class TestGoogleStorage:
         client.delete.side_effect = fail_while_others_are_active
         with patch.object(storage, '_get_client', return_value=client):
             with pytest.raises(PartialDeleteError) as excinfo:
-                await asyncio.wait_for(storage.delete('gs://bucket/dataset', is_recursive=True), timeout=5)
+                await asyncio.wait_for(storage.delete('gs://bucket/dataset', recursive=True), timeout=5)
 
         assert excinfo.value.failed == parts[0]
         assert excinfo.value.deleted == len(completed) == DELETE_CONCURRENCY - 1

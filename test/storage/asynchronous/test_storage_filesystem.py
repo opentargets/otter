@@ -440,13 +440,13 @@ class TestFilesystemStorage:
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """With is_recursive, a directory and everything under directory gets deleted."""
+        """With recursive, a directory and everything under directory gets deleted."""
         test_dir = tmp_path / 'dataset'
         (test_dir / 'nested').mkdir(parents=True)
         (test_dir / '00000000.parquet').write_text('part one')
         (test_dir / 'nested' / '00000001.parquet').write_text('part two')
 
-        await storage.delete(str(test_dir), is_recursive=True)
+        await storage.delete(str(test_dir), recursive=True)
 
         assert not test_dir.exists()
 
@@ -456,12 +456,12 @@ class TestFilesystemStorage:
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """Without is_recursive, a directory raises instead of being skipped."""
+        """Without recursive, a directory raises instead of being skipped."""
         test_dir = tmp_path / 'dataset'
         test_dir.mkdir()
         (test_dir / '00000000.parquet').write_text('part one')
 
-        with pytest.raises(StorageError, match='is_recursive'):
+        with pytest.raises(StorageError, match='recursive'):
             await storage.delete(str(test_dir))
 
         assert test_dir.exists()
@@ -483,7 +483,7 @@ class TestFilesystemStorage:
             original_rmtree(path)
 
         with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=checked_rmtree):
-            await storage.delete(str(test_dir), is_recursive=True)
+            await storage.delete(str(test_dir), recursive=True)
 
         assert not test_dir.exists()
 
@@ -538,7 +538,7 @@ class TestFilesystemStorage:
 
         with patch('otter.storage.asynchronous.filesystem.shutil.rmtree', side_effect=PermissionError('access denied')):
             with pytest.raises(StorageError, match=r'error deleting directory .*access denied'):
-                await storage.delete(str(test_dir), is_recursive=True)
+                await storage.delete(str(test_dir), recursive=True)
 
     @pytest.mark.asyncio
     async def test_delete_directory_removed_by_someone_else_is_not_an_error(
@@ -561,7 +561,7 @@ class TestFilesystemStorage:
             'otter.storage.asynchronous.filesystem.shutil.rmtree',
             side_effect=rmtree_after_someone_else_won,
         ):
-            await storage.delete(str(test_dir), is_recursive=True)
+            await storage.delete(str(test_dir), recursive=True)
 
         assert not test_dir.exists()
 
@@ -588,7 +588,7 @@ class TestFilesystemStorage:
             side_effect=rmtree_after_child_disappeared,
         ):
             with pytest.raises(StorageError, match=r'error deleting directory .*part\.txt'):
-                await storage.delete(str(test_dir), is_recursive=True)
+                await storage.delete(str(test_dir), recursive=True)
 
         assert test_dir.is_dir()
         assert not child.exists()

@@ -150,7 +150,7 @@ class AsyncFilesystemStorage(AsyncStorage):
 
         return dst_path.stat().st_mtime
 
-    async def delete(self, dst: str, *, is_recursive: bool = False) -> None:
+    async def delete(self, dst: str, *, recursive: bool = False) -> None:
         p = Path(dst)
         try:
             s = await aiofiles.os.stat(p, follow_symlinks=False)
@@ -164,8 +164,8 @@ class AsyncFilesystemStorage(AsyncStorage):
 
         # a real directory, as opposed to a symlink pointing at one
         if S_ISDIR(s.st_mode):
-            if not is_recursive:
-                raise StorageError(f'{dst} is a directory, pass is_recursive to delete it')
+            if not recursive:
+                raise StorageError(f'{dst} is a directory, pass recursive to delete it')
             try:
                 # rmtree blocks while it walks the tree, so hand it to a worker thread
                 await asyncio.to_thread(shutil.rmtree, p)

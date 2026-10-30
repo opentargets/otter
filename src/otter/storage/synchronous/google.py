@@ -256,7 +256,7 @@ class GoogleStorage(Storage):
         except Exception as e:
             raise StorageError(f'error copying {src} to {dst}: {e}')
 
-    def delete(self, dst: str, *, is_recursive: bool = False) -> None:
+    def delete(self, dst: str, *, recursive: bool = False) -> None:
         """Delete a blob, or every blob sharing a prefix.
 
         A bucket is a flat list of blobs. The slashes in a blob name are part of
@@ -288,7 +288,7 @@ class GoogleStorage(Storage):
         # rather than carry on. the count is not returned, it only tells
         # PartialDeleteError how far the deletion got before it failed
         deleted_under_prefix = 0
-        if is_recursive:
+        if recursive:
             for blob in bucket.list_blobs(prefix=prefix):
                 try:
                     blob.delete()
@@ -311,8 +311,8 @@ class GoogleStorage(Storage):
         # nothing was deleted, but blobs do sit under the prefix. the caller meant
         # a whole directory and did not ask to recurse, so say so instead of
         # succeeding quietly and leaving the blobs behind
-        if not is_recursive and not deleted_exact:
+        if not recursive and not deleted_exact:
             if list(bucket.list_blobs(prefix=prefix, max_results=1)):
-                raise StorageError(f'{dst} is a prefix, pass is_recursive to delete it')
+                raise StorageError(f'{dst} is a prefix, pass recursive to delete it')
 
         logger.debug(f'deleted {dst}')

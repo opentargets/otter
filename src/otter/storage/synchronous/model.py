@@ -202,7 +202,7 @@ class Storage(ABC):
         self,
         dst: str,
         *,
-        is_recursive: bool = False,
+        recursive: bool = False,
     ) -> None:
         """Delete a file or directory.
 
@@ -211,8 +211,8 @@ class Storage(ABC):
 
         :param dst: The destination path to delete the file in.
         :type dst: str
-        :param is_recursive: Whether to delete recursively.
-        :type is_recursive: bool
-        :raises StorageError: If ``dst`` is a directory and ``is_recursive`` is
+        :param recursive: Whether to delete recursively.
+        :type recursive: bool
+        :raises StorageError: If ``dst`` is a directory and ``recursive`` is
             ``False``, or if the deletion fails.
         """
