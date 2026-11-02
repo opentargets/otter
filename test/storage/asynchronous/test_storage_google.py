@@ -354,23 +354,30 @@ class TestGoogleStorage:
         assert mock_client.delete.await_args_list[0].args == ('bucket', 'path/file.txt')
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        'error',
+        [
+            ClientResponseError(
+                request_info=Mock(),
+                history=(),
+                status=404,
+                message='Not Found',
+            ),
+            Exception('404 Not Found'),
+            Exception('Not Found'),
+        ],
+    )
     async def test_delete_missing_blob_is_not_an_error(
         self,
         storage: AsyncGoogleStorage,
+        error: Exception,
     ) -> None:
         """A 404 means there was no such blob, which is not an error."""
         with patch.object(storage, '_get_client') as mock_get_client:
             mock_client = AsyncMock()
             # nothing sits under the prefix either, so there is nothing to refuse
             mock_client.list_objects = AsyncMock(return_value={'items': []})
-            mock_client.delete = AsyncMock(
-                side_effect=ClientResponseError(
-                    request_info=Mock(),
-                    history=(),
-                    status=404,
-                    message='Not Found',
-                )
-            )
+            mock_client.delete = AsyncMock(side_effect=error)
             mock_get_client.return_value = mock_client
 
             await storage.delete('gs://bucket/path/gone.txt')
