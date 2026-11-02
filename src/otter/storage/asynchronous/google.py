@@ -352,7 +352,7 @@ class AsyncGoogleStorage(AsyncStorage):
             )
             deleted_exact = True
         except Exception as e:
-            if getattr(e, 'status', None) == 404 or 'Not Found' in str(e) or '404' in str(e):
+            if getattr(e, 'status', None) == 404:
                 deleted_exact = False
             elif deleted_under_prefix:
                 raise PartialDeleteError(dst, deleted_under_prefix, blob_name, str(e))
