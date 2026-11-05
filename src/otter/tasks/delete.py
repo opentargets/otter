@@ -1,0 +1,54 @@
+"""Delete a file or directory."""
+
+from typing import Self
+
+from loguru import logger
+
+from otter.storage.synchronous.handle import StorageHandle
+from otter.task.model import Spec, Task, TaskContext
+from otter.task.task_reporter import report
+from otter.util.errors import NotFoundError, TaskValidationError
+
+
+class DeleteSpec(Spec):
+    """Configuration fields for the delete task."""
+
+    location: str
+    """The location to delete, relative to the release root."""
+    recursive: bool = False
+    """Whether to delete a directory, or a prefix and everything under it.
+        Defaults to ``False``, which refuses to delete a directory."""
+
+
+class Delete(Task):
+    """Delete a file or directory.
+
+    Deleting something that is not there is not an error, the task succeeds.
+    """
+
+    def __init__(self, spec: DeleteSpec, context: TaskContext) -> None:
+        super().__init__(spec, context)
+        self.spec: DeleteSpec
+
+    @report
+    def run(self) -> Self:
+        h = StorageHandle(self.spec.location, config=self.context.config)
+        logger.info(f'deleting {h.absolute}')
+
+        h.delete(recursive=self.spec.recursive)
+
+        logger.success(f'deleted {h.absolute}')
+        return self
+
+    @report
+    def validate(self) -> Self:
+        """Check that the location is gone."""
+        h = StorageHandle(self.spec.location, config=self.context.config)
+
+        try:
+            h.stat()
+        except NotFoundError:
+            logger.success(f'{h.absolute} is gone')
+            return self
+
+        raise TaskValidationError(f'{h.absolute} still exists after delete')

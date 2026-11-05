@@ -127,3 +127,34 @@ steps:
       do:
         - name: hello_world for ${each}
           who: ${each}
+
+  delete_file:
+    - name: touch a single file
+      location: to-delete/file.txt
+
+    - name: delete a single file
+      requires: [touch a single file]
+      location: to-delete/file.txt
+
+  delete_directory:
+    - name: touch dataset directory with parquet file
+      location: dataset/00000000.parquet
+
+    - name: touch a nested dataset with parquet file
+      location: dataset/nested/00000000.parquet
+
+    - name: delete a whole dataset directory
+      requires:
+        - touch dataset directory with parquet file
+        - touch a nested dataset with parquet file
+      location: dataset
+      recursive: true
+
+  delete_existing_directory:
+    - name: delete a whole existing directory
+      location: delete-this-directory/
+      recursive: true
+
+  delete_missing_file:
+    - name: delete a file that does not exist
+      location: never/existed.txt

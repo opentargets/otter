@@ -93,6 +93,22 @@ class StorageContextSettingsError(StorageError):
     """Raise when invalid settings are provided in storage context."""
 
 
+class PartialDeleteError(StorageError):
+    """Raise when a deletion stops with resources left behind.
+
+    The location is in neither state the caller asked for: some resources are
+    gone and others remain, so the location cannot be assumed clean and a retry
+    will not delete the same things again.
+    """
+
+    def __init__(self, dst: str, deleted: int, failed: str, reason: str) -> None:
+        self.deleted = deleted
+        """How many resources were deleted before the failure."""
+        self.failed = failed
+        """The resource the deletion failed on."""
+        super().__init__(f'deleted {deleted} resources under {dst} before failing on {failed}: {reason}')
+
+
 class ManifestError(OtterError):
     """Raise when an error occurs in the manifest management."""
 

@@ -1,6 +1,6 @@
 [project]
 name = "opentargets-otter"
-version = "26.9.1"
+version = "26.9.2"
 description = "Open Targets Task ExecutoR"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["deptry>=0.25.1", "ruff>=0.15.17", "ty>=0.0.49"]
+dev = [
+    "deptry>=0.25.1",
+    "ruff>=0.15.17",
+    "ty>=0.0.49",
+]
 test = [
   "coverage>=7.14.1",
   "freezegun>=1.5.5",

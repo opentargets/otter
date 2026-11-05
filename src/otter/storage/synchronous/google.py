@@ -13,7 +13,7 @@ from loguru import logger
 from otter.storage.settings import GoogleStorageSettings
 from otter.storage.storage_context import get_storage_context
 from otter.storage.synchronous.model import Revision, StatResult, Storage
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 REQUEST_TIMEOUT = 300
 
@@ -255,3 +255,64 @@ class GoogleStorage(Storage):
             raise NotFoundError(thing=src)
         except Exception as e:
             raise StorageError(f'error copying {src} to {dst}: {e}')
+
+    def delete(self, dst: str, *, recursive: bool = False) -> None:
+        """Delete a blob, or every blob sharing a prefix.
+
+        A bucket is a flat list of blobs. The slashes in a blob name are part of
+        the name itself, not directory separators, so there is no tree to walk
+        and nothing to recurse into. Deleting what looks like a directory means
+        listing every blob whose name starts with that prefix and deleting each
+        one.
+
+        Two different things can live at ``gs://bucket/dataset``: the blobs named
+        ``dataset/00000000.parquet`` and so on, and a blob named exactly
+        ``dataset``. A prefix listing only finds the first kind, so this method
+        deletes the two separately.
+
+        Deleting the root of a bucket is refused. Both ``gs://bucket`` and
+        ``gs://bucket/`` name every blob in the bucket, and no caller means that.
+        """
+        bucket_name, blob_name = self._parse_uri(dst)
+        if not blob_name:
+            raise StorageError(f'refusing to delete the root of bucket {bucket_name}')
+
+        client = self._get_client()
+        bucket = self._get_bucket(client, bucket_name)
+
+        # the trailing slash keeps the match on `dataset/` and off `dataset2/`
+        prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
+
+        # the blobs named `dataset/...`, only when asked to recurse.
+        # a failure here leaves the rest of the prefix untouched, so stop at once
+        # rather than carry on. the count is not returned, it only tells
+        # PartialDeleteError how far the deletion got before it failed
+        deleted_under_prefix = 0
+        if recursive:
+            for blob in bucket.list_blobs(prefix=prefix):
+                try:
+                    blob.delete()
+                except Exception as e:
+                    raise PartialDeleteError(dst, deleted_under_prefix, blob.name, str(e))
+                deleted_under_prefix += 1
+
+        # the blob named exactly `dataset`, which the listing above never matches.
+        # NotFound just means there was no such blob, which is not an error
+        try:
+            bucket.blob(blob_name).delete()
+            deleted_exact = True
+        except NotFound:
+            deleted_exact = False
+        except Exception as e:
+            if deleted_under_prefix:
+                raise PartialDeleteError(dst, deleted_under_prefix, blob_name, str(e))
+            raise StorageError(f'error deleting {dst}: {e}')
+
+        # nothing was deleted, but blobs do sit under the prefix. the caller meant
+        # a whole directory and did not ask to recurse, so say so instead of
+        # succeeding quietly and leaving the blobs behind
+        if not recursive and not deleted_exact:
+            if list(bucket.list_blobs(prefix=prefix, max_results=1)):
+                raise StorageError(f'{dst} is a prefix, pass recursive to delete it')
+
+        logger.debug(f'deleted {dst}')

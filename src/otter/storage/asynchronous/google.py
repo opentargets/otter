@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 
 from aiohttp import ServerTimeoutError
@@ -13,9 +14,10 @@ from otter.storage.asynchronous.model import AsyncStorage
 from otter.storage.model import Revision, StatResult
 from otter.storage.settings import GoogleStorageSettings
 from otter.storage.storage_context import get_storage_context
-from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
+from otter.util.errors import NotFoundError, PartialDeleteError, PreconditionFailedError, StorageError
 
 REQUEST_TIMEOUT = 300
+DELETE_CONCURRENCY = 20
 
 
 class AsyncGoogleStorage(AsyncStorage):
@@ -277,3 +279,97 @@ class AsyncGoogleStorage(AsyncStorage):
             if 'Not Found' in str(e) or '404' in str(e):
                 raise NotFoundError(thing=src)
             raise StorageError(f'error copying {src} to {dst}: {e}')
+
+    async def delete(self, dst: str, *, recursive: bool = False) -> None:
+        """Delete a blob, or every blob sharing a prefix.
+
+        A bucket is a flat list of blobs. The slashes in a blob name are part of
+        the name itself, not directory separators, so there is no tree to walk
+        and nothing to recurse into. Deleting what looks like a directory means
+        listing every blob whose name starts with that prefix and deleting each
+        one.
+
+        Two different things can live at ``gs://bucket/dataset``: the blobs named
+        ``dataset/00000000.parquet`` and so on, and a blob named exactly
+        ``dataset``. A prefix listing only finds the first kind, so this method
+        deletes the two separately.
+
+        Deleting the root of a bucket is refused. Both ``gs://bucket`` and
+        ``gs://bucket/`` name every blob in the bucket, and no caller means that.
+        """
+        bucket_name, blob_name = self._parse_uri(dst)
+        if not blob_name:
+            raise StorageError(f'refusing to delete the root of bucket {bucket_name}')
+
+        client = self._get_client()
+
+        # the trailing slash keeps the match on `dataset/` and off `dataset2/`
+        prefix = blob_name if blob_name.endswith('/') else f'{blob_name}/'
+
+        # the blobs named `dataset/...`, only when asked to recurse.
+        # Stop starting requests after a failure, but let requests already in flight
+        # finish so PartialDeleteError includes all confirmed deletions.
+        deleted_under_prefix = 0
+        if recursive:
+            names = await self._list_blob_names(bucket_name, prefix=prefix)
+            semaphore = asyncio.Semaphore(DELETE_CONCURRENCY)
+            first_failure: tuple[str, Exception] | None = None
+
+            async def delete_blob(name: str) -> None:
+                """Delete one blob while respecting the request limit and earlier failures."""
+                nonlocal deleted_under_prefix, first_failure
+                async with semaphore:
+                    if first_failure is not None:
+                        return
+                    try:
+                        await client.delete(
+                            bucket_name,
+                            name,
+                            params=self._request_params(),
+                            headers=self._request_headers(),
+                            timeout=REQUEST_TIMEOUT,
+                        )
+                    except Exception as e:
+                        if first_failure is None:
+                            first_failure = (name, e)
+                    else:
+                        deleted_under_prefix += 1
+
+            await asyncio.gather(*(delete_blob(name) for name in names))
+            if first_failure is not None:
+                name, error = first_failure
+                raise PartialDeleteError(dst, deleted_under_prefix, name, str(error))
+
+        # the blob named exactly `dataset`, which the listing above never matches.
+        # a 404 just means there was no such blob, which is not an error
+        try:
+            await client.delete(
+                bucket_name,
+                blob_name,
+                params=self._request_params(),
+                headers=self._request_headers(),
+                timeout=REQUEST_TIMEOUT,
+            )
+            deleted_exact = True
+        except Exception as e:
+            if getattr(e, 'status', None) == 404:
+                deleted_exact = False
+            elif deleted_under_prefix:
+                raise PartialDeleteError(dst, deleted_under_prefix, blob_name, str(e))
+            else:
+                raise StorageError(f'error deleting {dst}: {e}')
+
+        # nothing was deleted, but blobs do sit under the prefix. the caller meant
+        # a whole directory and did not ask to recurse, so say so instead of
+        # succeeding quietly and leaving the blobs behind
+        if not recursive and not deleted_exact:
+            # maxResults keeps this a yes or no question rather than listing every blob
+            content = await client.list_objects(
+                bucket_name,
+                params=self._request_params({'prefix': prefix, 'maxResults': '1'}),
+                headers=self._request_headers(),
+            )
+            if content.get('items'):
+                raise StorageError(f'{dst} is a prefix, pass recursive to delete it')
+
+        logger.debug(f'deleted {dst}')
