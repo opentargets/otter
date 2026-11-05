@@ -541,12 +541,12 @@ class TestFilesystemStorage:
                 await storage.delete(str(test_dir), recursive=True)
 
     @pytest.mark.asyncio
-    async def test_delete_directory_removed_by_someone_else_is_not_an_error(
+    async def test_delete_directory_removed_during_deletion_raises_storage_error(
         self,
         storage: AsyncFilesystemStorage,
         tmp_path: Path,
     ) -> None:
-        """A directory that goes away between the stat and the rmtree is still gone."""
+        """A missing directory during removal is reported as a deletion failure."""
         test_dir = tmp_path / 'dataset'
         test_dir.mkdir()
         (test_dir / 'part.txt').write_text('content')
@@ -561,7 +561,8 @@ class TestFilesystemStorage:
             'otter.storage.asynchronous.filesystem.shutil.rmtree',
             side_effect=rmtree_after_someone_else_won,
         ):
-            await storage.delete(str(test_dir), recursive=True)
+            with pytest.raises(StorageError, match=r'error deleting directory .*No such file or directory'):
+                await storage.delete(str(test_dir), recursive=True)
 
         assert not test_dir.exists()
 

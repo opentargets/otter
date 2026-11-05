@@ -169,25 +169,7 @@ class AsyncFilesystemStorage(AsyncStorage):
             try:
                 # rmtree blocks while it walks the tree, so hand it to a worker thread
                 await asyncio.to_thread(shutil.rmtree, p)
-            except FileNotFoundError as e:
-                # Deletion tried to access a path that does not exist.
-                # Check whether the directory we were asked to delete is also missing,
-                # or whether it still exists and deletion failed somewhere inside it.
-                try:
-                    await aiofiles.os.stat(p, follow_symlinks=False)
-                except FileNotFoundError:
-                    # The target itself is gone, so there is nothing left to delete.
-                    logger.debug(f'{dst} does not exist, nothing to delete')
-                    return
-                except OSError as stat_error:
-                    # Checking whether the directory exists failed, for example due to permissions.
-                    # Its existence is unknown, so we cannot treat it as already deleted.
-                    # Report the error from this check as a StorageError.
-                    raise StorageError(f'error deleting directory {dst}: {stat_error}')
-                # The target still exists, so deletion is incomplete; report the original error.
-                raise StorageError(f'error deleting directory {dst}: {e}')
             except OSError as e:
-                # Removal failed for another reason; report it.
                 raise StorageError(f'error deleting directory {dst}: {e}')
             logger.info(f'deleted directory {dst} and everything in it')
             return

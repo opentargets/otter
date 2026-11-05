@@ -504,10 +504,7 @@ class TestFilesystemStorage:
             'otter.storage.synchronous.filesystem.shutil.rmtree',
             side_effect=rmtree_after_path_disappeared,
         ):
-            if remove_target:
+            with pytest.raises(StorageError, match=r'error deleting directory .*No such file or directory'):
                 storage.delete(str(test_dir), recursive=True)
-            else:
-                with pytest.raises(StorageError, match='error deleting directory'):
-                    storage.delete(str(test_dir), recursive=True)
 
         assert test_dir.exists() is not remove_target
