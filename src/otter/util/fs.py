@@ -1,8 +1,6 @@
 """Local file system utilities."""
 
-import hashlib
 import os
-import tempfile
 from pathlib import Path
 
 from loguru import logger
@@ -92,31 +90,3 @@ def check_destination(path: Path | str, *, delete: bool = False) -> None:
         else:
             raise FSError(f'file {path} already exists')
     logger.trace('destination passed checks')
-
-
-#: where :func:`lock_path` puts lock files
-LOCK_DIR = Path(tempfile.gettempdir()) / 'otter-locks'
-
-
-def lock_path(path: Path | str) -> Path:
-    """The lock file that guards reads and writes of a local file.
-
-    It is kept outside the file's directory, so that globs over the data never
-    pick it up, and it is named after a hash of the file's resolved path, so
-    that every name of the file (a symlink, a relative path) shares one lock.
-
-    Lock files are never deleted: a lock file removed while a process waits on
-    it lets that process and a newcomer, who creates a new one, both hold the
-    lock. They are empty, and there is one per file ever locked.
-
-    .. note:: The lock only works between processes that share a temporary
-       directory (``TMPDIR``), which normally means the same host and user.
-
-    :param path: The file to guard.
-    :type path: Path | str
-    :return: The lock file's path. Its directory exists.
-    :rtype: Path
-    """
-    key = hashlib.sha256(str(Path(path).resolve()).encode()).hexdigest()
-    LOCK_DIR.mkdir(exist_ok=True)
-    return LOCK_DIR / f'{key}.lock'

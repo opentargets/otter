@@ -14,15 +14,7 @@ from loguru import logger
 from otter.storage.asynchronous.model import AsyncStorage
 from otter.storage.model import REVISION_ABSENT, Revision, StatResult
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
-from otter.util.fs import check_destination, lock_path
-
-#: seconds to wait for another process to finish reading or writing a file
-LOCK_TIMEOUT = 10
-
-
-def _lock(path: Path) -> FileLock:
-    """The lock every read and write of `path` holds, so none sees another's partial write."""
-    return FileLock(lock_path(path), timeout=LOCK_TIMEOUT)
+from otter.util.fs import check_destination
 
 
 class AsyncFilesystemStorage(AsyncStorage):
@@ -55,21 +47,20 @@ class AsyncFilesystemStorage(AsyncStorage):
         mode: str = 'rb',
         encoding: str | None = None,
     ) -> tuple[bytes | str, Revision]:
-        with _lock(Path(location)):
-            while True:
-                previous_stat = await self.stat(location)
-                previous_mtime = previous_stat.mtime
-                try:
-                    async with aiofiles.open(location, mode, encoding=encoding) as f:
-                        data = await f.read()
-                except FileNotFoundError:
-                    raise NotFoundError(thing=location)
-                current_stat = await self.stat(location)
-                current_mtime = current_stat.mtime
-                if current_mtime == previous_mtime:
-                    logger.info(f'downloaded {location}')
-                    return data, current_stat.revision
-                logger.debug(f'file {location} modified during read, retrying')
+        while True:
+            previous_stat = await self.stat(location)
+            previous_mtime = previous_stat.mtime
+            try:
+                async with aiofiles.open(location, mode, encoding=encoding) as f:
+                    data = await f.read()
+            except FileNotFoundError:
+                raise NotFoundError(thing=location)
+            current_stat = await self.stat(location)
+            current_mtime = current_stat.mtime
+            if current_mtime == previous_mtime:
+                logger.info(f'downloaded {location}')
+                return data, current_stat.revision
+            logger.debug(f'file {location} modified during read, retrying')
 
     async def read(
         self,
@@ -98,23 +89,30 @@ class AsyncFilesystemStorage(AsyncStorage):
     ) -> Revision:
         p = Path(location)
         p.parent.mkdir(parents=True, exist_ok=True)
-        lock = _lock(p)
-        try:
-            with lock:
-                if expected_revision == REVISION_ABSENT:
-                    if p.exists():
-                        raise PreconditionFailedError(f'{location} already exists')
-                elif expected_revision is not None:
-                    s = await self.stat(str(p))
-                    r = s.revision
-                    if r != expected_revision:
-                        raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
-                async with aiofiles.open(location, 'wb') as f:
-                    await f.write(data)
-                return p.stat().st_mtime
-        finally:
-            if lock.is_locked:
-                lock.release()
+        lock_path = p.with_suffix(p.suffix + '.lock')
+        if expected_revision is not None:
+            lock = FileLock(lock_path, timeout=10)
+            try:
+                with lock:
+                    if expected_revision == REVISION_ABSENT:
+                        if p.exists():
+                            raise PreconditionFailedError(f'{location} already exists')
+                    else:
+                        s = await self.stat(str(p))
+                        r = s.revision
+                        if r != expected_revision:
+                            raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
+                    async with aiofiles.open(location, 'wb') as f:
+                        await f.write(data)
+                    return p.stat().st_mtime
+            finally:
+                if lock.is_locked:
+                    lock.release()
+                lock_path.unlink(missing_ok=True)
+        else:
+            async with aiofiles.open(location, 'wb') as f:
+                await f.write(data)
+            return p.stat().st_mtime
 
     async def write_text(
         self,

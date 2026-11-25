@@ -13,15 +13,7 @@ from loguru import logger
 from otter.storage.model import REVISION_ABSENT, Revision, StatResult
 from otter.storage.synchronous.model import Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
-from otter.util.fs import check_destination, lock_path
-
-#: seconds to wait for another process to finish reading or writing a file
-LOCK_TIMEOUT = 10
-
-
-def _lock(path: Path) -> FileLock:
-    """The lock every read and write of `path` holds, so none sees another's partial write."""
-    return FileLock(lock_path(path), timeout=LOCK_TIMEOUT)
+from otter.util.fs import check_destination
 
 
 class FilesystemStorage(Storage):
@@ -67,21 +59,20 @@ class FilesystemStorage(Storage):
         mode: str = 'rb',
         encoding: str | None = None,
     ) -> tuple[bytes | str, Revision]:
-        with _lock(Path(location)):
-            while True:
-                previous_stat = self.stat(location)
-                previous_mtime = previous_stat.mtime
-                try:
-                    with open(location, mode, encoding=encoding) as f:
-                        data = f.read()
-                except FileNotFoundError:
-                    raise NotFoundError(thing=location)
-                current_stat = self.stat(location)
-                current_mtime = current_stat.mtime
-                if current_mtime == previous_mtime:
-                    logger.info(f'downloaded {location}')
-                    return data, current_stat.revision
-                logger.debug(f'file {location} modified during read, retrying')
+        while True:
+            previous_stat = self.stat(location)
+            previous_mtime = previous_stat.mtime
+            try:
+                with open(location, mode, encoding=encoding) as f:
+                    data = f.read()
+            except FileNotFoundError:
+                raise NotFoundError(thing=location)
+            current_stat = self.stat(location)
+            current_mtime = current_stat.mtime
+            if current_mtime == previous_mtime:
+                logger.info(f'downloaded {location}')
+                return data, current_stat.revision
+            logger.debug(f'file {location} modified during read, retrying')
 
     def read(
         self,
@@ -110,22 +101,28 @@ class FilesystemStorage(Storage):
     ) -> Revision:
         p = Path(location)
         p.parent.mkdir(parents=True, exist_ok=True)
-        lock = _lock(p)
-        try:
-            with lock:
-                if expected_revision == REVISION_ABSENT:
-                    if p.exists():
-                        raise PreconditionFailedError(f'{location} already exists')
-                elif expected_revision is not None:
-                    s = self.stat(str(p))
-                    r = s.revision
-                    if r != expected_revision:
-                        raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
-                p.write_bytes(data)
-                return p.stat().st_mtime
-        finally:
-            if lock.is_locked:
-                lock.release()
+        lock_path = p.with_suffix(p.suffix + '.lock')
+        if expected_revision is not None:
+            lock = FileLock(lock_path, timeout=10)
+            try:
+                with lock:
+                    if expected_revision == REVISION_ABSENT:
+                        if p.exists():
+                            raise PreconditionFailedError(f'{location} already exists')
+                    else:
+                        s = self.stat(str(p))
+                        r = s.revision
+                        if r != expected_revision:
+                            raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
+                    Path(location).write_bytes(data)
+                    return p.stat().st_mtime
+            finally:
+                if lock.is_locked:
+                    lock.release()
+                lock_path.unlink(missing_ok=True)
+        else:
+            Path(location).write_bytes(data)
+            return p.stat().st_mtime
 
     def write_text(
         self,

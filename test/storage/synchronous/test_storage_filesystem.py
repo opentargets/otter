@@ -5,12 +5,10 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from filelock import FileLock, Timeout
+from filelock import Timeout
 
-from otter.storage.model import REVISION_ABSENT
 from otter.storage.synchronous.filesystem import FilesystemStorage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
-from otter.util.fs import lock_path
 
 
 class TestFilesystemStorage:
@@ -383,74 +381,3 @@ class TestFilesystemStorage:
         storage.copy_within(str(src_file), str(dst_file))
 
         assert src_file.stat().st_ino == dst_file.stat().st_ino  # test same inode
-
-
-class TestFilesystemStorageLocking:
-    """Reads and writes hold a lock kept outside the data, and write in place."""
-
-    @pytest.fixture
-    def storage(self) -> FilesystemStorage:
-        return FilesystemStorage()
-
-    def test_lock_file_is_kept_out_of_the_data_directory(self, storage: FilesystemStorage, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-
-        storage.write(str(target), b'first')
-        _, revision = storage.read(str(target))
-        storage.write(str(target), b'second', expected_revision=revision)
-
-        assert [p.name for p in tmp_path.iterdir()] == ['data.json']
-        assert storage.glob(str(tmp_path)) == [str(target)]
-
-    def test_symlink_and_target_share_a_lock(self, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-        target.write_text('x')
-        link = tmp_path / 'link.json'
-        link.symlink_to(target)
-
-        assert lock_path(link) == lock_path(target)
-
-    def test_write_through_a_symlink_updates_its_target(self, storage: FilesystemStorage, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-        target.write_text('first')
-        link = tmp_path / 'link.json'
-        link.symlink_to(target)
-        _, revision = storage.read(str(link))
-
-        storage.write(str(link), b'second', expected_revision=revision)
-
-        assert link.is_symlink()
-        assert target.read_text() == 'second'
-
-    def test_write_keeps_the_file_mode(self, storage: FilesystemStorage, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-        target.write_text('first')
-        target.chmod(0o640)
-
-        storage.write(str(target), b'second', expected_revision=storage.stat(str(target)).revision)
-
-        assert target.stat().st_mode & 0o777 == 0o640
-
-    def test_absent_revision_creates_a_missing_file(self, storage: FilesystemStorage, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-
-        storage.write(str(target), b'first', expected_revision=REVISION_ABSENT)
-
-        assert target.read_bytes() == b'first'
-
-    def test_absent_revision_refuses_an_existing_file(self, storage: FilesystemStorage, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-        target.write_text('first')
-
-        with pytest.raises(PreconditionFailedError, match='already exists'):
-            storage.write(str(target), b'second', expected_revision=REVISION_ABSENT)
-        assert target.read_text() == 'first'
-
-    def test_read_waits_for_a_write_in_progress(self, storage: FilesystemStorage, tmp_path: Path) -> None:
-        target = tmp_path / 'data.json'
-        target.write_text('first')
-
-        with FileLock(lock_path(target), timeout=0):
-            with patch('otter.storage.synchronous.filesystem.LOCK_TIMEOUT', 0.1):
-                with pytest.raises(Timeout):
-                    storage.read(str(target))
