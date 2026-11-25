@@ -3,9 +3,7 @@
 
 from __future__ import annotations
 
-import os
 import shutil
-import tempfile
 from pathlib import Path
 from typing import IO, Any, cast
 
@@ -15,32 +13,15 @@ from loguru import logger
 from otter.storage.model import REVISION_ABSENT, Revision, StatResult
 from otter.storage.synchronous.model import Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
-from otter.util.fs import check_destination
+from otter.util.fs import check_destination, lock_path
 
-#: the process umask, read once: new files get the mode `write_bytes` would give them
-_UMASK = os.umask(0)
-os.umask(_UMASK)
-
-
-def _file_mode(path: Path) -> int:
-    """The mode a write to `path` keeps: its current one, or a new file's default."""
-    try:
-        return path.stat().st_mode & 0o777
-    except FileNotFoundError:
-        return 0o666 & ~_UMASK
+#: seconds to wait for another process to finish reading or writing a file
+LOCK_TIMEOUT = 10
 
 
-def _replace_atomically(path: Path, data: bytes) -> None:
-    """Write `data` to `path` so a concurrent reader sees the old content or the new, never part of it."""
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f'.{path.name}.', suffix='.tmp')
-    try:
-        with os.fdopen(fd, 'wb') as f:
-            f.write(data)
-        os.chmod(tmp, _file_mode(path))
-        os.replace(tmp, path)
-    except BaseException:
-        Path(tmp).unlink(missing_ok=True)
-        raise
+def _lock(path: Path) -> FileLock:
+    """The lock every read and write of `path` holds, so none sees another's partial write."""
+    return FileLock(lock_path(path), timeout=LOCK_TIMEOUT)
 
 
 class FilesystemStorage(Storage):
@@ -86,20 +67,21 @@ class FilesystemStorage(Storage):
         mode: str = 'rb',
         encoding: str | None = None,
     ) -> tuple[bytes | str, Revision]:
-        while True:
-            previous_stat = self.stat(location)
-            previous_mtime = previous_stat.mtime
-            try:
-                with open(location, mode, encoding=encoding) as f:
-                    data = f.read()
-            except FileNotFoundError:
-                raise NotFoundError(thing=location)
-            current_stat = self.stat(location)
-            current_mtime = current_stat.mtime
-            if current_mtime == previous_mtime:
-                logger.info(f'downloaded {location}')
-                return data, current_stat.revision
-            logger.debug(f'file {location} modified during read, retrying')
+        with _lock(Path(location)):
+            while True:
+                previous_stat = self.stat(location)
+                previous_mtime = previous_stat.mtime
+                try:
+                    with open(location, mode, encoding=encoding) as f:
+                        data = f.read()
+                except FileNotFoundError:
+                    raise NotFoundError(thing=location)
+                current_stat = self.stat(location)
+                current_mtime = current_stat.mtime
+                if current_mtime == previous_mtime:
+                    logger.info(f'downloaded {location}')
+                    return data, current_stat.revision
+                logger.debug(f'file {location} modified during read, retrying')
 
     def read(
         self,
@@ -128,29 +110,22 @@ class FilesystemStorage(Storage):
     ) -> Revision:
         p = Path(location)
         p.parent.mkdir(parents=True, exist_ok=True)
-        lock_path = p.with_suffix(p.suffix + '.lock')
-        if expected_revision is not None:
-            lock = FileLock(lock_path, timeout=10)
-            try:
-                with lock:
-                    if expected_revision == REVISION_ABSENT:
-                        if p.exists():
-                            raise PreconditionFailedError(f'{location} already exists')
-                    else:
-                        s = self.stat(str(p))
-                        r = s.revision
-                        if r != expected_revision:
-                            raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
-                    _replace_atomically(p, data)
-                    return p.stat().st_mtime
-            finally:
-                # the lock file is kept: deleting it lets a process waiting on the old file and
-                # one creating a new file both hold the lock
-                if lock.is_locked:
-                    lock.release()
-        else:
-            _replace_atomically(p, data)
-            return p.stat().st_mtime
+        lock = _lock(p)
+        try:
+            with lock:
+                if expected_revision == REVISION_ABSENT:
+                    if p.exists():
+                        raise PreconditionFailedError(f'{location} already exists')
+                elif expected_revision is not None:
+                    s = self.stat(str(p))
+                    r = s.revision
+                    if r != expected_revision:
+                        raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
+                p.write_bytes(data)
+                return p.stat().st_mtime
+        finally:
+            if lock.is_locked:
+                lock.release()
 
     def write_text(
         self,
