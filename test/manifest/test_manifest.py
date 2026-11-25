@@ -10,6 +10,7 @@ writes they rely on are the ones Google Cloud Storage enforces with
 
 import asyncio
 import json
+import os
 from collections.abc import Callable
 from pathlib import Path
 
@@ -48,7 +49,13 @@ def _write_as_other_process(work_path: Path, step: str) -> None:
         else json.loads(Manifest(_config(work_path, step))._create_empty().model_dump_json())
     )
     root['steps'][f'otter_{step}'] = json.loads(StepManifest(name=step, result=Result.SUCCESS).model_dump_json())
+    before = path.stat().st_mtime_ns if path.exists() else None
     path.write_text(json.dumps(root))
+    if before is not None:
+        # the filesystem backend's revision is the mtime, which on Linux can stay the same for
+        # two writes milliseconds apart (a backend limitation, not what these tests are about);
+        # move it on, as the time between two real steps would
+        os.utime(path, ns=(before + 10**9, before + 10**9))
 
 
 @pytest.fixture
