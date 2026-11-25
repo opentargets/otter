@@ -7,6 +7,14 @@ from pydantic import BaseModel, ConfigDict
 Revision = float | str | None
 """Type alias for file revision identifiers."""
 
+REVISION_ABSENT: str = '0'
+"""An ``expected_revision`` meaning the resource must not exist yet.
+
+A write with it creates the resource, or raises
+:class:`otter.util.errors.PreconditionFailedError` if it already exists. It is
+Google Cloud Storage's generation ``0``; no backend uses it as a real revision.
+"""
+
 
 class StorageSettings(BaseModel):
     """Base class for storage settings models.

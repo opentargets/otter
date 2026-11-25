@@ -10,6 +10,7 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError, computed_field
 
 from otter.config.model import Config
+from otter.storage.model import REVISION_ABSENT
 from otter.storage.synchronous.handle import StorageHandle
 from otter.util.errors import ManifestError, NotFoundError, PreconditionFailedError, StorageError
 
@@ -187,9 +188,16 @@ class Manifest:
             self._root.steps[step_name] = step_manifest
             self._root.modified_at = datetime.now()
             self._recalculate_result()
-            h.write_text(self._serialize())
-            logger.success(f'step {step_manifest.name} updated successfully')
-            return
+            try:
+                # only if still absent: another process may create it first
+                h.write_text(self._serialize(), expected_revision=REVISION_ABSENT)
+                logger.success(f'step {step_manifest.name} updated successfully')
+                return
+            except PreconditionFailedError:
+                logger.warning(f'manifest at {h.absolute} was created by another process, updating it')
+            except StorageError as e:
+                logger.critical(f'error writing manifest to {h.absolute}: {e}')
+                raise ManifestError(f'error writing manifest: {e}') from e
 
         while True:
             try:

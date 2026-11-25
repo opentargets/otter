@@ -287,7 +287,7 @@ class TestFilesystemStorage:
         mock_lock.is_locked = True
 
         with patch('otter.storage.synchronous.filesystem.FileLock', return_value=mock_lock):
-            with patch('pathlib.Path.write_bytes', side_effect=OSError):
+            with patch('otter.storage.synchronous.filesystem.os.replace', side_effect=OSError):
                 stat = storage.stat(str(test_file))
                 with pytest.raises(OSError):
                     storage.write(
@@ -297,6 +297,8 @@ class TestFilesystemStorage:
                     )
 
         mock_lock.release.assert_called_once()
+        assert test_file.read_text() == 'initial content'
+        assert not list(tmp_path.glob('*.tmp'))
 
     def test_write_creates_parent_directories(
         self,

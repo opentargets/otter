@@ -308,3 +308,47 @@ class TestStorageHandleRelative:
 
         with pytest.raises(StorageError, match='not in the release root'):
             _ = handle.relative
+
+
+class TestStorageHandleExpectedRevision:
+    """The handle passes `expected_revision` to its backend, so conditional writes are conditional."""
+
+    def test_write_text_with_stale_revision_raises(self, work_path: Path) -> None:
+        from otter.util.errors import PreconditionFailedError
+
+        handle = StorageHandle(str(work_path / 'file.txt'), fake_config(work_path=work_path, release_uri=None))
+        handle.write_text('first')
+
+        with pytest.raises(PreconditionFailedError):
+            handle.write_text('second', expected_revision=-1.0)
+        assert (work_path / 'file.txt').read_text() == 'first'
+
+    def test_write_with_stale_revision_raises(self, work_path: Path) -> None:
+        from otter.util.errors import PreconditionFailedError
+
+        handle = StorageHandle(str(work_path / 'file.bin'), fake_config(work_path=work_path, release_uri=None))
+        handle.write(b'first')
+
+        with pytest.raises(PreconditionFailedError):
+            handle.write(b'second', expected_revision=-1.0)
+        assert (work_path / 'file.bin').read_bytes() == b'first'
+
+    def test_write_text_with_current_revision_succeeds(self, work_path: Path) -> None:
+        handle = StorageHandle(str(work_path / 'file.txt'), fake_config(work_path=work_path, release_uri=None))
+        handle.write_text('first')
+        _, revision = handle.read_text()
+
+        handle.write_text('second', expected_revision=revision)
+
+        assert (work_path / 'file.txt').read_text() == 'second'
+
+    def test_write_text_absent_creates_only_once(self, work_path: Path) -> None:
+        from otter.storage.model import REVISION_ABSENT
+        from otter.util.errors import PreconditionFailedError
+
+        handle = StorageHandle(str(work_path / 'file.txt'), fake_config(work_path=work_path, release_uri=None))
+        handle.write_text('first', expected_revision=REVISION_ABSENT)
+
+        with pytest.raises(PreconditionFailedError, match='already exists'):
+            handle.write_text('second', expected_revision=REVISION_ABSENT)
+        assert (work_path / 'file.txt').read_text() == 'first'

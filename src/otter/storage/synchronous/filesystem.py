@@ -3,17 +3,44 @@
 
 from __future__ import annotations
 
+import os
 import shutil
+import tempfile
 from pathlib import Path
 from typing import IO, Any, cast
 
 from filelock import FileLock
 from loguru import logger
 
-from otter.storage.model import Revision, StatResult
+from otter.storage.model import REVISION_ABSENT, Revision, StatResult
 from otter.storage.synchronous.model import Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 from otter.util.fs import check_destination
+
+#: the process umask, read once: new files get the mode `write_bytes` would give them
+_UMASK = os.umask(0)
+os.umask(_UMASK)
+
+
+def _file_mode(path: Path) -> int:
+    """The mode a write to `path` keeps: its current one, or a new file's default."""
+    try:
+        return path.stat().st_mode & 0o777
+    except FileNotFoundError:
+        return 0o666 & ~_UMASK
+
+
+def _replace_atomically(path: Path, data: bytes) -> None:
+    """Write `data` to `path` so a concurrent reader sees the old content or the new, never part of it."""
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f'.{path.name}.', suffix='.tmp')
+    try:
+        with os.fdopen(fd, 'wb') as f:
+            f.write(data)
+        os.chmod(tmp, _file_mode(path))
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 class FilesystemStorage(Storage):
@@ -106,18 +133,23 @@ class FilesystemStorage(Storage):
             lock = FileLock(lock_path, timeout=10)
             try:
                 with lock:
-                    s = self.stat(str(p))
-                    r = s.revision
-                    if r != expected_revision:
-                        raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
-                    Path(location).write_bytes(data)
+                    if expected_revision == REVISION_ABSENT:
+                        if p.exists():
+                            raise PreconditionFailedError(f'{location} already exists')
+                    else:
+                        s = self.stat(str(p))
+                        r = s.revision
+                        if r != expected_revision:
+                            raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
+                    _replace_atomically(p, data)
                     return p.stat().st_mtime
             finally:
+                # the lock file is kept: deleting it lets a process waiting on the old file and
+                # one creating a new file both hold the lock
                 if lock.is_locked:
                     lock.release()
-                lock_path.unlink(missing_ok=True)
         else:
-            Path(location).write_bytes(data)
+            _replace_atomically(p, data)
             return p.stat().st_mtime
 
     def write_text(
