@@ -218,7 +218,7 @@ class StorageHandle:
         :return: The revision of the written resource.
         :rtype: Revision
         """
-        return self._storage.write(self._resolved, data)
+        return self._storage.write(self._resolved, data, expected_revision=expected_revision)
 
     def write_text(
         self,
@@ -239,7 +239,7 @@ class StorageHandle:
         :return: The revision of the written resource.
         :rtype: Revision
         """
-        return self._storage.write_text(self._resolved, data, encoding=encoding)
+        return self._storage.write_text(self._resolved, data, encoding=encoding, expected_revision=expected_revision)
 
     def copy_to(self, dest: StorageHandle) -> Revision:
         """Copy this resource to the destination handle.

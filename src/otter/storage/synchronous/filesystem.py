@@ -10,7 +10,7 @@ from typing import IO, Any, cast
 from filelock import FileLock
 from loguru import logger
 
-from otter.storage.model import Revision, StatResult
+from otter.storage.model import REVISION_ABSENT, Revision, StatResult
 from otter.storage.synchronous.model import Storage
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 from otter.util.fs import check_destination
@@ -106,10 +106,14 @@ class FilesystemStorage(Storage):
             lock = FileLock(lock_path, timeout=10)
             try:
                 with lock:
-                    s = self.stat(str(p))
-                    r = s.revision
-                    if r != expected_revision:
-                        raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
+                    if expected_revision == REVISION_ABSENT:
+                        if p.exists():
+                            raise PreconditionFailedError(f'{location} already exists')
+                    else:
+                        s = self.stat(str(p))
+                        r = s.revision
+                        if r != expected_revision:
+                            raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
                     Path(location).write_bytes(data)
                     return p.stat().st_mtime
             finally:

@@ -316,3 +316,41 @@ class TestStorageHandleRelative:
 
         with pytest.raises(StorageError, match='not in the release root'):
             _ = handle.relative
+
+
+class TestAsyncStorageHandleExpectedRevision:
+    """The async handle passes `expected_revision` to its backend."""
+
+    @pytest.mark.asyncio
+    async def test_write_text_with_stale_revision_raises(self, work_path: Path) -> None:
+        from otter.util.errors import PreconditionFailedError
+
+        handle = AsyncStorageHandle(str(work_path / 'file.txt'), fake_config(work_path=work_path, release_uri=None))
+        await handle.write_text('first')
+
+        with pytest.raises(PreconditionFailedError):
+            await handle.write_text('second', expected_revision=-1.0)
+        assert (work_path / 'file.txt').read_text() == 'first'
+
+    @pytest.mark.asyncio
+    async def test_write_with_stale_revision_raises(self, work_path: Path) -> None:
+        from otter.util.errors import PreconditionFailedError
+
+        handle = AsyncStorageHandle(str(work_path / 'file.bin'), fake_config(work_path=work_path, release_uri=None))
+        await handle.write(b'first')
+
+        with pytest.raises(PreconditionFailedError):
+            await handle.write(b'second', expected_revision=-1.0)
+        assert (work_path / 'file.bin').read_bytes() == b'first'
+
+    @pytest.mark.asyncio
+    async def test_write_text_absent_creates_only_once(self, work_path: Path) -> None:
+        from otter.storage.model import REVISION_ABSENT
+        from otter.util.errors import PreconditionFailedError
+
+        handle = AsyncStorageHandle(str(work_path / 'file.txt'), fake_config(work_path=work_path, release_uri=None))
+        await handle.write_text('first', expected_revision=REVISION_ABSENT)
+
+        with pytest.raises(PreconditionFailedError, match='already exists'):
+            await handle.write_text('second', expected_revision=REVISION_ABSENT)
+        assert (work_path / 'file.txt').read_text() == 'first'

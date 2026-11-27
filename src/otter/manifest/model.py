@@ -10,6 +10,7 @@ from loguru import logger
 from pydantic import BaseModel, ValidationError, computed_field
 
 from otter.config.model import Config
+from otter.storage.model import REVISION_ABSENT
 from otter.storage.synchronous.handle import StorageHandle
 from otter.util.errors import ManifestError, NotFoundError, PreconditionFailedError, StorageError
 
@@ -179,33 +180,24 @@ class Manifest:
         else:
             h = StorageHandle(MANIFEST_FILENAME, self.config, force_local=True)
 
-        try:
-            h.stat()
-        except NotFoundError:
-            logger.info(f'no manifest found at {h.absolute}, creating new one')
-            self._root = self._create_empty()
-            self._root.steps[step_name] = step_manifest
-            self._root.modified_at = datetime.now()
-            self._recalculate_result()
-            h.write_text(self._serialize())
-            logger.success(f'step {step_manifest.name} updated successfully')
-            return
-
+        # each pass either creates the manifest, if it is absent, or rewrites the revision it read;
+        # a write that finds the manifest changed (or created, or deleted) since starts a new pass
         while True:
             try:
                 manifest, revision = h.read_text()
             except NotFoundError:
-                logger.warning(f'manifest at {h.absolute} removed between stat and read, retrying')
-                await asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
-                continue
+                logger.info(f'no manifest found at {h.absolute}, creating new one')
+                self._root = self._create_empty()
+                revision = REVISION_ABSENT
             except StorageError as e:
                 logger.critical(f'error reading manifest from {h.absolute}: {e}')
                 raise ManifestError('error reading manifest') from e
-            try:
-                self._root = RootManifest().model_validate_json(manifest)
-            except ValidationError as e:
-                logger.critical(f'error validating manifest: {e}')
-                raise ManifestError('invalid manifest format')
+            else:
+                try:
+                    self._root = RootManifest().model_validate_json(manifest)
+                except ValidationError as e:
+                    logger.critical(f'error validating manifest: {e}')
+                    raise ManifestError('invalid manifest format')
             self._root.steps[step_name] = step_manifest
             self._root.modified_at = datetime.now()
             self._recalculate_result()
@@ -213,8 +205,8 @@ class Manifest:
                 h.write_text(self._serialize(), expected_revision=revision)
                 logger.success(f'step {step_manifest.name} updated successfully')
                 return
-            except PreconditionFailedError:
-                logger.warning(f'manifest at {h.absolute} was modified by another process, retrying')
+            except (PreconditionFailedError, NotFoundError):
+                logger.warning(f'manifest at {h.absolute} was changed by another process, retrying')
                 await asyncio.sleep(RETRY_BASE_DELAY + random.uniform(0, RETRY_BASE_DELAY))
             except StorageError as e:
                 logger.critical(f'error writing manifest to {h.absolute}: {e}')

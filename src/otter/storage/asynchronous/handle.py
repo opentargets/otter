@@ -208,7 +208,7 @@ class AsyncStorageHandle:
         :return: The revision of the written resource.
         :rtype: Revision
         """
-        return await self._storage.write(self._resolved, data)
+        return await self._storage.write(self._resolved, data, expected_revision=expected_revision)
 
     async def write_text(
         self,
@@ -229,7 +229,9 @@ class AsyncStorageHandle:
         :return: The revision of the written resource.
         :rtype: Revision
         """
-        return await self._storage.write_text(self._resolved, data, encoding=encoding)
+        return await self._storage.write_text(
+            self._resolved, data, encoding=encoding, expected_revision=expected_revision
+        )
 
     async def copy_to(self, dest: AsyncStorageHandle) -> Revision:
         """Copy this resource to the destination handle.

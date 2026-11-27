@@ -272,6 +272,22 @@ class TestGoogleStorage:
         call_args = mock_blob.upload_from_string.call_args
         assert call_args[1]['if_generation_match'] == 42
 
+    def test_write_absent_requires_the_object_not_to_exist(
+        self,
+        storage: GoogleStorage,
+    ) -> None:
+        """`REVISION_ABSENT` is generation 0: GCS creates the object only if it does not exist yet."""
+        from otter.storage.model import REVISION_ABSENT
+
+        with patch.object(storage, '_get_client') as mock_get_client:
+            mock_blob = MagicMock()
+            mock_blob.generation = 1
+            mock_get_client.return_value.bucket.return_value.blob.return_value = mock_blob
+
+            storage.write('gs://bucket/file.txt', b'data', expected_revision=REVISION_ABSENT)
+
+        assert mock_blob.upload_from_string.call_args[1]['if_generation_match'] == 0
+
     def test_write_precondition_failed(
         self,
         storage: GoogleStorage,

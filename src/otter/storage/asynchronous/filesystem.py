@@ -12,7 +12,7 @@ from filelock import FileLock
 from loguru import logger
 
 from otter.storage.asynchronous.model import AsyncStorage
-from otter.storage.model import Revision, StatResult
+from otter.storage.model import REVISION_ABSENT, Revision, StatResult
 from otter.util.errors import NotFoundError, PreconditionFailedError, StorageError
 from otter.util.fs import check_destination
 
@@ -94,10 +94,14 @@ class AsyncFilesystemStorage(AsyncStorage):
             lock = FileLock(lock_path, timeout=10)
             try:
                 with lock:
-                    s = await self.stat(str(p))
-                    r = s.revision
-                    if r != expected_revision:
-                        raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
+                    if expected_revision == REVISION_ABSENT:
+                        if p.exists():
+                            raise PreconditionFailedError(f'{location} already exists')
+                    else:
+                        s = await self.stat(str(p))
+                        r = s.revision
+                        if r != expected_revision:
+                            raise PreconditionFailedError(f'revision mismatch {expected_revision} {r}')
                     async with aiofiles.open(location, 'wb') as f:
                         await f.write(data)
                     return p.stat().st_mtime
