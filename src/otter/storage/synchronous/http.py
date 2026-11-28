@@ -3,15 +3,66 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import time
+from collections.abc import Callable
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import IO, Any
 
 import requests
+from loguru import logger
 
 from otter.storage.model import Revision, StatResult
 from otter.storage.synchronous.model import Storage
 
 REQUEST_TIMEOUT = 300
+
+TOO_MANY_REQUESTS = 429
+MAX_RATE_LIMIT_RETRIES = 10
+"""How many times a request rate-limited with HTTP 429 is retried before giving up."""
+DEFAULT_RATE_LIMIT_WAIT = 60
+"""Seconds to wait after a 429 without a usable ``Retry-After`` header."""
+MAX_RATE_LIMIT_WAIT = 900
+"""Upper bound, in seconds, for a single wait after a 429."""
+
+
+def _retry_after_seconds(resp: requests.Response) -> float:
+    """Seconds to wait before retrying a rate-limited response.
+
+    Reads ``Retry-After`` as either delay-seconds or an HTTP-date, falling back
+    to :data:`DEFAULT_RATE_LIMIT_WAIT`, and caps it at :data:`MAX_RATE_LIMIT_WAIT`.
+    """
+    value = resp.headers.get('Retry-After')
+    wait: float = DEFAULT_RATE_LIMIT_WAIT
+    if value:
+        try:
+            wait = float(value)
+        except ValueError:
+            try:
+                wait = (parsedate_to_datetime(value) - datetime.now(UTC)).total_seconds()
+            except (TypeError, ValueError):
+                wait = DEFAULT_RATE_LIMIT_WAIT
+    return min(max(wait, 0.0), MAX_RATE_LIMIT_WAIT)
+
+
+def _send_with_rate_limit_retry(send: Callable[[], requests.Response], location: str) -> requests.Response:
+    """Send a request, waiting and retrying while the server answers HTTP 429.
+
+    The wait honours ``Retry-After``. After :data:`MAX_RATE_LIMIT_RETRIES`
+    retries the last response is returned, so the caller's error handling
+    applies to it unchanged.
+    """
+    for attempt in range(1, MAX_RATE_LIMIT_RETRIES + 1):
+        resp = send()
+        if resp.status_code != TOO_MANY_REQUESTS:
+            return resp
+        wait = _retry_after_seconds(resp)
+        logger.warning(
+            f'rate limited (HTTP 429) on {location}, retry {attempt}/{MAX_RATE_LIMIT_RETRIES} in {wait:.0f}s'
+        )
+        resp.close()
+        time.sleep(wait)
+    return send()
 
 
 class HTTPStorage(Storage):
@@ -35,11 +86,14 @@ class HTTPStorage(Storage):
 
     def stat(self, location: str) -> StatResult:
         session = self._get_session()
-        resp = session.head(
+        resp = _send_with_rate_limit_retry(
+            lambda: session.head(
+                location,
+                headers={'Accept-Encoding': 'identity'},  # prevent compression to get real size
+                allow_redirects=True,
+                timeout=REQUEST_TIMEOUT,
+            ),
             location,
-            headers={'Accept-Encoding': 'identity'},  # prevent compression to get real size
-            allow_redirects=True,
-            timeout=REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
 
@@ -90,11 +144,15 @@ class HTTPStorage(Storage):
         self,
         location: str,
     ) -> tuple[bytes, Revision]:
+        session = self._get_session()
         try:
-            resp = self._get_session().get(
+            resp = _send_with_rate_limit_retry(
+                lambda: session.get(
+                    location,
+                    allow_redirects=True,
+                    timeout=REQUEST_TIMEOUT,
+                ),
                 location,
-                allow_redirects=True,
-                timeout=REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
             return resp.content, resp.headers.get('Last-Modified', None)
